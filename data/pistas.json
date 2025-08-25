@@ -1,0 +1,52 @@
+{
+    "sala_1" : {
+        "pista_1": "Busca bien, algo podria serte de ayuda.",
+        "pista_2": "Encontraste un objeto, pero para que sirve? Algo debe abrir.",
+        "pista_3": "Escapa del asesino antes de que sea tarde."
+    },
+    "sala_2"  : {
+        "pista_1": "Necesitas una cuerda para poder avanzar, y un aliado que te la tire.",
+        "pista_2": "Es una certijo, hasta un buro podria resolverlo"
+    },
+    "sala_3"  : {
+        "pista_1": "Mira tus alrededores, algo por ahi este escrito",
+        "pista_2": "Sin luz es dificil, busca antes de que se acabe el tiempo",
+    },
+    "sala_4"  : {
+        "pista_1": "El Joker es conocido por sus bromas y sadismo, ten cuidado con lo que haces.",
+        "pista_2": "Recuerda que no todo es lo que parece.",
+        "pista_3": "Enceuntra la puerta correcta si no quieres morir"
+    },
+    "sala_5"  : {
+        "pista_1": "Si no te ven no te pueden disparar",
+        "pista_2": "Algo que bloquee la vista serviria."
+    },
+    "sala_6"  : {
+        "pista_1": "Escucha bien, si entiendes puede escapar",
+        "pista_2": "No sabes si es amigo o enemigo, no confies en todo lo que dice."
+    },
+    "sala_7"  : {
+        "pista_1": "Moverte lentamente puede salvarte la vida.",
+        "pista_2": "No hagas ruido o mueres"
+    },
+    "sala_8"  : {
+        "pista_1": "Responde bien, yoda es un Jedi muy amable",
+        "pista_2": "Responde rapido y usa la logica, aunque no sea lo que crees de verdad."
+    },
+    "sala_9"  : {
+        "pista_1": ""
+    },
+    "sala_10" : {
+        "pista_1": "Piensa en la pista, y la puerta encontraras."
+    },
+    "sala_11" : {
+        "pista_1": "Busca bien, algo podria serte de ayuda.",
+        "pista_2": "Recuerda que no todo es lo que parece.",
+        "pista_3": "No confies en nadie, todos son sospechosos."
+    },
+    "sala_12" : {
+        "pista_1": "Busca bien, algo podria serte de ayuda.",
+        "pista_2": "Recuerda que no todo es lo que parece.",
+        "pista_3": "No confies en nadie, todos son sospechosos."
+    }
+}
