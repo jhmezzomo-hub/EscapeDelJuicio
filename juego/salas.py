@@ -1,39 +1,42 @@
-import pygame
-import sys
+import pygame, sys
+from rutas import rutas_img
 
 # Inicializar Pygame
 pygame.init()
 
-# Dimensiones de la ventana
-WIDTH, HEIGHT = 1000, 700
+# Dimensiones fijas de la ventana
+WIDTH, HEIGHT = 1100, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Mapa estilo Saw Game (isométrico)")
+pygame.display.set_caption("Sala Isométrica con Colisiones")
 
 # Colores
 COLOR_PARED = (120, 120, 120)
 COLOR_PISO = (160, 160, 160)
 COLOR_TECHO = (100, 100, 100)
 COLOR_LINEA = (0, 0, 0)
-COLOR_FONDO = (80, 80, 80)  # <- antes negro, ahora gris
+COLOR_FONDO = (80, 80, 80)
 
-# Cargar personaje y escalarlo
-personaje_img = pygame.image.load("michael-myers.png").convert_alpha()
-personaje_img = pygame.transform.scale(personaje_img, (100, 200))
-personaje_rect = personaje_img.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 150))
+# Cargar personaje
+path = rutas_img("michael-myers.png")
+personaje_img = pygame.image.load(path).convert_alpha()
+personaje_img = pygame.transform.scale(personaje_img, (120, 240))  # más grande
+personaje_rect = personaje_img.get_rect(midbottom=(WIDTH // 2, HEIGHT // 2 + 200))
 
-# Velocidad del personaje
-velocidad = 5
+# Física del personaje
+velocidad = 7
+gravedad = 1
+vel_y = 0
 
-# Rectángulo de límites (el piso de la sala)
-limite_piso = pygame.Rect(200, 500, 600, 100)
+# Definir sala en perspectiva
+def calcular_limites():
+    piso = [(200, 400), (900, 400), (1000, 550), (100, 550)]
+    pared_izq = [(200, 400), (100, 550), (100, 150), (200, 100)]
+    pared_der = [(900, 400), (1000, 550), (1000, 150), (900, 100)]
+    techo = [(200, 100), (900, 100), (1000, 150), (100, 150)]
+    return piso, pared_izq, pared_der, techo
 
-# Función para dibujar la sala
 def dibujar_sala():
-    piso = [(200, 500), (800, 500), (900, 600), (100, 600)]
-    pared_izq = [(200, 500), (100, 600), (100, 250), (200, 200)]
-    pared_der = [(800, 500), (900, 600), (900, 250), (800, 200)]
-    techo = [(200, 200), (800, 200), (900, 250), (100, 250)]
-
+    piso, pared_izq, pared_der, techo = calcular_limites()
     pygame.draw.polygon(screen, COLOR_PISO, piso)
     pygame.draw.polygon(screen, COLOR_PARED, pared_izq)
     pygame.draw.polygon(screen, COLOR_PARED, pared_der)
@@ -47,40 +50,43 @@ def dibujar_sala():
 # Bucle principal
 clock = pygame.time.Clock()
 while True:
-    # Dibujar fondo gris en vez de negro
     screen.fill(COLOR_FONDO)
-
-    # Dibujar sala
     dibujar_sala()
+    piso, pared_izq, pared_der, techo = calcular_limites()
 
-    # Eventos
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-    # Movimiento con colisiones
+    # Movimiento lateral
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] or keys[pygame.K_UP]:
-        personaje_rect.y -= velocidad
-        if not limite_piso.colliderect(personaje_rect):
-            personaje_rect.y += velocidad
-    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-        personaje_rect.y += velocidad
-        if not limite_piso.colliderect(personaje_rect):
-            personaje_rect.y -= velocidad
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
         personaje_rect.x -= velocidad
-        if not limite_piso.colliderect(personaje_rect):
-            personaje_rect.x += velocidad
     if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
         personaje_rect.x += velocidad
-        if not limite_piso.colliderect(personaje_rect):
-            personaje_rect.x -= velocidad
+    if keys[pygame.K_ESCAPE]:
+        pygame.quit()
+        sys.exit()
+
+    # Gravedad
+    vel_y += gravedad
+    personaje_rect.y += vel_y
+
+    # Colisiones con límites
+    if personaje_rect.left < 100:  # pared izquierda
+        personaje_rect.left = 100
+    if personaje_rect.right > 1000:  # pared derecha
+        personaje_rect.right = 1000
+    if personaje_rect.top < 150:  # línea de horizonte (techo inferior)
+        personaje_rect.top = 150
+        vel_y = 0
+    if personaje_rect.bottom > 550:  # piso
+        personaje_rect.bottom = 550
+        vel_y = 0
 
     # Dibujar personaje
     screen.blit(personaje_img, personaje_rect)
 
-    # Actualizar pantalla
     pygame.display.flip()
     clock.tick(60)
