@@ -25,32 +25,24 @@ personaje_rect = personaje.get_rect(center=(WIDTH//2, HEIGHT - 150))
 velocidad = 5
 
 # ---- CREAR MÁSCARA TRAPEZOIDAL ----
-# Crear superficie vacía con fondo negro
-zona_jugable = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-zona_jugable.fill((0, 0, 0, 0))  # transparente
-
-# ---- CREAR MÁSCARA TRAPEZOIDAL ----
 zona_jugable = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 zona_jugable.fill((0, 0, 0, 0))
 
 arr = pygame.surfarray.array3d(fondo)
 
-# Detectar los píxeles del piso (color rojo aproximado)
-mask_piso = (arr[:,:,0] > 90) & (arr[:,:,1] < 50) & (arr[:,:,2] < 80)
-
-# Buscar los límites del piso
-ys, xs = np.where(mask_piso)
-min_y, max_y = ys.min(), ys.max()
-min_x, max_x = xs.min(), xs.max()
-
-# Ahora tenemos un "bounding box" del piso
-# Para simular trapecio, tomamos 4 puntos:
-p1 = (min_x+200, min_y)   # arriba izquierda
-p2 = (max_x-200, min_y)   # arriba derecha
-p3 = (max_x, max_y)       # abajo derecha
-p4 = (min_x, max_y)       # abajo izquierda
+# Trapecio a mano (ajustado a tu imagen)
+p1 = (200, 250)   # arriba izquierda
+p2 = (900, 250)   # arriba derecha
+p3 = (1050, 600)  # abajo derecha
+p4 = (50, 600)    # abajo izquierda
 
 puntos_trapecio = [p1, p2, p3, p4]
+
+# Dibujar el polígono en la superficie
+pygame.draw.polygon(zona_jugable, (255, 255, 255), puntos_trapecio)
+
+# Crear máscara
+mask = pygame.mask.from_surface(zona_jugable)
 
 # Bucle principal
 clock = pygame.time.Clock()
@@ -91,7 +83,7 @@ while True:
     screen.blit(fondo, (0, 0))
 
     # [Opcional] dibujar contorno del área jugable para depurar
-    # pygame.draw.polygon(screen, (0, 255, 0), puntos_trapecio, 2)
+    pygame.draw.polygon(screen, (0, 255, 0), puntos_trapecio, 2)
 
     # Dibujar personaje
     screen.blit(personaje, personaje_rect)
