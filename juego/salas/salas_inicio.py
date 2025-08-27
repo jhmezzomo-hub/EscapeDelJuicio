@@ -31,9 +31,9 @@ zona_jugable.fill((0, 0, 0, 0))
 p1 = (132, 411)   # arriba izquierda
 p2 = (980, 411)   # arriba derecha
 p3 = (1100, 488)  # medio derecha
-p4 = (1100, 600)   # abajo derecha
-p5 = (0, 600)   # abajo izquierda
-p6 = (0, 491)   # medio izquierda
+p4 = (1100, 600)  # abajo derecha
+p5 = (0, 600)     # abajo izquierda
+p6 = (0, 491)     # medio izquierda
 
 puntos_hexagono = [p1, p2, p3, p4, p5, p6]
 
@@ -69,14 +69,17 @@ while True:
         pygame.quit()
         sys.exit()
 
-    # Verificación de colisión con hexágono
-    cx = personaje_rect.centerx
-    cy = personaje_rect.bottom + 60  # pies
+    # ---- Verificación de colisión con dos puntos (costados de los pies) ----
+    cx_left = personaje_rect.left + 10
+    cx_right = personaje_rect.right - 10
+    cy = personaje_rect.bottom - 5   # pies
 
-    if 0 <= cx < mask.get_size()[0] and 0 <= cy < mask.get_size()[1]:
-        if mask.get_at((cx, cy)) == 0:
-            personaje_rect.topleft = old_pos
-    else:
+    dentro = False
+    if (0 <= cx_left < mask.get_size()[0] and 0 <= cy < mask.get_size()[1] and mask.get_at((cx_left, cy)) != 0) and \
+       (0 <= cx_right < mask.get_size()[0] and 0 <= cy < mask.get_size()[1] and mask.get_at((cx_right, cy)) != 0):
+        dentro = True
+
+    if not dentro:
         personaje_rect.topleft = old_pos
 
     # Dibujar fondo
