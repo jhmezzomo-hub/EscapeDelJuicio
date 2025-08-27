@@ -1,5 +1,7 @@
-import pygame, sys
-from rutas import rutas_img
+import pygame, sys,os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from controlador.rutas import rutas_img
+from controlador.cargar_fondos import cargar_fondo
 
 # Inicializar Pygame
 pygame.init()
@@ -10,9 +12,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Sala Jugable en el Piso Rojo")
 
 # Cargar fondo (tu imagen de la sala)
-path = rutas_img("Fondo_Juego.png")
-fondo = pygame.image.load(path)
-fondo = pygame.transform.scale(fondo, (WIDTH, HEIGHT))
+fondo = cargar_fondo(WIDTH, HEIGHT)
 
 # Cargar personaje
 path = rutas_img("michael-myers.png")
@@ -48,6 +48,9 @@ while True:
         personaje_rect.x -= velocidad
     if keys[pygame.K_d] and personaje_rect.right < limite_der:
         personaje_rect.x += velocidad
+    if keys[pygame.K_ESCAPE]:
+        pygame.quit()
+        sys.exit()
 
     # Dibujar
     screen.blit(fondo, (0, 0))
