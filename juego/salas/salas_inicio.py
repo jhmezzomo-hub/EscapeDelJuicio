@@ -71,7 +71,7 @@ while True:
 
     # Verificación de colisión con hexágono
     cx = personaje_rect.centerx
-    cy = personaje_rect.bottom + 60  # pies
+    cy = personaje_rect.bottom - 10  # pies
 
     if 0 <= cx < mask.get_size()[0] and 0 <= cy < mask.get_size()[1]:
         if mask.get_at((cx, cy)) == 0:
