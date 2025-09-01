@@ -1,0 +1,32 @@
+import pygame
+
+def crear_mascara(puntos, width, height):
+    """
+    Crea una máscara a partir de un polígono (zona jugable).
+    puntos: lista de tuplas con coordenadas [(x1, y1), (x2, y2), ...]
+    width, height: dimensiones de la pantalla
+    """
+    superficie = pygame.Surface((width, height), pygame.SRCALPHA)
+    pygame.draw.polygon(superficie, (255, 255, 255), puntos)
+    return pygame.mask.from_surface(superficie)
+
+
+def verificar_colision(mask, personaje_rect, margen_x=10, margen_y=5):
+    """
+    Verifica si el personaje está dentro de la máscara usando dos puntos en los pies.
+    - mask: máscara de la zona jugable
+    - personaje_rect: rectángulo del personaje
+    - margen_x: ajuste lateral de los pies
+    - margen_y: ajuste en la parte inferior del personaje
+    Devuelve True si está dentro, False si no.
+    """
+    cx_left = personaje_rect.left + margen_x
+    cx_right = personaje_rect.right - margen_x
+    cy = personaje_rect.bottom - margen_y
+
+    # Verificar dentro de los límites
+    if 0 <= cx_left < mask.get_size()[0] and 0 <= cy < mask.get_size()[1] and \
+       0 <= cx_right < mask.get_size()[0] and 0 <= cy < mask.get_size()[1]:
+        return (mask.get_at((cx_left, cy)) != 0 and mask.get_at((cx_right, cy)) != 0)
+    
+    return False
