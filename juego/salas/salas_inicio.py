@@ -1,7 +1,4 @@
-# salas_inicio.py
-import pygame
-import sys
-import os
+import pygame, os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from controlador.rutas import rutas_img
@@ -13,9 +10,6 @@ from ui.inventory import Inventory
 
 # Inicializar Pygame
 pygame.init()
-
-#color puerta                                 # <- borrar
-color_puerta = color_puerta = (210, 105, 30)  # <- borrar
 
 # Pantalla fija
 WIDTH, HEIGHT = 1100, 600
@@ -109,7 +103,6 @@ while True:
 
     # Dibujar todo
     screen.blit(fondo, (0, 0))
-    pygame.draw.rect(fondo, color_puerta, puerta)
 
     # Dibujar contorno del hexágono (solo si debug está activo)
     if mostrar_contorno:
