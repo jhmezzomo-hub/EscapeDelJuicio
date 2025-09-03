@@ -2,11 +2,16 @@
 import pygame
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Add the parent directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
 from controlador.cargar_personaje import cargar_personaje
 from controlador.cargar_fondos import cargar_fondo
-from controlador.colisiones import crear_mascara, verificar_colision
+from controlador.colisiones import crear_mascara
+from controlador.controles import manejar_mc
 
 # Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
 from ui.inventory import Inventory
@@ -79,22 +84,7 @@ while True:
             # otros eventos de la sala que necesiten procesarse aquí...
 
     # Movimiento del personaje: solo si el inventario NO está abierto
-    keys = pygame.key.get_pressed()
-    old_pos = personaje_rect.topleft
-    if not inv.is_open:
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
-            personaje_rect.y -= velocidad
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            personaje_rect.y += velocidad
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            personaje_rect.x -= velocidad
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            personaje_rect.x += velocidad
-
-        # ---- Verificación de colisión ----
-        if not verificar_colision(mask, personaje_rect):
-            personaje_rect.topleft = old_pos
-
+    manejar_mc(personaje_rect, velocidad, inv, mask)
     # Update del inventario (por si tenés animaciones/timers)
     inv.update(dt)
 
