@@ -14,6 +14,9 @@ from ui.inventory import Inventory
 # Inicializar Pygame
 pygame.init()
 
+#color puerta                                 # <- borrar
+color_puerta = color_puerta = (210, 105, 30)  # <- borrar
+
 # Pantalla fija
 WIDTH, HEIGHT = 1100, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -27,6 +30,9 @@ path = rutas_img("michael-myers.png")
 personaje = pygame.image.load(path).convert_alpha()
 personaje = pygame.transform.scale(personaje, (120, 200))
 personaje_rect = personaje.get_rect(center=(WIDTH//2, HEIGHT - 150))
+
+#Cargar puerta
+puerta = pygame.Rect(725, 220, 180, 180)
 
 # Velocidad
 velocidad = 5
@@ -103,6 +109,7 @@ while True:
 
     # Dibujar todo
     screen.blit(fondo, (0, 0))
+    pygame.draw.rect(fondo, color_puerta, puerta)
 
     # Dibujar contorno del hexágono (solo si debug está activo)
     if mostrar_contorno:
