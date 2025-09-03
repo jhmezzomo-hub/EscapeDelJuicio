@@ -1,8 +1,16 @@
-from .rutas import rutas_img
+import os
+import sys
 import pygame
 
-def cargar_personaje(personaje, WIDTH, HEIGHT):
-    path = rutas_img(personaje)
+# Add the project root directory to Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from .rutas import rutas_img
+
+def cargar_personaje(nombre_img, personaje, WIDTH, HEIGHT):
+    path = rutas_img(nombre_img, personaje)
     personaje = pygame.image.load(path).convert_alpha()
     personaje = pygame.transform.scale(personaje, (120, 200))
     personaje_rect = personaje.get_rect(center=(WIDTH//2, HEIGHT - 150))

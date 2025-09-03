@@ -1,6 +1,6 @@
-import pygame, sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from controlador.rutas import rutas_img
+import pygame
+
+from juego.controlador.rutas import rutas_img
 
 def cargar_fondo(WIDTH, HEIGHT):
     path = rutas_img("Fondo_inicial.png")

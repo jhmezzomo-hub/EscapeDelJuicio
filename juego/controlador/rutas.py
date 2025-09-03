@@ -1,8 +1,11 @@
-import os
+import os, sys
 
-def rutas_img(nombre_img):
+def rutas_img(nombre_img, personaje=None):
     path = os.path.dirname(__file__)
-    path = os.path.join(path, "..","..","img", nombre_img)
+    if personaje:
+        path = os.path.join(path, "..","..","img", personaje, nombre_img)
+    else:
+        path = os.path.join(path, "..","..","img", nombre_img)
     path = os.path.abspath(path)
     return path
 
