@@ -1,104 +1,50 @@
-# salas_inicio.py
 import pygame
-import sys
 import os
+from controlador.rutas import rutas_img  # tu función que devuelve la ruta absoluta
 
-# Add the parent directory to Python path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+def cargar_sprites_personaje(nombre_carpeta, ancho_pantalla, alto_pantalla, ancho_sprite=120, alto_sprite=200):
+    """
+    Carga los sprites del personaje y devuelve:
+        sprites: dict con 'idle', 'walk_left', 'walk_right'
+        rect: rect inicial del personaje centrado
+    """
+    carpeta = rutas_img(nombre_carpeta)  # ejemplo: img/mc/
+    sprites = {
+        "idle": [],
+        "walk_left": [],
+        "walk_right": []
+    }
 
-from controlador.cargar_personaje import cargar_personaje
-from controlador.cargar_fondos import cargar_fondo
-from controlador.colisiones import crear_mascara
-from controlador.controles import manejar_mc
+    # Cargar idle (mc_0.png)
+    path_idle = os.path.join(carpeta, "mc_0.png")
+    if os.path.exists(path_idle):
+        img = pygame.image.load(path_idle).convert_alpha()
+        img = pygame.transform.scale(img, (ancho_sprite, alto_sprite))
+        sprites["idle"].append(img)
+    else:
+        raise FileNotFoundError(f"No se encontró {path_idle}")
 
-# Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
-from ui.inventory import Inventory
+    # Cargar caminar derecha (mc_1.png, mc_2.png, mc_3.png)
+    for i in range(1, 4):
+        path = os.path.join(carpeta, f"mc_{i}.png")
+        if os.path.exists(path):
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (ancho_sprite, alto_sprite))
+            sprites["walk_right"].append(img)
+        else:
+            raise FileNotFoundError(f"No se encontró {path}")
 
-# Inicializar Pygame
-pygame.init()
+    # Cargar caminar izquierda (mc_4.png, mc_5.png, mc_6.png)
+    for i in range(4, 7):
+        path = os.path.join(carpeta, f"mc_{i}.png")
+        if os.path.exists(path):
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (ancho_sprite, alto_sprite))
+            sprites["walk_left"].append(img)
+        else:
+            raise FileNotFoundError(f"No se encontró {path}")
 
-# Pantalla fija
-WIDTH, HEIGHT = 1100, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
+    # Rect inicial centrado en pantalla
+    rect = sprites["idle"][0].get_rect(center=(ancho_pantalla//2, alto_pantalla - 150))
 
-# Cargar fondo
-fondo = cargar_fondo(WIDTH, HEIGHT)
-
-# Cargar personaje
-personaje, personaje_rect = cargar_personaje("mc.png", WIDTH, HEIGHT)
-
-# Velocidad
-velocidad = 5
-
-# ---- CREAR MÁSCARA HEXAGONAL (usando el controlador) ----
-puntos_hexagono = [
-    (132, 411),   # arriba izquierda
-    (980, 411),   # arriba derecha
-    (1100, 488),  # medio derecha
-    (1100, 600),  # abajo derecha
-    (0, 600),     # abajo izquierda
-    (0, 491)      # medio izquierda
-]
-
-mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
-
-# Flag para mostrar/ocultar el contorno
-mostrar_contorno = False
-
-# --- Crear instancia del inventario ---
-# Ajusta rows/cols/pos si querés (pos es la esquina superior izquierda del UI)
-inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
-inv.is_open = False  # empieza cerrado
-
-# Si querés cargar íconos reales desde tus rutas, podés hacerlo aquí:
-# ej:
-# img_path = rutas_img("items/potion.png")
-# potion_surf = pygame.image.load(img_path).convert_alpha()
-# y en inventory.py adaptar Item para usar surface en vez de .icon
-
-# Bucle principal
-clock = pygame.time.Clock()
-while True:
-    dt = clock.tick(60) / 1000.0
-
-    # RECOGER TODOS LOS EVENTOS
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        # Pasar el evento al inventario primero (captura tecla 'I' y clicks si está abierto)
-        inv.handle_event(event)
-
-        # Si el inventario está abierto, no procesamos inputs de la sala (salvo que queramos ambos)
-        if not inv.is_open:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
-                elif event.key == pygame.K_F1:
-                    mostrar_contorno = not mostrar_contorno  # alternar debug
-            # otros eventos de la sala que necesiten procesarse aquí...
-
-    # Movimiento del personaje: solo si el inventario NO está abierto
-    manejar_mc(personaje_rect, velocidad, inv, mask)
-    # Update del inventario (por si tenés animaciones/timers)
-    inv.update(dt)
-
-    # Dibujar todo
-    screen.blit(fondo, (0, 0))
-
-    # Dibujar contorno del hexágono (solo si debug está activo)
-    if mostrar_contorno:
-        pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
-
-    # Dibujar personaje
-    screen.blit(personaje, personaje_rect)
-
-    # Dibujar inventario por encima (solo se muestra si inv.is_open == True dentro de inv.draw)
-    inv.draw(screen)
-
-    pygame.display.flip()
+    return sprites, rect
