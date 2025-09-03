@@ -1,13 +1,8 @@
 import os, sys
 
-def rutas_img(nombre_img, personaje=None):
+def rutas_img(nombre_img, nombre_carpeta):
     path = os.path.dirname(__file__)
-    if personaje:
-        path = os.path.join(path, "..","..","img", personaje, nombre_img)
-    else:
-        path = os.path.join(path, "..","..","img", nombre_img)
-    path = os.path.abspath(path)
-    return path
+    path = os.path.join(path, "..","..","img", nombre_carpeta, nombre_img)
 
 def rutas_data(nombre_arch):
     path = os.path.dirname(__file__)
