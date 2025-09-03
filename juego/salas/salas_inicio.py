@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controlador.rutas import rutas_img
+from controlador.cargar_personaje import cargar_personaje
 from controlador.cargar_fondos import cargar_fondo
 from controlador.colisiones import crear_mascara, verificar_colision
 
@@ -23,10 +23,7 @@ pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
 fondo = cargar_fondo(WIDTH, HEIGHT)
 
 # Cargar personaje
-path = rutas_img("michael-myers.png")
-personaje = pygame.image.load(path).convert_alpha()
-personaje = pygame.transform.scale(personaje, (120, 200))
-personaje_rect = personaje.get_rect(center=(WIDTH//2, HEIGHT - 150))
+personaje, personaje_rect = cargar_personaje("mc.png", WIDTH, HEIGHT)
 
 # Velocidad
 velocidad = 5
