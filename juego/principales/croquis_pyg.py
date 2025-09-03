@@ -2,7 +2,7 @@
 import pygame
 import sys
 import random
-from sala2 import create_room as create_sala2
+from sala2 import create_room
 
 pygame.init()
 
@@ -23,7 +23,6 @@ color_boton_hover = (100, 160, 210)
 color_texto = (255, 255, 255)
 color_debug_barril_llave = (0, 255, 0)  
 color_enemigo = (255, 0, 0)
-color_mesa = (139, 69, 19)  # marrón
 
 # Tamaños y objetos base (plantilla sala 1)
 tamaño_barril = 30
@@ -33,14 +32,6 @@ plantilla_barriles_sala1 = [
     (600, 250, tamaño_barril, tamaño_barril)
 ]
 
-tamaño_jugador = 40
-x_jugador, y_jugador = 50, alto // 2
-velocidad = 5
-
-tamaño_enemigo = 50 
-x_enemigo, y_enemigo = ancho - 100, alto // 2
-velocidad_enemigo = 3
-
 plantilla_paredes_sala1 = [
     (150, 100, 500, 20),
     (150, 200, 20, 300),
@@ -49,13 +40,15 @@ plantilla_paredes_sala1 = [
 ]
 
 cama = pygame.Rect(45, 280, 60, 80)  # dibujo estático en sala 1
-mesa_sala2 = pygame.Rect(250, 200, 300, 120)  # posición y tamaño de la mesa
 
 # Reloj y fuente
 reloj = pygame.time.Clock()
 fuente = pygame.font.SysFont(None, 50)
 
 # Plantillas de salas (sala1 y sala2 modular)
+tamaño_enemigo = 50
+x_enemigo = (ancho - tamaño_enemigo) // 2
+y_enemigo = (alto - tamaño_enemigo) // 2
 salas_plantilla = {
     1: {
         "barriles": plantilla_barriles_sala1,
@@ -67,10 +60,19 @@ salas_plantilla = {
     2: {
         "barriles": [],
         "paredes": [],
-        "puerta": (0, alto // 2, 50, 50),  # puerta a la izquierda (vuelve a sala 1)
+        "puerta": (0, alto // 2, 50, 50),
+        "puerta_extra": (ancho - 80, alto // 2, 50, 50),
         "fondo": (30, 30, 30),
         "target": 1,
-        "enemigo": (x_enemigo, y_enemigo, tamaño_enemigo, tamaño_enemigo)  # enemigo en sala 2
+        "target_extra": 3,
+        "enemigo": (x_enemigo, y_enemigo, tamaño_enemigo, tamaño_enemigo)
+    },
+    3: {
+        "barriles": [],
+        "paredes": [],
+        "puerta": (0, alto // 2, 50, 50),
+        "fondo": (30, 30, 30),
+        "target": 2
     }
 }
 
@@ -86,14 +88,16 @@ indice_barril_llave = None
 tiene_llave = False
 
 def cargar_sala(num):
-    """Carga la plantilla (convierte tuplas a pygame.Rect)."""
-    global barriles, paredes, puerta, color_fondo, sala_actual
+    global barriles, paredes, puerta, color_fondo, sala_actual, enemigo_rect
     plantilla = salas_plantilla[num]
     barriles = [pygame.Rect(*b) for b in plantilla["barriles"]]
     paredes = [pygame.Rect(*p) for p in plantilla["paredes"]]
     puerta = pygame.Rect(*plantilla["puerta"])
     color_fondo = plantilla["fondo"]
     sala_actual = num
+    # Si la sala tiene enemigo, actualiza su posición
+    if "enemigo" in plantilla:
+        enemigo_rect.x, enemigo_rect.y = plantilla["enemigo"][0], plantilla["enemigo"][1]
 
 # Función para verificar colisiones con paredes y barriles (barriles bloquean movimiento)
 def verificar_colisiones(rectangulo):
@@ -104,8 +108,6 @@ def verificar_colisiones(rectangulo):
         if rectangulo.colliderect(pared):
             return True
     # Colisión con la mesa solo en sala 2
-    if sala_actual == 2 and rectangulo.colliderect(mesa_sala2):
-        return True
     return False
 
 # Mostrar texto temporal en pantalla
@@ -197,21 +199,49 @@ def tocar_barril(jugador_rect):
 # Interacción con puerta: cambia de sala si corresponde
 def interactuar_puerta(jugador_rect):
     global sala_actual, tiene_llave, x_jugador, y_jugador
+    # Interacción con puerta principal
     if jugador_rect.colliderect(puerta):
         destino = salas_plantilla[sala_actual]["target"]
         if sala_actual == 1:
-            # en sala 1 la puerta exige llave
             if tiene_llave:
                 mostrar_texto("La llave abre la puerta... entrando")
                 cargar_sala(destino)
-                x_jugador, y_jugador = 60, alto // 2  # entrar a sala 2 desde la izquierda
+                x_jugador, y_jugador = 60, alto // 2
+                return  # <-- Agrega este return para cortar la función
             else:
-                mostrar_texto("La puerta está cerrada. Necesitas una llave.")
-        else:
-            # salas distintas pueden tener comportamiento diferente; sala2 tiene target->1
+                mostrar_texto("La puerta está cerrada")
+                mostrar_texto("Necesitas una llave")
+                return
+        elif sala_actual == 2:
             mostrar_texto("Volviendo a la sala anterior")
             cargar_sala(destino)
             x_jugador, y_jugador = ancho - 120, alto // 2
+            return
+        elif sala_actual == 3:
+            mostrar_texto("Volviendo a la sala anterior")
+            cargar_sala(destino)
+            x_jugador, y_jugador = ancho - 120, alto // 2
+            return
+
+    # Interacción con puerta extra SOLO en sala 2
+    if sala_actual == 2:
+        puerta_extra = pygame.Rect(*salas_plantilla[2]["puerta_extra"])
+        if jugador_rect.colliderect(puerta_extra):
+            destino = salas_plantilla[2]["target_extra"]
+            mostrar_texto("Entrando a la siguiente sala")
+            cargar_sala(destino)
+            x_jugador, y_jugador = 60, alto // 2
+            return
+
+# Tamaño del jugador
+tamaño_jugador = 40
+
+# Posición inicial del jugador
+x_jugador = 50
+y_jugador = alto // 2
+
+# Velocidad de movimiento del jugador
+velocidad = 6
 
 # Inicialización del juego
 pantalla_inicio()
@@ -233,37 +263,15 @@ while jugando:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             jugando = False
-        # Uso KEYDOWN para E para evitar múltiples activaciones
         if evento.type == pygame.KEYDOWN and evento.key == pygame.K_e:
             ahora = pygame.time.get_ticks()
             if ahora - ultima_interaccion > DEBOUNCE_MS:
                 jugador_rect = pygame.Rect(x_jugador, y_jugador, tamaño_jugador, tamaño_jugador)
-                # primero intentar tocar barril (si hay alguno)
                 tocar_barril(jugador_rect)
-                # luego intentar puerta (si está en zona)
                 interactuar_puerta(jugador_rect)
                 ultima_interaccion = ahora
-                if sala_actual == 2:
-                    enemigo_activo = True
-                    dx_enemigo = x_jugador - enemigo_rect.x
-                    dy_enemigo = y_jugador - enemigo_rect.y
-                    distancia = (dx_enemigo**2 + dy_enemigo**2)**0.5
-                    if distancia < 100:
-                        if abs(dx) > 2:
-                            enemigo_rect.x += velocidad_enemigo if dx_enemigo > 0 else -velocidad_enemigo
-                        if abs(dy) > 2:
-                            enemigo_rect.y += velocidad_enemigo if dy_enemigo > 0 else -velocidad_enemigo
-                    pygame.draw.rect(ventana, color_enemigo, enemigo_rect)
-                    jugador_rect = pygame.Rect(x_jugador, y_jugador, tamaño_jugador, tamaño_jugador)
-                    if enemigo_rect.colliderect(jugador_rect):
-                        mostrar_texto("¡El enemigo te atrapó! Reiniciando...")
-                        reiniciar_juego()
-                        enemigo_rect.x, enemigo_rect.y = x_enemigo, y_enemigo  # resetear enemigo
-                else:
-                    enemigo_activo = False
-                    enemigo_rect.x, enemigo_rect.y = x_enemigo, y_enemigo  # resetear enemigo                        
-    
-    # Movimiento y colisiones
+
+    # --- Movimiento y colisiones ---
     teclas = pygame.key.get_pressed()
     jugador_rect = pygame.Rect(x_jugador, y_jugador, tamaño_jugador, tamaño_jugador)
 
@@ -288,43 +296,18 @@ while jugando:
         if verificar_colisiones(jugador_rect):
             y_jugador -= velocidad
 
-    # Dibujar todo
-    ventana.fill(color_fondo)
-    if sala_actual == 1:
-        pygame.draw.rect(ventana, color_cama, cama)
-    if sala_actual == 2:
-        pygame.draw.rect(ventana, color_mesa, mesa_sala2)  # dibuja la mesa solo en sala 2
-    for idx, barril in enumerate(barriles):
-        color = color_barriles
-        pygame.draw.rect(ventana, color, barril)
-    for pared in paredes:
-        pygame.draw.rect(ventana, color_paredes, pared)
-    pygame.draw.rect(ventana, color_puerta, puerta)
-    pygame.draw.rect(ventana, color_jugador, (x_jugador, y_jugador, tamaño_jugador, tamaño_jugador))
-
     # --- Enemigo solo en sala 2 ---
     if sala_actual == 2:
-        # Activar enemigo solo en sala 2
         enemigo_activo = True
-        # Calcular distancia al jugador
         dx = x_jugador - enemigo_rect.x
         dy = y_jugador - enemigo_rect.y
         distancia = (dx**2 + dy**2) ** 0.5
-        # Si está cerca, el enemigo persigue al jugador
         if distancia < 300:
             velocidad_enemigo = 4
-            # Movimiento en X
-            nuevo_rect_x = enemigo_rect.copy()
             if abs(dx) > 2:
-                nuevo_rect_x.x += velocidad_enemigo if dx > 0 else -velocidad_enemigo
-                if not nuevo_rect_x.colliderect(mesa_sala2):
-                    enemigo_rect.x = nuevo_rect_x.x
-            # Movimiento en Y
-            nuevo_rect_y = enemigo_rect.copy()
+                enemigo_rect.x += velocidad_enemigo if dx > 0 else -velocidad_enemigo
             if abs(dy) > 2:
-                nuevo_rect_y.y += velocidad_enemigo if dy > 0 else -velocidad_enemigo
-                if not nuevo_rect_y.colliderect(mesa_sala2):
-                    enemigo_rect.y = nuevo_rect_y.y
+                enemigo_rect.y += velocidad_enemigo if dy > 0 else -velocidad_enemigo
         pygame.draw.rect(ventana, color_enemigo, enemigo_rect)
         jugador_rect = pygame.Rect(x_jugador, y_jugador, tamaño_jugador, tamaño_jugador)
         if enemigo_rect.colliderect(jugador_rect):
@@ -335,6 +318,22 @@ while jugando:
         enemigo_activo = False
         enemigo_rect.x, enemigo_rect.y = x_enemigo, y_enemigo
 
+    # Dibujar todo
+    ventana.fill(color_fondo)
+    if sala_actual == 1:
+        pygame.draw.rect(ventana, color_cama, cama)
+    for idx, barril in enumerate(barriles):
+        color = color_barriles
+        pygame.draw.rect(ventana, color, barril)
+    for pared in paredes:
+        pygame.draw.rect(ventana, color_paredes, pared)
+    pygame.draw.rect(ventana, color_puerta, puerta)
+    if sala_actual == 2:
+        puerta_extra = pygame.Rect(*salas_plantilla[2]["puerta_extra"])
+        pygame.draw.rect(ventana, color_puerta, puerta_extra)
+        pygame.draw.rect(ventana, color_enemigo, enemigo_rect)  # <-- Dibuja el enemigo aquí
+    pygame.draw.rect(ventana, color_jugador, (x_jugador, y_jugador, tamaño_jugador, tamaño_jugador))
+
     # Indicadores e info
     texto_sala = fuente.render(f"Sala {sala_actual}", True, color_texto)
     ventana.blit(texto_sala, (10, 10))
@@ -344,5 +343,3 @@ while jugando:
 
 pygame.quit()
 sys.exit()
-
-
