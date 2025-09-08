@@ -1,9 +1,8 @@
 import pygame, os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controlador.rutas import rutas_img
 from controlador.cargar_fondos import cargar_fondo
-from controlador.colisiones import crear_mascara, verificar_colision
+from controlador.colisiones import crear_mascara
 from controlador.cargar_personaje import cargar_personaje
 from controlador.controles import manejar_mc
 
