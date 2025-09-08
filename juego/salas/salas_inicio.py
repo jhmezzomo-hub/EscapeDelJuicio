@@ -84,12 +84,6 @@ while True:
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
 
-    # Cargar fondo
-    fondo = cargar_fondo(WIDTH, HEIGHT)
-
-    # Cargar personaje
-    personaje, personaje_rect = cargar_personaje("Personaje principal imagen 0.png", "mc", WIDTH, HEIGHT)
-
     # Velocidad
     velocidad = 5
 
