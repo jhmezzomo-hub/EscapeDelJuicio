@@ -5,7 +5,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from controlador.rutas import rutas_img
+from juego.controlador.rutas import rutas_img
 
 def cargar_personaje(nombre_img, personaje, WIDTH, HEIGHT):
     path = rutas_img(nombre_img, personaje)
