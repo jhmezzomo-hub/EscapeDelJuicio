@@ -1,4 +1,4 @@
-import pygame, sys, os
+import pygame, sys
 
 from controlador.cargar_fondos import cargar_fondo
 from controlador.cargar_personaje import cargar_personaje
