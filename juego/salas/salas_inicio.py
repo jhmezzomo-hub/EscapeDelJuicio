@@ -15,7 +15,7 @@ def iniciar_sala():
     # Pantalla fija
     WIDTH, HEIGHT = 1100, 600
     pantalla = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
+    pygame.display.set_caption("Escape Del Juicio")
 
     # Cargar fondo
     # Asegúrate de que el nombre del archivo sea el correcto
