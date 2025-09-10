@@ -21,7 +21,7 @@ pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
 fondo = cargar_fondo(WIDTH, HEIGHT)
 
 # Cargar personaje
-personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+personaje, personaje_rect = cargar_personaje("Joker_0.png", "Joker", WIDTH, HEIGHT)
 
 #Cargar puerta
 puerta = pygame.Rect(725, 220, 180, 180)
