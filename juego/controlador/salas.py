@@ -6,19 +6,19 @@ from limite_colisiones.crear_mascara import crear_mascara
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
 
-def cargar_sala(nombre_fondo, carpeta):
+def cargar_sala(fondo, personaje_info, size):
     """Carga una sala con un fondo dado. 
        Más adelante podés expandirla con enemigos, puertas, etc."""
     pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption(f"Sala: {nombre_fondo}")
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("Escape Del Juicio")
 
     # Fondo según el nombre
-    fondo = cargar_fondo(nombre_fondo, carpeta, (WIDTH, HEIGHT))
+    fondo_1P = fondo
+    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", size)
 
     # Personaje
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+    personaje, personaje_rect = personaje_info
 
     # Inventario
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
@@ -33,7 +33,7 @@ def cargar_sala(nombre_fondo, carpeta):
         (0, 600),
         (0, 491)
     ]
-    mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
+    mask = crear_mascara(puntos_hexagono, size)
 
     velocidad = 5
     clock = pygame.time.Clock()
@@ -59,7 +59,7 @@ def cargar_sala(nombre_fondo, carpeta):
         inv.update(dt)
 
         # Dibujos
-        screen.blit(fondo, (0, 0))
+        screen.blit(fondo_1P, (0, 0))
         screen.blit(personaje, personaje_rect)
         inv.draw(screen)
         pygame.display.flip()

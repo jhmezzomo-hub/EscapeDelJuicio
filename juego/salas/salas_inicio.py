@@ -23,7 +23,8 @@ def iniciar_sala():
     fuente = pygame.font.SysFont("Arial", 26)
 
     # Cargar fondo
-    fondo = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
+    fondo_1P = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
+    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", (WIDTH, HEIGHT))
 
     # Cargar personaje
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
@@ -74,14 +75,14 @@ def iniciar_sala():
                     20, 5
                 )
                 if pies_personaje.colliderect(puerta_interaccion):
-                    cargar_sala("Fondo_sala1.png", "Fondos")  # <-- Aquí pasa a la Sala 2
+                    cargar_sala(fondo_2P, (personaje, personaje_rect), )  # <-- Aquí pasa a la Sala 2
         # Movimiento del personaje
         manejar_mc(personaje_rect, velocidad, inv, mask)
         # Update inventario
         inv.update(dt)
 
         # Dibujar todo
-        screen.blit(fondo, (0, 0))
+        screen.blit(fondo_1P, (0, 0))
 
         # Dibujar contorno del hexágono (solo si debug está activo)
         if mostrar_contorno:
