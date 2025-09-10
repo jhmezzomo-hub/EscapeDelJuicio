@@ -110,6 +110,16 @@ def iniciar_sala():
         # Dibujar personaje
         screen.blit(personaje, personaje_rect)
 
+         # Mostrar mensaje solo si los pies tocan la puerta
+        pies_personaje = pygame.Rect(
+            personaje_rect.centerx - 10,
+            personaje_rect.bottom - 5,
+            20, 5
+        )
+        if pies_personaje.colliderect(puerta_interaccion):
+            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
+            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+
         # Dibujar inventario por encima (solo se muestra si inv.is_open == True dentro de inv.draw)
         inv.draw(screen)
 
