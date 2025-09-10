@@ -15,7 +15,7 @@ def cargar_sala(nombre_fondo, carpeta):
     pygame.display.set_caption(f"Sala: {nombre_fondo}")
 
     # Fondo según el nombre
-    fondo = cargar_fondo(WIDTH, HEIGHT, nombre_fondo, carpeta)
+    fondo = cargar_fondo(nombre_fondo, carpeta, (WIDTH, HEIGHT))
 
     # Personaje
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)

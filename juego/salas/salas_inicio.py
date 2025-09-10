@@ -72,21 +72,21 @@ def iniciar_sala():
 
         # Si el inventario está abierto, no procesamos inputs de la sala (salvo que queramos ambos)
         if not inv.is_open:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
-                elif event.key == pygame.K_F1:
-                    mostrar_contorno = not mostrar_contorno
-                # Detectar pies y presionar E
-                elif event.key == pygame.K_e:
-                    pies_personaje = pygame.Rect(
-                        personaje_rect.centerx - 10,
-                        personaje_rect.bottom - 5,
-                        20, 5
-                    )
-                    if pies_personaje.colliderect(puerta_interaccion):
-                        cargar_sala("Fondo_sala1.png", "Fondos")  # <-- Aquí pasa a la Sala 2
+            presionado = pygame.key.get_pressed()
+            if presionado[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
+            elif presionado[pygame.K_F1]:
+                mostrar_contorno = not mostrar_contorno
+            # Detectar pies y presionar E
+            elif presionado[pygame.K_e]:
+                pies_personaje = pygame.Rect( #Volverlo su propia funcion?
+                    personaje_rect.centerx - 10,
+                    personaje_rect.bottom - 5,
+                    20, 5
+                )
+                if pies_personaje.colliderect(puerta_interaccion):
+                    cargar_sala("Fondo_sala1.png", "Fondos")  # <-- Aquí pasa a la Sala 2
         # Movimiento del personaje
         manejar_mc(personaje_rect, velocidad, inv, mask)
         # Update inventario
