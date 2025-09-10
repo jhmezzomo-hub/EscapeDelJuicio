@@ -19,7 +19,7 @@ def iniciar_sala():
 
     # Cargar fondo
     # Asegúrate de que el nombre del archivo sea el correcto
-    fondo = cargar_fondo(rutas_img("Fondo_inicial.png", "Fondos"), (WIDTH, HEIGHT))
+    fondo = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
 
     # Cargar personaje
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
