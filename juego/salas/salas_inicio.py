@@ -16,7 +16,7 @@ def iniciar_sala():
     # Pantalla fija
     WIDTH, HEIGHT = 1100, 600
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
+    pygame.display.set_caption("Escape Del Juicio")
 
     # Fuente para mensajes
     fuente = pygame.font.SysFont("Arial", 26)
