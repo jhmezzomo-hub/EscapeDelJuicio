@@ -2,7 +2,7 @@ import pygame, sys
 
 def pantalla_de_inicio():
     pygame.init()
-    WIDTH, HEIGHT = 1280, 720
+    WIDTH, HEIGHT = 1100, 600
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Escape del Juicio - Menu")
 
