@@ -1,13 +1,14 @@
 import pygame, sys
 
+from juego.controlador.cargar_fondos import cargar_fondo
+
 def pantalla_de_inicio():
     pygame.init()
     WIDTH, HEIGHT = 1100, 600
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Escape del Juicio - Menu")
+    pygame.display.set_caption("Escape del Juicio")
 
-    bg = pygame.image.load("img/fondos/pantallaInicial.png").convert()
-    bg = pygame.transform.smoothscale(bg, (WIDTH, HEIGHT))
+    bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
     font = pygame.font.SysFont("arial", 48, bold=True)
     fuente_agresiva = pygame.font.SysFont("impact", 60)
     color_rojo = (255, 0, 0)
@@ -47,9 +48,9 @@ def pantalla_de_inicio():
         pygame.quit()
         sys.exit()
 
-    btn_w, btn_h = 300, 70
-    btn_play = Button((800, int(HEIGHT*0.65), btn_w, btn_h), "JUGAR", start_game)
-    btn_exit = Button((800, int(HEIGHT*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
+    btn_w, btn_h = 250, 70
+    btn_play = Button((700, int(HEIGHT*0.65), btn_w, btn_h), "JUGAR", start_game)
+    btn_exit = Button((700, int(HEIGHT*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
     buttons = [btn_play, btn_exit]
 
     clock = pygame.time.Clock()
