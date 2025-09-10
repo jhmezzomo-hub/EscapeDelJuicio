@@ -31,7 +31,7 @@ def iniciar_sala():
     puerta = pygame.Rect(725, 220, 180, 180)
 
     # Rect más chico para interacción (la base de la puerta)
-    puerta_interaccion = pygame.Rect(770, 400, 70, 40)
+    puerta_interaccion = pygame.Rect(770, 400, 120, 40)
 
     # Velocidad
     velocidad = 5
@@ -51,6 +51,9 @@ def iniciar_sala():
     # Flag para mostrar/ocultar el contorno
     mostrar_contorno = False
 
+    # --- Variables para mostrar mensaje de bienvenida ---
+    mostrar_bienvenida = True
+    tiempo_inicio = pygame.time.get_ticks()
 
     # --- Crear instancia del inventario ---
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
@@ -60,6 +63,40 @@ def iniciar_sala():
     clock = pygame.time.Clock()
     while True:
         dt = clock.tick(60) / 1000.0
+
+        # Mostrar mensaje de bienvenida los primeros 2 segundos
+        if mostrar_bienvenida:
+            tiempo_actual = pygame.time.get_ticks()
+            if tiempo_actual - tiempo_inicio < 2000:
+                texto_bienvenida = fuente.render("Bienvenidos al Escape del Juicio", True, (255, 255, 255))
+                screen.blit(fondo, (0, 0))
+                screen.blit(personaje, personaje_rect)
+                screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, HEIGHT // 2 - 30))
+                pygame.display.flip()
+                continue
+            if tiempo_actual - tiempo_inicio < 4000:
+                texto_bienvenida2 = fuente.render("Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales", True, (255, 255, 255))
+                screen.blit(fondo, (0, 0))
+                screen.blit(personaje, personaje_rect)
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                pygame.display.flip()
+                continue
+            if tiempo_actual - tiempo_inicio < 6000:
+                texto_bienvenida2 = fuente.render("Tendrás que derrotar enemigos, resolver acertijos y escapar con vida", True, (255, 255, 255))
+                screen.blit(fondo, (0, 0))
+                screen.blit(personaje, personaje_rect)
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                pygame.display.flip()
+                continue
+            if tiempo_actual - tiempo_inicio < 8000:
+                texto_bienvenida2 = fuente.render("Podrás escapar?", True, (255, 255, 255))
+                screen.blit(fondo, (0, 0))
+                screen.blit(personaje, personaje_rect)
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                pygame.display.flip()
+                continue
+            else:
+                mostrar_bienvenida = False
 
         # Eventos
         for event in pygame.event.get():
