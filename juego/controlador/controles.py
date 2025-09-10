@@ -1,5 +1,5 @@
 import pygame
-from .colisiones import verificar_colision 
+from juego.controlador.verificar_colisiones import verificar_colision 
 
 def manejar_mc(personaje_rect, velocidad, inv, mask):
     # Movimiento del personaje: solo si el inventario NO está abierto

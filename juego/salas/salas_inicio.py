@@ -1,11 +1,12 @@
-import pygame, os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys, os, pygame
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from controlador.rutas import rutas_img
-from controlador.cargar_fondos import cargar_fondo
-from controlador.colisiones import crear_mascara, verificar_colision
-from controlador.cargar_personaje import cargar_personaje
-from controlador.controles import manejar_mc
+from juego.controlador.cargar_fondos import cargar_fondo
+from juego.limite_colisiones.colision_piso import colision_piso, puntos_hexagono
+from juego.controlador.cargar_personaje import cargar_personaje
+from juego.controlador.controles import manejar_mc
+
+# Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
 from juego.ui.inventory import Inventory
 from controlador.salas import cargar_sala  # <-- Importamos la función de transición
 
@@ -36,21 +37,8 @@ def iniciar_sala():
     # Velocidad
     velocidad = 5
 
-    # ---- CREAR MÁSCARA HEXAGONAL (usando el controlador) ----
-    puntos_hexagono = [
-        (132, 411),   # arriba izquierda
-        (980, 411),   # arriba derecha
-        (1100, 488),  # medio derecha
-        (1100, 600),  # abajo derecha
-        (0, 600),     # abajo izquierda
-        (0, 491)      # medio izquierda
-    ]
-
-    mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
-
-    # Flag para mostrar/ocultar el contorno
-    mostrar_contorno = False
-
+    mask = colision_piso(WIDTH, HEIGHT)
+    puntos_hexagono = puntos_hexagono()
 
     # --- Crear instancia del inventario ---
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
@@ -98,19 +86,11 @@ def iniciar_sala():
         # Dibujar contorno del hexágono (solo si debug está activo)
         if mostrar_contorno:
             pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
-            pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion, 2)  # debug interacción
-            pygame.draw.rect(screen, (0, 0, 255), personaje_rect, 1)      # debug personaje
-            pies_personaje = pygame.Rect(
-                personaje_rect.centerx - 10,
-                personaje_rect.bottom - 5,
-                20, 5
-            )
-            pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)     # debug pies
 
         # Dibujar personaje
         screen.blit(personaje, personaje_rect)
 
-         # Mostrar mensaje solo si los pies tocan la puerta
+        # Mostrar mensaje solo si los pies tocan la puerta
         pies_personaje = pygame.Rect(
             personaje_rect.centerx - 10,
             personaje_rect.bottom - 5,
