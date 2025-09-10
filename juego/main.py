@@ -1,18 +1,16 @@
 import sys
 import os
 
-# Añadir el directorio raíz del proyecto al path de Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Importar la función específica que inicia la sala
 from juego.salas.salas_inicio import iniciar_sala
+from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 
 def main():
-    """Función principal que inicia el juego."""
     print("Iniciando juego desde main.py...")
-    iniciar_sala()
+    pantalla_de_inicio()  # Mostrar menú principal
+    iniciar_sala()        # Solo se ejecuta después de salir del menú
     print("Juego terminado.")
 
-# Ejecutar la función main solo si este archivo es el punto de entrada
 if __name__ == '__main__':
     main()

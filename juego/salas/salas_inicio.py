@@ -14,15 +14,15 @@ def iniciar_sala():
 
     # Pantalla fija
     WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pantalla = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Sala Jugable con Hexágono en el Piso")
 
     # Cargar fondo
     # Asegúrate de que el nombre del archivo sea el correcto
-    fondo = cargar_fondo(rutas_img("fondo_sala_inicio.png", "fondos"), (WIDTH, HEIGHT))
+    fondo = cargar_fondo(rutas_img("Fondo_inicial.png", "Fondos"), (WIDTH, HEIGHT))
 
     # Cargar personaje
-    personaje, personaje_rect = cargar_personaje("Personaje principal imagen 0.png", "mc", WIDTH, HEIGHT)
+    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
 
     #Cargar puerta
     puerta = pygame.Rect(725, 220, 180, 180)
@@ -51,33 +51,33 @@ def iniciar_sala():
 
     # Bucle principal
     clock = pygame.time.Clock()
-    while True:
+    corriendo = True
+    while corriendo:
         dt = clock.tick(60) / 1000.0
 
         # RECOGER TODOS LOS EVENTOS
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                corriendo = False
 
             inv.handle_event(event)
 
         if not inv.is_open:
             old_pos = personaje_rect.topleft
-            manejar_mc(personaje_rect, velocidad)
+            manejar_mc(personaje_rect, velocidad, inv, mask)
             if not verificar_colision(mask, personaje_rect):
                 personaje_rect.topleft = old_pos
 
         inv.update(dt)
 
         # Dibujar todo
-        screen.blit(fondo, (0, 0))
+        pantalla.blit(fondo, (0, 0))
 
         if mostrar_contorno:
-            pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
+            pygame.draw.polygon(pantalla, (0, 255, 0), puntos_hexagono, 2)
 
-        screen.blit(personaje, personaje_rect)
-        inv.draw(screen)
+        pantalla.blit(personaje, personaje_rect)
+        inv.draw(pantalla)
 
         pygame.display.flip()
 
