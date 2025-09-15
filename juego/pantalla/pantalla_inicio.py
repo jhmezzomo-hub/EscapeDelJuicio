@@ -1,5 +1,4 @@
 import pygame, sys
-
 from juego.controlador.cargar_fondos import cargar_fondo
 
 def pantalla_de_inicio():
@@ -9,9 +8,36 @@ def pantalla_de_inicio():
     pygame.display.set_caption("Escape del Juicio")
 
     bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
-    font = pygame.font.SysFont("arial", 48, bold=True)
-    fuente_agresiva = pygame.font.SysFont("impact", 60)
-    color_rojo = (255, 0, 0)
+    fuente_agresiva = pygame.font.SysFont("impact", 72, bold=True)
+
+    # Colores más oscuros
+    color_texto_normal = (110, 10, 10)   # rojo sangre oscura
+    color_texto_hover = (170, 20, 20)    # más brillante al pasar el mouse
+    color_borde_exterior = (0, 0, 0)     # negro
+    color_borde_interior = (0, 0, 0)     # borde interno, más suave
+
+    def render_texto(texto, color, center):
+        # Renderizamos texto principal
+        text_surf = fuente_agresiva.render(texto, True, color)
+        text_rect = text_surf.get_rect()
+
+        # Superficie para contorno
+        outline = pygame.Surface((text_rect.width + 20, text_rect.height + 20), pygame.SRCALPHA)
+
+        # Borde exterior grueso
+        for dx in range(-4, 5):
+            for dy in range(-4, 5):
+                if dx != 0 or dy != 0:
+                    outline.blit(fuente_agresiva.render(texto, True, color_borde_exterior), (dx + 10, dy + 10))
+
+        # Borde interior sutil
+        for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            outline.blit(fuente_agresiva.render(texto, True, color_borde_interior), (dx + 10, dy + 10))
+
+        # Texto final encima
+        outline.blit(text_surf, (10, 10))
+
+        return outline, outline.get_rect(center=center)
 
     class Button:
         def __init__(self, rect, text, callback):
@@ -21,15 +47,8 @@ def pantalla_de_inicio():
             self.hover = False
 
         def draw(self, surface):
-            base_color = (120, 0, 0)
-            hover_color = (180, 0, 0)
-            border_color = (200, 200, 200)
-            color = hover_color if self.hover else base_color
-            pygame.draw.rect(surface, color, self.rect, border_radius=12)
-            pygame.draw.rect(surface, border_color, self.rect, 3, border_radius=12)
-            # Usa fuente agresiva y color rojo para el texto del botón
-            text_surf = fuente_agresiva.render(self.text, True, color_rojo)
-            text_rect = text_surf.get_rect(center=self.rect.center)
+            text_color = color_texto_hover if self.hover else color_texto_normal
+            text_surf, text_rect = render_texto(self.text, text_color, self.rect.center)
             surface.blit(text_surf, text_rect)
 
         def handle_event(self, event):
@@ -61,6 +80,8 @@ def pantalla_de_inicio():
                 b.handle_event(event)
 
         screen.blit(bg, (0, 0))
+
+        # Botones
         for b in buttons:
             b.draw(screen)
 
