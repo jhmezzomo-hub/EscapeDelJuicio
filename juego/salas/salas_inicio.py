@@ -2,7 +2,7 @@ import sys, os, pygame
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.limite_colisiones.colision_piso import colision_piso, puntos_hexagono
+from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import manejar_mc
 
@@ -22,6 +22,9 @@ def iniciar_sala():
     # Fuente para mensajes
     fuente = pygame.font.SysFont("Arial", 26)
 
+    # Inicializar variable para mostrar contorno
+    mostrar_contorno = False
+
     # Cargar fondo
     fondo = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
 
@@ -38,7 +41,7 @@ def iniciar_sala():
     velocidad = 5
 
     mask = colision_piso(WIDTH, HEIGHT)
-    puntos_hexagono = puntos_hexagono()
+    puntos_hexagono = devolver_puntos_hexagono()
 
     # --- Crear instancia del inventario ---
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
