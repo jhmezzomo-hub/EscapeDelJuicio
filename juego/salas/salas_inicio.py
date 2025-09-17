@@ -71,28 +71,28 @@ def iniciar_sala():
                 texto_bienvenida = fuente.render("Bienvenidos al Escape del Juicio", True, (255, 255, 255))
                 screen.blit(fondo, (0, 0))
                 screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, HEIGHT // 2 - 30))
+                screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
                 pygame.display.flip()
                 continue
             if tiempo_actual - tiempo_inicio < 4000:
                 texto_bienvenida2 = fuente.render("Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales", True, (255, 255, 255))
                 screen.blit(fondo, (0, 0))
                 screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
                 pygame.display.flip()
                 continue
             if tiempo_actual - tiempo_inicio < 6000:
                 texto_bienvenida2 = fuente.render("Tendrás que derrotar enemigos, resolver acertijos y escapar con vida", True, (255, 255, 255))
                 screen.blit(fondo, (0, 0))
                 screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
                 pygame.display.flip()
                 continue
             if tiempo_actual - tiempo_inicio < 8000:
                 texto_bienvenida2 = fuente.render("Podrás escapar?", True, (255, 255, 255))
                 screen.blit(fondo, (0, 0))
                 screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, HEIGHT // 2 -30))
+                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
                 pygame.display.flip()
                 continue
             else:
