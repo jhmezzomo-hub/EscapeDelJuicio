@@ -1,4 +1,5 @@
-import pygame, sys
+import pygame.freetype, sys
+
 from juego.controlador.cargar_fondos import cargar_fondo
 
 def pantalla_de_inicio():
@@ -8,36 +9,33 @@ def pantalla_de_inicio():
     pygame.display.set_caption("Escape del Juicio")
 
     bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
-    fuente_agresiva = pygame.font.SysFont("impact", 72, bold=True)
 
-    # Colores más oscuros
+    # Usamos freetype para fuente con contorno
+    fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
+
     color_texto_normal = (110, 10, 10)   # rojo sangre oscura
     color_texto_hover = (170, 20, 20)    # más brillante al pasar el mouse
-    color_borde_exterior = (0, 0, 0)     # negro
-    color_borde_interior = (0, 0, 0)     # borde interno, más suave
+    outline_color = (0, 0, 0)            # negro para contorno
+    outline_size = 3                     # grosor del contorno
 
     def render_texto(texto, color, center):
-        # Renderizamos texto principal
-        text_surf = fuente_agresiva.render(texto, True, color)
-        text_rect = text_surf.get_rect()
+        # Creamos superficie transparente para el texto
+        text_surf = pygame.Surface((500, 150), pygame.SRCALPHA)
+        text_surf.fill((0,0,0,0))
 
-        # Superficie para contorno
-        outline = pygame.Surface((text_rect.width + 20, text_rect.height + 20), pygame.SRCALPHA)
+        # Crear el efecto de contorno dibujando el texto en varias posiciones
+        offsets = [(x, y) for x in [-outline_size, 0, outline_size] for y in [-outline_size, 0, outline_size]]
+        for offset_x, offset_y in offsets:
+            if offset_x != 0 or offset_y != 0:  # Skip center position for outline
+                fuente_agresiva.render_to(text_surf, (outline_size + offset_x, outline_size + offset_y), texto, fgcolor=outline_color, bgcolor=None)
 
-        # Borde exterior grueso
-        for dx in range(-4, 5):
-            for dy in range(-4, 5):
-                if dx != 0 or dy != 0:
-                    outline.blit(fuente_agresiva.render(texto, True, color_borde_exterior), (dx + 10, dy + 10))
+        # Dibujamos el texto principal en el centro
+        fuente_agresiva.render_to(text_surf, (outline_size, outline_size), texto, fgcolor=color, bgcolor=None)
 
-        # Borde interior sutil
-        for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            outline.blit(fuente_agresiva.render(texto, True, color_borde_interior), (dx + 10, dy + 10))
+        text_rect = text_surf.get_rect(center=center)
+        return text_surf, text_rect
 
-        # Texto final encima
-        outline.blit(text_surf, (10, 10))
-
-        return outline, outline.get_rect(center=center)
+    # Resto del código igual, solo cambia render_texto
 
     class Button:
         def __init__(self, rect, text, callback):
@@ -45,18 +43,33 @@ def pantalla_de_inicio():
             self.text = text
             self.callback = callback
             self.hover = False
+            self.text_surf = None
+            self.text_rect = None
+            self.mask = None
 
         def draw(self, surface):
             text_color = color_texto_hover if self.hover else color_texto_normal
-            text_surf, text_rect = render_texto(self.text, text_color, self.rect.center)
-            surface.blit(text_surf, text_rect)
+            self.text_surf, self.text_rect = render_texto(self.text, text_color, self.rect.center)
+            # Crear máscara para detección precisa
+            if not self.mask:
+                self.mask = pygame.mask.from_surface(self.text_surf)
+            surface.blit(self.text_surf, self.text_rect)
 
         def handle_event(self, event):
-            if event.type == pygame.MOUSEMOTION:
-                self.hover = self.rect.collidepoint(event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.rect.collidepoint(event.pos):
-                    self.callback()
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+                mouse_pos = event.pos
+                if self.text_rect and self.text_rect.collidepoint(mouse_pos):
+                    # Convertir posición global del mouse a local de la superficie de texto
+                    local_x = mouse_pos[0] - self.text_rect.x
+                    local_y = mouse_pos[1] - self.text_rect.y
+                    # Verificar si el punto está dentro de la máscara
+                    if 0 <= local_x < self.text_surf.get_width() and 0 <= local_y < self.text_surf.get_height():
+                        if self.mask.get_at((local_x, local_y)):
+                            self.hover = True
+                            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                                self.callback()
+                            return
+                self.hover = False
 
     running = True
     def start_game():
@@ -68,8 +81,8 @@ def pantalla_de_inicio():
         sys.exit()
 
     btn_w, btn_h = 250, 70
-    btn_play = Button((700, int(HEIGHT*0.65), btn_w, btn_h), "JUGAR", start_game)
-    btn_exit = Button((700, int(HEIGHT*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
+    btn_play = Button((850, int(HEIGHT*0.65), btn_w, btn_h), "JUGAR", start_game)
+    btn_exit = Button((850, int(HEIGHT*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
     buttons = [btn_play, btn_exit]
 
     clock = pygame.time.Clock()
@@ -81,7 +94,6 @@ def pantalla_de_inicio():
 
         screen.blit(bg, (0, 0))
 
-        # Botones
         for b in buttons:
             b.draw(screen)
 
