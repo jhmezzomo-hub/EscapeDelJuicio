@@ -31,17 +31,35 @@ def iniciar_sala2():
     # MANIQUÍES dentro del hexágono con espacio suficiente para pasar
     maniquies = []
     posiciones = [
-        (900, 250),  # izquierda arriba
-        (950, 370),  # izquierda media
+        (900, 200),  # derecha abajo
+        (950, 370),  # derecha arriba
         (700, 340),  # derecha media
-        (100, 400),  # derecha arriba
-        (150, 250),  # izquierda abajo
-        (300, 300)   # derecha abajo
+        (50, 400),   # izq abajo
+        (150, 250),  # izq arriba
+        (300, 350)   # izq medio
     ]
     imagenes = ["mm1.png", "mm2.png", "mm3.png", "mm4.png", "mm5.png", "mm6.png"]
-    for img, pos in zip(imagenes, posiciones):
+    
+    # Definí aquí ancho y alto de cada maniquí
+    tamaños = [
+        (200, 190),  # Man1: derecha arriba
+        (200, 190),   # Man2: derecha abajo
+        (110, 190),  # Man3: derecha media
+        (110, 190),   # Man4: izquierda abajo
+        (110, 190),  # Man5: izquierda arriba
+        (200, 190)   # Man6: izquierda media
+    ]
+
+    for img, pos, (ancho, alto) in zip(imagenes, posiciones, tamaños):
         maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", WIDTH, HEIGHT)
+        
+        # Redimensionar a ancho y alto específicos
+        maniquie_img = pygame.transform.scale(maniquie_img, (ancho, alto))
+        
+        # Anchor topleft
+        maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
+        
         maniquies.append((maniquie_img, maniquie_rect))
 
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
