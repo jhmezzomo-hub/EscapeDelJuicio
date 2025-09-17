@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
 from juego.controlador.cargar_personaje import cargar_personaje
+from juego.controlador.controles import manejar_mc  
 
 # Inicializar pygame
 pygame.init()
@@ -43,16 +44,7 @@ while running:
 
     keys = pygame.key.get_pressed()
 
-    moving = False
-
-    if keys[pygame.K_LEFT]:
-        x -= speed
-        direction = "left"
-        moving = True
-    elif keys[pygame.K_RIGHT]:
-        x += speed
-        direction = "right"
-        moving = True
+    moving, direction = manejar_mc()
 
     # Animación
     if moving:
