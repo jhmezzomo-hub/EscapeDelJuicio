@@ -6,6 +6,7 @@ from controlador.colisiones import crear_mascara
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
 
+
 def cargar_sala(nombre_fondo, carpeta):
     """Carga una sala con un fondo dado. 
        Más adelante podés expandirla con enemigos, puertas, etc."""
@@ -63,3 +64,6 @@ def cargar_sala(nombre_fondo, carpeta):
         screen.blit(personaje, personaje_rect)
         inv.draw(screen)
         pygame.display.flip()
+
+        if num_sala == 2:
+            iniciar_sala2()  # <-- Aquí pasa a la Sala 2

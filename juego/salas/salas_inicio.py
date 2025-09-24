@@ -8,6 +8,7 @@ from controlador.cargar_personaje import cargar_personaje
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
 from controlador.salas import cargar_sala  # <-- Importamos la función de transición
+from juego.salas.sala2 import iniciar_sala2
 
 def iniciar_sala():
     # Inicializar Pygame
@@ -66,6 +67,21 @@ def iniciar_sala():
 
         # Mostrar mensaje de bienvenida los primeros 2 segundos
         if mostrar_bienvenida:
+            lista_textos = [
+                "Bienvenidos al Escape del Juicio",
+                "Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales",
+                "Tendrás que derrotar enemigos, resolver acertijos y escapar con vida",
+                "¿Podrás escapar?"
+            ]
+            """tiempo_actual = pygame.time.get_ticks()
+            screen.blit(fondo, (0, 0))
+            for i, texto in enumerate(lista_textos):
+                if tiempo_actual - tiempo_inicio < (i + 1) * 2000:
+                    texto_bienvenida = fuente.render(texto, True, (255, 255, 255))
+                    screen.blit(personaje, personaje_rect)
+                    screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
+                    pygame.display.flip()
+                    break"""
             tiempo_actual = pygame.time.get_ticks()
             if tiempo_actual - tiempo_inicio < 2000:
                 texto_bienvenida = fuente.render("Bienvenidos al Escape del Juicio", True, (255, 255, 255))
@@ -123,7 +139,8 @@ def iniciar_sala():
                     20, 5
                 )
                 if pies_personaje.colliderect(puerta_interaccion):
-                    cargar_sala("Fondo_sala1.png", "Fondos")  # <-- Aquí pasa a la Sala 2
+                    iniciar_sala2()  # <-- Aquí pasa a la Sala 2
+
         # Movimiento del personaje
         manejar_mc(personaje_rect, velocidad, inv, mask)
         # Update inventario
@@ -161,6 +178,11 @@ def iniciar_sala():
         inv.draw(screen)
 
         pygame.display.flip()
+
+
+def esenciales():
+    esenciales = [inv, personaje, personaje_rect, fondo, mask]
+    return esenciales
 
 # Este bloque permite correr este archivo directamente para probarlo
 if __name__ == '__main__':
