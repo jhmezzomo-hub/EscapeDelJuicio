@@ -8,7 +8,7 @@ from juego.controlador.controles import manejar_mc
 
 # Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
 from juego.ui.inventory import Inventory
-from controlador.salas import cargar_sala  # <-- Importamos la función de transición
+from juego.controlador.salas import cargar_sala  # <-- Importamos la función de transición
 
 def iniciar_sala():
     # Inicializar Pygame
@@ -38,7 +38,9 @@ def iniciar_sala():
     velocidad = 5
 
     mask = colision_piso(WIDTH, HEIGHT)
-    puntos_hexagono = puntos_hexagono()
+    punto_hexagono = puntos_hexagono()
+    mostrar_contorno = True;
+
 
     # --- Crear instancia del inventario ---
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
@@ -85,7 +87,7 @@ def iniciar_sala():
 
         # Dibujar contorno del hexágono (solo si debug está activo)
         if mostrar_contorno:
-            pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
+            pygame.draw.polygon(screen, (0, 255, 0), punto_hexagono, 2)
 
         # Dibujar personaje
         screen.blit(personaje, personaje_rect)
