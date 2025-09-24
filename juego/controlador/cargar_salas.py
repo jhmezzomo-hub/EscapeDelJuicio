@@ -1,7 +1,6 @@
 import pygame, sys
 
 from controlador.cargar_fondos import cargar_fondo
-from controlador.cargar_personaje import cargar_personaje
 from limite_colisiones.crear_mascara import crear_mascara
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory

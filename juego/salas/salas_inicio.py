@@ -8,7 +8,7 @@ from juego.controlador.controles import manejar_mc
 
 # Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
 from juego.ui.inventory import Inventory
-from controlador.salas import cargar_sala  # <-- Importamos la función de transición
+from juego.controlador.cargar_salas import cargar_sala  # <-- Importamos la función de transición
 
 def iniciar_sala():
     # Inicializar Pygame
