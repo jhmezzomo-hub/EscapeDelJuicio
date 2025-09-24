@@ -5,22 +5,18 @@ from juego.controlador.cargar_fondos import cargar_fondo
 from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import manejar_mc
-
-# Importa la clase Inventory modular (asegurate de tener ui/inventory.py)
-from juego.ui.inventory import Inventory
+from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_salas import cargar_sala  # <-- Importamos la función de transición
-
+from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
+from info_pantalla.mostrar_pantalla import mostrar_pantalla
+from juego.controlador.mensaje_paso_sala import mensaje_paso_sala, devolver_pies_personaje
 def iniciar_sala():
     # Inicializar Pygame
     pygame.init()
 
     # Pantalla fija
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Escape Del Juicio")
-
-    # Fuente para mensajes
-    fuente = pygame.font.SysFont("Arial", 26)
+    WIDTH, HEIGHT = tamaño_pantallas()
+    screen = info_pantalla()
 
     # Cargar fondo
     fondo_1P = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
@@ -40,10 +36,10 @@ def iniciar_sala():
 
     mask = colision_piso(WIDTH, HEIGHT)
     puntos_hexagono = devolver_puntos_hexagono()
+    mostrar_contorno = False  # Debug: muestra el contorno del hexágono
 
     # --- Crear instancia del inventario ---
-    inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
-    inv.is_open = False  # empieza cerrado
+    inv = crear_inventario()
 
     # Bucle principal
     clock = pygame.time.Clock()
@@ -75,12 +71,15 @@ def iniciar_sala():
                     20, 5
                 )
                 if pies_personaje.colliderect(puerta_interaccion):
-                    cargar_sala(fondo_2P, (personaje, personaje_rect), )  # <-- Aquí pasa a la Sala 2
+                    cargar_sala(fondo_2P, (personaje, personaje_rect), (WIDTH, HEIGHT))  # <-- Aquí pasa a la Sala 2
         # Movimiento del personaje
         manejar_mc(personaje_rect, velocidad, inv, mask)
         # Update inventario
         inv.update(dt)
 
+        pies_personaje = devolver_pies_personaje(personaje_rect)
+        if pies_personaje.colliderect(puerta_interaccion):
+            mensaje_paso_sala(screen, (WIDTH, HEIGHT))
         # Dibujar todo
         screen.blit(fondo_1P, (0, 0))
 
@@ -91,16 +90,7 @@ def iniciar_sala():
         # Dibujar personaje
         screen.blit(personaje, personaje_rect)
 
-        # Mostrar mensaje solo si los pies tocan la puerta
-        pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
-        if pies_personaje.colliderect(puerta_interaccion):
-            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
-
+        
         # Dibujar inventario por encima (solo se muestra si inv.is_open == True dentro de inv.draw)
         inv.draw(screen)
 
