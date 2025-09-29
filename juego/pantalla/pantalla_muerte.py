@@ -1,167 +1,142 @@
 import pygame, sys, os
+import pygame.freetype
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
+from juego.pantalla.pantalla_inicio import pantalla_de_inicio
+from juego.controlador.cargar_fondos import cargar_fondo
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
-# Inicializar Pygame
-pygame.init()
 
-# Configuración de la pantalla
-size = tamaño_pantallas()
-screen = info_pantalla()
+def pantalla_fin():
+    pygame.init()
+    # (opcional) pygame.freetype.init()  # no suele ser necesario porque pygame.init() ya lo hace
 
-# Colores
-NEGRO = (0, 0, 0)
-ROJO_OSCURO = (139, 0, 0)
-ROJO_SANGRE = (180, 0, 0)
-DORADO = (212, 165, 116)
-BLANCO = (255, 255, 255)
+    size = tamaño_pantallas()          # espera (width, height)
+    screen = info_pantalla()           # superficie pygame.Surface
 
-# Fuentes
-fuente_titulo = pygame.font.Font(None, 120)
-fuente_subtitulo = pygame.font.Font(None, 50)
-fuente_botones = pygame.font.Font(None, 60)
+    # Cargar fondo (asegurate que cargar_fondos devuelva una Surface escalada o una Surface normal)
+    bg = cargar_fondo("game_over.png", "Fondos", size)
+    if bg is None:
+        # fallback: intenta cargar directamente
+        try:
+            bg = pygame.image.load(os.path.join("Fondos", "game_over.png"))
+            bg = pygame.transform.scale(bg, size)
+        except Exception:
+            bg = pygame.Surface(size)
+            bg.fill((10, 10, 10))
 
-class Boton:
-    def __init__(self, x, y, ancho, alto, texto, accion):
-        self.rect = pygame.Rect(x, y, ancho, alto)
-        self.texto = texto
-        self.accion = accion
-        self.hover = False
-        self.color_normal = ROJO_OSCURO
-        self.color_hover = ROJO_SANGRE
-        
-    def dibujar(self, superficie):
-        # Color del botón según si está en hover
-        color = self.color_hover if self.hover else self.color_normal
-        
-        # Sombra del botón
-        sombra = self.rect.copy()
-        sombra.x += 5
-        sombra.y += 5
-        pygame.draw.rect(superficie, (0, 0, 0), sombra, border_radius=10)
-        
-        # Botón principal
-        pygame.draw.rect(superficie, color, self.rect, border_radius=10)
-        pygame.draw.rect(superficie, DORADO, self.rect, 3, border_radius=10)
-        
-        # Efecto de brillo si está en hover
-        if self.hover:
-            brillo = self.rect.copy()
-            brillo.inflate_ip(-10, -10)
-            pygame.draw.rect(superficie, (200, 0, 0, 50), brillo, border_radius=8)
-        
-        # Texto del botón
-        texto_surface = fuente_botones.render(self.texto, True, DORADO)
-        texto_rect = texto_surface.get_rect(center=self.rect.center)
-        superficie.blit(texto_surface, texto_rect)
-    
-    def verificar_hover(self, pos):
-        self.hover = self.rect.collidepoint(pos)
-    
-    def verificar_click(self, pos):
-        if self.rect.collidepoint(pos):
-            return self.accion
-        return None
+    # Fuente freetype (con contorno)
+    try:
+        fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
+    except Exception:
+        fuente_agresiva = pygame.freetype.SysFont(None, 72, bold=True)
 
-def pantalla_muerte():
-    reloj = pygame.time.Clock()
-    
-    # Crear botones
-    botones = [
-        Boton(size[0]//2 - 200, size[1]//2 + 50, 400, 80, "VOLVER A JUGAR", "reiniciar"),
-        Boton(size[0]//2 - 200, size[1]//2 + 150, 400, 80, "MENÚ PRINCIPAL", "menu"),
-        Boton(size[0]//2 - 200, size[1]//2 + 250, 400, 80, "SALIR", "salir")
-    ]
-    
-    # Variables para efectos
-    alpha_fondo = 0
-    fade_in = True
-    tiempo_glitch = 0
-    
-    # Cargar imagen de fondo (opcional)
-    # fondo = pygame.image.load("ruta_a_tu_imagen.png")
-    # fondo = pygame.transform.scale(fondo, (ANCHO, ALTO))
-    
-    ejecutando = True
-    while ejecutando:
-        reloj.tick(60)
-        pos_mouse = pygame.mouse.get_pos()
-        
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
+    color_texto_normal = (110, 10, 10)   # rojo oscuro
+    color_texto_hover = (170, 20, 20)    # rojo más brillante
+    outline_color = (0, 0, 0)
+    outline_size = 3
+
+    def render_texto(texto, color, center):
+        # medir texto para crear superficie exacta
+        rect_medida = fuente_agresiva.get_rect(texto)
+        w = rect_medida.width + outline_size * 2 + 6
+        h = rect_medida.height + outline_size * 2 + 6
+
+        text_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+        text_surf.fill((0, 0, 0, 0))
+
+        # dibujar contorno con offsets
+        for ox in range(-outline_size, outline_size + 1):
+            for oy in range(-outline_size, outline_size + 1):
+                if ox == 0 and oy == 0:
+                    continue
+                fuente_agresiva.render_to(text_surf, (outline_size + ox, outline_size + oy),
+                                         texto, fgcolor=outline_color, bgcolor=None)
+
+        # dibujar texto principal
+        fuente_agresiva.render_to(text_surf, (outline_size, outline_size),
+                                 texto, fgcolor=color, bgcolor=None)
+
+        text_rect = text_surf.get_rect(center=center)
+        return text_surf, text_rect
+
+    class Button:
+        def __init__(self, rect, text, callback):
+            self.rect = pygame.Rect(rect)    # rect usado sólo para posicionamiento
+            self.text = text
+            self.callback = callback         # referencia a la función (NO ejecutada aquí)
+            self.hover = False
+            self.text_surf = None
+            self.text_rect = None
+            self.mask = None
+
+        def draw(self, surface):
+            text_color = color_texto_hover if self.hover else color_texto_normal
+            self.text_surf, self.text_rect = render_texto(self.text, text_color, self.rect.center)
+            # (Re)crear máscara cada draw para estar seguro si la superficie cambia
+            self.mask = pygame.mask.from_surface(self.text_surf)
+            surface.blit(self.text_surf, self.text_rect)
+
+        def handle_event(self, event):
+            # sólo proceder si ya hay rect y máscara creados
+            if self.text_rect is None or self.mask is None:
+                return
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+                mouse_pos = event.pos
+                if self.text_rect.collidepoint(mouse_pos):
+                    local_x = mouse_pos[0] - self.text_rect.x
+                    local_y = mouse_pos[1] - self.text_rect.y
+                    if 0 <= local_x < self.text_surf.get_width() and 0 <= local_y < self.text_surf.get_height():
+                        if self.mask.get_at((int(local_x), int(local_y))):
+                            self.hover = True
+                            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                                # ejecutar callback (referencia)
+                                if callable(self.callback):
+                                    self.callback()
+                            return
+                self.hover = False
+
+    running = True
+    def start_game():
+        nonlocal running
+        running = False     # salimos del loop para "reiniciar"
+
+    def exit_game():
+        pygame.quit()
+        sys.exit()
+
+    # Posiciones en columna, alineados a la derecha
+    btn_w, btn_h = 300, 70
+    gap = btn_h + 20  # separación entre botones
+
+    # anclamos en el 80% del ancho (parte derecha)
+    x = int(size[0] * 0.75)
+    y0 = int(size[1] * 0.50)  # arrancan un poco más arriba del centro
+
+    btn_play = Button((x - btn_w//2, y0, btn_w, btn_h), "VOLVER A JUGAR", start_game)
+    btn_menu = Button((x - btn_w//2, y0 + gap, btn_w, btn_h), "VOLVER AL MENU", pantalla_de_inicio)
+    btn_exit = Button((x - btn_w//2, y0 + 2*gap, btn_w, btn_h), "SALIR", exit_game)
+    buttons = [btn_play, btn_menu, btn_exit]
+
+
+    clock = pygame.time.Clock()
+
+    # Dibujo primero para que las máscaras existan antes de procesar eventos
+    while running:
+        # dibujar fondo y botones (crea text_rect y mask)
+        screen.blit(bg, (0, 0))
+        for b in buttons:
+            b.draw(screen)
+
+        # eventos (ahora que hay máscaras)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            
-            if evento.type == pygame.MOUSEMOTION:
-                for boton in botones:
-                    boton.verificar_hover(pos_mouse)
-            
-            if evento.type == pygame.MOUSEBUTTONDOWN:
-                for boton in botones:
-                    accion = boton.verificar_click(pos_mouse)
-                    if accion == "reiniciar":
-                        print("Reiniciando juego...")
-                        return "reiniciar"
-                    elif accion == "menu":
-                        print("Volviendo al menú...")
-                        return "menu"
-                    elif accion == "salir":
-                        pygame.quit()
-                        sys.exit()
-        
-        # Fondo degradado oscuro
-        for y in range(size[1]):
-            color = (int(26 * (1 - y/size[1])), 0, 0)
-            pygame.draw.line(screen, color, (0, y), (size[0], y))
-        
-        # Aquí puedes dibujar tu imagen de fondo
-        # pantalla.blit(fondo, (0, 0))
-        # Aplicar oscurecimiento
-        overlay = pygame.Surface(size)
-        overlay.set_alpha(200)
-        overlay.fill((0, 0, 0))
-        screen.blit(overlay, (0, 0))
-        
-        # Efecto de fade in
-        if fade_in and alpha_fondo < 255:
-            alpha_fondo += 3
-            if alpha_fondo >= 255:
-                fade_in = False
-        
-        # Título "GAME OVER" con efecto glitch
-        tiempo_glitch += 1
-        offset_x = 0
-        offset_y = 0
-        if tiempo_glitch % 30 < 5:  # Efecto glitch ocasional
-            offset_x = pygame.math.Vector2(2, -2)[tiempo_glitch % 2]
-            offset_y = pygame.math.Vector2(-2, 2)[tiempo_glitch % 2]
-        
-        # Sombra del título
-        texto_titulo = fuente_titulo.render("GAME OVER", True, (0, 0, 0))
-        rect_titulo = texto_titulo.get_rect(center=(size[0]//2 + 5, size[1]//4 + 5))
-        screen.blit(texto_titulo, rect_titulo)
-        
-        # Título principal
-        texto_titulo = fuente_titulo.render("GAME OVER", True, ROJO_OSCURO)
-        rect_titulo = texto_titulo.get_rect(center=(size[0]//2 + offset_x, size[1]//4 + offset_y))
-        screen.blit(texto_titulo, rect_titulo)
-        
-        # Subtítulo
-        texto_sub = fuente_subtitulo.render("EL JUICIO TE HA ATRAPADO", True, DORADO)
-        rect_sub = texto_sub.get_rect(center=(size[0]//2, size[1]//4 + 80))
-        screen.blit(texto_sub, rect_sub)
-        
-        # Dibujar botones
-        for boton in botones:
-            boton.dibujar(screen)
-        
-        pygame.display.flip()
-    
-    return None
+            for b in buttons:
+                b.handle_event(event)
 
-pantalla_muerte()
-"""# Ejecutar la pantalla de muerte
-if __name__ == "__main__":
-    resultado = pantalla_muerte()
-    print(f"Acción seleccionada: {resultado}")
-    pygame.quit()"""
+        pygame.display.flip()
+        clock.tick(60)
+
+pantalla_fin()
