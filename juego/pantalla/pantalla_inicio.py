@@ -1,14 +1,14 @@
 import pygame.freetype, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
+from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 
 def pantalla_de_inicio():
     pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Escape del Juicio")
+    size = tamaño_pantallas()
+    screen = info_pantalla()
 
-    bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
+    bg = cargar_fondo("pantallainicial.png", "Fondos", size)
 
     # Usamos freetype para fuente con contorno
     fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
@@ -81,8 +81,8 @@ def pantalla_de_inicio():
         sys.exit()
 
     btn_w, btn_h = 250, 70
-    btn_play = Button((850, int(HEIGHT*0.65), btn_w, btn_h), "JUGAR", start_game)
-    btn_exit = Button((850, int(HEIGHT*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
+    btn_play = Button((850, int(size[1]*0.65), btn_w, btn_h), "JUGAR", start_game)
+    btn_exit = Button((850, int(size[1]*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
     buttons = [btn_play, btn_exit]
 
     clock = pygame.time.Clock()
