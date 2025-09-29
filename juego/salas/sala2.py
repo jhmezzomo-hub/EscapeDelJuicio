@@ -21,46 +21,34 @@ def iniciar_sala2():
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
     velocidad = 5
 
-    # Máscara para límites (hexágono)
     puntos_hexagono = [
         (132, 411), (980, 411), (1100, 488),
         (1100, 600), (0, 600), (0, 491)
     ]
     mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
 
-    # MANIQUÍES dentro del hexágono con espacio suficiente para pasar
     maniquies = []
     posiciones = [
-        (900, 200),  # derecha abajo
-        (950, 370),  # derecha arriba
-        (700, 340),  # derecha media
-        (50, 400),   # izq abajo
-        (150, 250),  # izq arriba
-        (300, 350)   # izq medio
+        (850, 250), (910, 400), (730, 340),
+        (20, 400), (150, 250), (250, 340)
     ]
     imagenes = ["mm1.png", "mm2.png", "mm3.png", "mm4.png", "mm5.png", "mm6.png"]
-    
-    # Definí aquí ancho y alto de cada maniquí
     tamaños = [
-        (200, 190),  # Man1: derecha arriba
-        (200, 190),   # Man2: derecha abajo
-        (110, 190),  # Man3: derecha media
-        (110, 190),   # Man4: izquierda abajo
-        (110, 190),  # Man5: izquierda arriba
-        (200, 190)   # Man6: izquierda media
+        (180, 180), (184, 190), (110, 200),
+        (110, 200), (110, 200), (186, 200)
     ]
 
     for img, pos, (ancho, alto) in zip(imagenes, posiciones, tamaños):
         maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", WIDTH, HEIGHT)
-        
-        # Redimensionar a ancho y alto específicos
         maniquie_img = pygame.transform.scale(maniquie_img, (ancho, alto))
-        
-        # Anchor topleft
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
-        
-        maniquies.append((maniquie_img, maniquie_rect))
+
+        # Crear hitbox personalizada
+        hitbox_rect = pygame.Rect(maniquie_rect.left + 20, maniquie_rect.top + 50,
+                                   maniquie_rect.width - 40, maniquie_rect.height - 50)
+
+        maniquies.append((maniquie_img, maniquie_rect, hitbox_rect))
 
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
@@ -81,21 +69,28 @@ def iniciar_sala2():
                 pygame.quit()
                 sys.exit()
 
-        manejar_mc(personaje_rect, velocidad, inv, mask)
+        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
 
-        # DIBUJAR
         screen.blit(fondo, (0, 0))
-        for img, rect in maniquies:
-            screen.blit(img, rect)
-            if personaje_rect.colliderect(rect):
-                texto = fuente.render("¡Colisión con maniquí!", True, (255, 0, 0))
-                screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
 
-        screen.blit(personaje, personaje_rect)
+        # Ordenar objetos por profundidad
+        objetos = [(img, rect) for img, rect, _ in maniquies] + [(personaje, personaje_rect)]
+        objetos.sort(key=lambda x: x[1].bottom)
+
+        for img, rect in objetos:
+            screen.blit(img, rect)
+            if rect != personaje_rect:
+                hitbox_index = [m[1] for m in maniquies].index(rect)
+                hitbox_rect = maniquies[hitbox_index][2]
+                pygame.draw.rect(screen, (255, 0, 0), hitbox_rect, 1)  # Opcional: dibuja la hitbox
+
+                if personaje_rect.colliderect(hitbox_rect):
+                    texto = fuente.render("¡Colisión con maniquí!", True, (255, 0, 0))
+                    screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+
         inv.update(dt)
         inv.draw(screen)
         pygame.display.flip()
-
 
 if __name__ == "__main__":
     iniciar_sala2()

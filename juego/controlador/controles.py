@@ -1,10 +1,10 @@
 import pygame
-from .colisiones import verificar_colision 
+from .colisiones import verificar_colision, verificar_colision_maniquies
 
-def manejar_mc(personaje_rect, velocidad, inv, mask):
-    # Movimiento del personaje: solo si el inventario NO está abierto
+def manejar_mc(personaje_rect, velocidad, inv, mask, maniquies):
     keys = pygame.key.get_pressed()
     old_pos = personaje_rect.topleft
+
     if not inv.is_open:
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             personaje_rect.y -= velocidad
@@ -15,6 +15,6 @@ def manejar_mc(personaje_rect, velocidad, inv, mask):
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             personaje_rect.x += velocidad
 
-        # ---- Verificación de colisión ----
-        if not verificar_colision(mask, personaje_rect):
+        # Bloquear movimiento si hay colisión con límites o hitbox de maniquí
+        if not verificar_colision(mask, personaje_rect) or verificar_colision_maniquies(personaje_rect, maniquies):
             personaje_rect.topleft = old_pos

@@ -8,7 +8,7 @@ from juego.ui.inventory import Inventory
 
 def cargar_sala(nombre_fondo, carpeta):
     """Carga una sala con un fondo dado. 
-       Más adelante podés expandirla con enemigos, puertas, etc."""
+    Más adelante podés expandirla con enemigos, puertas, etc."""
     pygame.init()
     WIDTH, HEIGHT = 1100, 600
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
