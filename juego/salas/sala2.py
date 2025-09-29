@@ -1,35 +1,27 @@
 import pygame
 import sys
-from juego.controlador import cargar_personaje
-
+from juego.controlador.salas import cargar_sala_base, actualizar_sala_base
 
 def iniciar_sala2():
-    cargar_sala("Fondo_sala1.png", "Fondos")
-    pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Sala 2")
-
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
-    puerta_interaccion = pygame.Rect(770, 400, 120, 40)
+    # Cargar elementos base
+    elementos = cargar_sala_base("Fondo_sala1.png", "Fondos")
+    
+    # Elementos específicos de la sala 2
     marron = (139, 69, 19)
-    cuadrado_rect = pygame.Rect(400, 250, 100, 100)
+    
+    # Aquí defines la posición de la puerta - puedes modificar estos valores
+    # Los parámetros son: (x, y, ancho, alto)
+    puerta = pygame.Rect(725, 220, 180, 180)  # Puerta visual
+    puerta_interaccion = pygame.Rect(770, 400, 120, 40)  # Área de interacción
 
+    # Bucle principal de la sala
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        screen.fill((255, 255, 255))
-
-        # Dibuja el personaje
-        screen.blit(personaje, personaje_rect)
-
-        # Dibuja la puerta
-        pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion, 2)
-
-        # Dibuja el cuadrado marrón
-        pygame.draw.rect(screen, marron, cuadrado_rect)
-
+        # Actualizar y dibujar elementos base
+        dt = actualizar_sala_base(elementos)
+        
+        # Dibujar elementos específicos de la sala 2
+        pygame.draw.rect(elementos["screen"], marron, puerta)  # Puerta visual
+        pygame.draw.rect(elementos["screen"], (255, 0, 0), puerta_interaccion, 2)  # Área de interacción
+        
+        # Actualizar pantalla
         pygame.display.flip()

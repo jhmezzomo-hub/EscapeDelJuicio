@@ -7,7 +7,6 @@ from controlador.colisiones import crear_mascara, verificar_colision
 from controlador.cargar_personaje import cargar_personaje
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
-from controlador.salas import cargar_sala  # <-- Importamos la función de transición
 from juego.salas.sala2 import iniciar_sala2
 
 def iniciar_sala():
@@ -180,7 +179,7 @@ def iniciar_sala():
         pygame.display.flip()
 
 
-def esenciales():
+def esenciales(inv, personaje, personaje_rect, fondo, mask):
     esenciales = [inv, personaje, personaje_rect, fondo, mask]
     return esenciales
 
