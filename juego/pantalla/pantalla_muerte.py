@@ -138,5 +138,3 @@ def pantalla_fin():
 
         pygame.display.flip()
         clock.tick(60)
-
-pantalla_fin()
