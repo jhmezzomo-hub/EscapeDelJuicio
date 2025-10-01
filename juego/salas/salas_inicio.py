@@ -9,6 +9,23 @@ from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
 from juego.salas.sala2 import iniciar_sala2
 
+def bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
+    mensajes = [
+        "Bienvenidos al Escape del Juicio",
+        "Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales",
+        "Tendrás que derrotar enemigos, resolver acertijos y escapar con vida",
+        "Podrás escapar?"
+    ]
+    for i, mensaje in enumerate(mensajes):
+        if tiempo_actual - tiempo_inicio < (i + 1) * 2000:
+            texto_bienvenida = fuente.render(mensaje, True, (255, 255, 255))
+            screen.blit(fondo, (0, 0))
+            screen.blit(personaje, personaje_rect)
+            screen.blit(texto_bienvenida, (screen.get_width() // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
+            pygame.display.flip()
+            return True
+    return False
+
 def iniciar_sala():
     # Inicializar Pygame
     pygame.init()
@@ -66,52 +83,10 @@ def iniciar_sala():
 
         # Mostrar mensaje de bienvenida los primeros 2 segundos
         if mostrar_bienvenida:
-            lista_textos = [
-                "Bienvenidos al Escape del Juicio",
-                "Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales",
-                "Tendrás que derrotar enemigos, resolver acertijos y escapar con vida",
-                "¿Podrás escapar?"
-            ]
-            """tiempo_actual = pygame.time.get_ticks()
-            screen.blit(fondo, (0, 0))
-            for i, texto in enumerate(lista_textos):
-                if tiempo_actual - tiempo_inicio < (i + 1) * 2000:
-                    texto_bienvenida = fuente.render(texto, True, (255, 255, 255))
-                    screen.blit(personaje, personaje_rect)
-                    screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
-                    pygame.display.flip()
-                    break"""
             tiempo_actual = pygame.time.get_ticks()
-            if tiempo_actual - tiempo_inicio < 2000:
-                texto_bienvenida = fuente.render("Bienvenidos al Escape del Juicio", True, (255, 255, 255))
-                screen.blit(fondo, (0, 0))
-                screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida, (WIDTH // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
-                pygame.display.flip()
-                continue
-            if tiempo_actual - tiempo_inicio < 4000:
-                texto_bienvenida2 = fuente.render("Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales", True, (255, 255, 255))
-                screen.blit(fondo, (0, 0))
-                screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
-                pygame.display.flip()
-                continue
-            if tiempo_actual - tiempo_inicio < 6000:
-                texto_bienvenida2 = fuente.render("Tendrás que derrotar enemigos, resolver acertijos y escapar con vida", True, (255, 255, 255))
-                screen.blit(fondo, (0, 0))
-                screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
-                pygame.display.flip()
-                continue
-            if tiempo_actual - tiempo_inicio < 8000:
-                texto_bienvenida2 = fuente.render("Podrás escapar?", True, (255, 255, 255))
-                screen.blit(fondo, (0, 0))
-                screen.blit(personaje, personaje_rect)
-                screen.blit(texto_bienvenida2, (WIDTH // 2 - texto_bienvenida2.get_width() // 2, 600 - 70))
-                pygame.display.flip()
-                continue
-            else:
+            if not bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
                 mostrar_bienvenida = False
+            continue  # Saltar el resto del bucle hasta que termine la bienvenida
 
         # Eventos
         for event in pygame.event.get():
