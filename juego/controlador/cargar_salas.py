@@ -7,7 +7,7 @@ from juego.ui.inventory import Inventory
 
 def cargar_sala(fondo, personaje_info, size):
     """Carga una sala con un fondo dado. 
-       Más adelante podés expandirla con enemigos, puertas, etc."""
+    Más adelante podés expandirla con enemigos, puertas, etc."""
     pygame.init()
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("Escape Del Juicio")

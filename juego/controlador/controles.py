@@ -1,5 +1,5 @@
 import pygame
-from juego.controlador.verificar_colisiones import verificar_colision 
+from juego.controlador.verificar_colisiones import verificar_colision, verificar_colision_maniquies
 
 def teclas_movimiento(personaje_rect, velocidad, last_direction="left"):
     """Mueve el rect del personaje y devuelve (moving, direction).
@@ -31,6 +31,7 @@ def teclas_movimiento(personaje_rect, velocidad, last_direction="left"):
 def manejar_mc(personaje_rect, inv, mask):
     # Movimiento del personaje: solo si el inventario NO está abierto
     old_pos = personaje_rect.topleft
+
     if not inv.is_open:
         # usar una velocidad por defecto (consistente con otras partes)
         # ignoramos la dirección devuelta aquí (este handler solo gestiona colisiones)
