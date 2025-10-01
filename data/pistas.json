@@ -10,7 +10,7 @@
     },
     "sala_3"  : {
         "pista_1": "Mira tus alrededores, algo por ahi este escrito",
-        "pista_2": "Sin luz es dificil, busca antes de que se acabe el tiempo",
+        "pista_2": "Sin luz es dificil, busca antes de que se acabe el tiempo"
     },
     "sala_4"  : {
         "pista_1": "El Joker es conocido por sus bromas y sadismo, ten cuidado con lo que haces.",
@@ -34,19 +34,15 @@
         "pista_2": "Responde rapido y usa la logica, aunque no sea lo que crees de verdad."
     },
     "sala_9"  : {
-        "pista_1": ""
+        "pista_1": "Piensa como un Jedi lo haria"
     },
     "sala_10" : {
-        "pista_1": "Piensa en la pista, y la puerta encontraras."
+        "pista_1": "Debes tener una buena memoria ppara pasar de esta sala."
     },
     "sala_11" : {
-        "pista_1": "Busca bien, algo podria serte de ayuda.",
-        "pista_2": "Recuerda que no todo es lo que parece.",
-        "pista_3": "No confies en nadie, todos son sospechosos."
+        "pista_1": "La pista del genio es la solucion."
     },
     "sala_12" : {
-        "pista_1": "Busca bien, algo podria serte de ayuda.",
-        "pista_2": "Recuerda que no todo es lo que parece.",
-        "pista_3": "No confies en nadie, todos son sospechosos."
+        "pista_1": "Toma una decision antes de que Vader los mate."
     }
 }
