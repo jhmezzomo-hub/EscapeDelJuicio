@@ -80,21 +80,12 @@ def iniciar_sala():
         pies_personaje = devolver_pies_personaje(personaje_rect)
         if pies_personaje.colliderect(puerta_interaccion):
             mensaje_paso_sala(screen, (WIDTH, HEIGHT))
-        # Dibujar todo
-        screen.blit(fondo_1P, (0, 0))
-
+       
         # Dibujar contorno del hexágono (solo si debug está activo)
         if mostrar_contorno:
             pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
 
-        # Dibujar personaje
-        screen.blit(personaje, personaje_rect)
-
-        
-        # Dibujar inventario por encima (solo se muestra si inv.is_open == True dentro de inv.draw)
-        inv.draw(screen)
-
-        pygame.display.flip()
+        mostrar_pantalla()
 
 # Este bloque permite correr este archivo directamente para probarlo
 if __name__ == '__main__':
