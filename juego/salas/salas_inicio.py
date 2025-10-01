@@ -1,13 +1,15 @@
 import sys, os, pygame
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from juego.controlador.rutas import rutas_img
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.controlador.colisiones import crear_mascara
+from juego.limite_colisiones.colision_piso import devolver_puntos_hexagono, colision_piso
 from juego.controlador.cargar_personaje import cargar_personaje
+from juego.controlador.cargar_salas import cargar_sala
 from juego.controlador.controles import manejar_mc
-from juego.ui.inventory import Inventory
-
+from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
+from info_pantalla.mostrar_pantalla import mostrar_pantalla
+from juego.controlador.inventario import crear_inventario
+from juego.controlador.mensaje_paso_sala import mensaje_paso_sala, devolver_pies_personaje
 # Importamos la sala dos
 from juego.salas.sala2 import iniciar_sala2
 
@@ -62,7 +64,7 @@ def iniciar_sala():
 
         if mostrar_bienvenida:
             tiempo_actual = pygame.time.get_ticks()
-            if not bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
+            if not bienvenida_textos(tiempo_actual, tiempo_inicio, pygame.font.SysFont("Arial", 26), screen, fondo_1P, personaje, personaje_rect):
                 mostrar_bienvenida = False
             continue
 
