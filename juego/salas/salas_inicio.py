@@ -54,9 +54,19 @@ def iniciar_sala():
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
 
+    # Inicializar variables para la bienvenida
+    mostrar_bienvenida = True
+    tiempo_inicio = pygame.time.get_ticks()
+
     clock = pygame.time.Clock()
     while True:
         dt = clock.tick(60) / 1000.0
+
+        if mostrar_bienvenida:
+            tiempo_actual = pygame.time.get_ticks()
+            if not bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
+                mostrar_bienvenida = False
+            continue
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

@@ -21,6 +21,9 @@ def iniciar_sala2():
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
     velocidad = 5
 
+    #Crear puerta de regreso a sala 1
+    puerta_regreso = pygame.Rect(550 - 80, 550, 70, 40)
+
     puntos_hexagono = [
         (132, 411), (980, 411), (1100, 488),
         (1100, 600), (0, 600), (0, 491)
@@ -68,6 +71,24 @@ def iniciar_sala2():
             if teclas[pygame.K_ESCAPE]:
                 pygame.quit()
                 sys.exit()
+            elif teclas[pygame.K_F1]:
+                mostrar_contorno = not mostrar_contorno
+            elif teclas[pygame.K_e]:
+                pies_personaje = pygame.Rect(
+                    personaje_rect.centerx - 10,
+                    personaje_rect.bottom - 5,
+                    20, 5
+                )
+            
+        pies_personaje = pygame.Rect(
+            personaje_rect.centerx - 10,
+            personaje_rect.bottom - 5,
+            20, 5
+        )
+        
+        if pies_personaje.colliderect(puerta_regreso):
+            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
+            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
 
         manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
 
