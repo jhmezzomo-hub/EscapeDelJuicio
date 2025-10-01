@@ -44,14 +44,21 @@ def iniciar_sala2():
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
 
-        # Crear hitbox personalizada
-        hitbox_rect = pygame.Rect(maniquie_rect.left + 20, maniquie_rect.top + 50,
-                                   maniquie_rect.width - 40, maniquie_rect.height - 50)
+        # Hitbox solo en pies
+        hitbox_rect = pygame.Rect(
+            maniquie_rect.left + 20,
+            maniquie_rect.bottom - 20,
+            maniquie_rect.width - 40,
+            20
+        )
 
-        maniquies.append((maniquie_img, maniquie_rect, hitbox_rect))
+        profundidad = (maniquie_rect.top, maniquie_rect.bottom)
+        maniquies.append((maniquie_img, maniquie_rect, hitbox_rect, profundidad))
 
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
+
+    mostrar_hitboxes = False  # NUEVO: controla visibilidad de hitboxes
 
     clock = pygame.time.Clock()
     while True:
@@ -62,6 +69,9 @@ def iniciar_sala2():
                 pygame.quit()
                 sys.exit()
             inv.handle_event(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F1:
+                    mostrar_hitboxes = not mostrar_hitboxes  # alterna visibilidad
 
         if not inv.is_open:
             teclas = pygame.key.get_pressed()
@@ -73,20 +83,15 @@ def iniciar_sala2():
 
         screen.blit(fondo, (0, 0))
 
-        # Ordenar objetos por profundidad
-        objetos = [(img, rect) for img, rect, _ in maniquies] + [(personaje, personaje_rect)]
+        objetos = [(img, rect) for img, rect, _, _ in maniquies] + [(personaje, personaje_rect)]
         objetos.sort(key=lambda x: x[1].bottom)
 
         for img, rect in objetos:
             screen.blit(img, rect)
-            if rect != personaje_rect:
+            if rect != personaje_rect and mostrar_hitboxes:
                 hitbox_index = [m[1] for m in maniquies].index(rect)
                 hitbox_rect = maniquies[hitbox_index][2]
-                pygame.draw.rect(screen, (255, 0, 0), hitbox_rect, 1)  # Opcional: dibuja la hitbox
-
-                if personaje_rect.colliderect(hitbox_rect):
-                    texto = fuente.render("¡Colisión con maniquí!", True, (255, 0, 0))
-                    screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+                pygame.draw.rect(screen, (255, 0, 0), hitbox_rect, 1)  # solo se dibuja si mostrar_hitboxes=True
 
         inv.update(dt)
         inv.draw(screen)

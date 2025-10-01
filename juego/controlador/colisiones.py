@@ -17,7 +17,9 @@ def verificar_colision(mask, personaje_rect, margen_x=10, margen_y=4):
     return False
 
 def verificar_colision_maniquies(personaje_rect, maniquies):
-    for _, _, hitbox_rect in maniquies:
-        if personaje_rect.colliderect(hitbox_rect):
+    for _, _, hitbox_rect, profundidad in maniquies:
+        y_inicio, y_fin = profundidad
+        # Colisión solo si personaje está dentro del rango vertical del maniquí
+        if y_inicio <= personaje_rect.bottom <= y_fin and personaje_rect.colliderect(hitbox_rect):
             return True
     return False

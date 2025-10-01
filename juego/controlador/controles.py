@@ -15,6 +15,5 @@ def manejar_mc(personaje_rect, velocidad, inv, mask, maniquies):
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             personaje_rect.x += velocidad
 
-        # Bloquear movimiento si hay colisión con límites o hitbox de maniquí
         if not verificar_colision(mask, personaje_rect) or verificar_colision_maniquies(personaje_rect, maniquies):
             personaje_rect.topleft = old_pos

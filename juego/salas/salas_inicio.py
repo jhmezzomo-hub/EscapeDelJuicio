@@ -66,8 +66,8 @@ def iniciar_sala():
                     pygame.quit()
                     iniciar_sala2()
                     return
-
-        manejar_mc(personaje_rect, velocidad, inv, mask)
+        maniquies = []
+        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
