@@ -67,7 +67,9 @@ def iniciar_sala():
                     iniciar_sala2()
                     return
 
-        manejar_mc(personaje_rect, velocidad, inv, mask)
+        # Empty list for maniquies since this room has none
+        maniquies = []
+        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
