@@ -89,9 +89,10 @@ def iniciar_sala():
                 )
                 if pies_personaje.colliderect(puerta_interaccion):
                     # PASAR A SALA 2
-                    pygame.quit()
                     iniciar_sala2()
-                    return
+                    fondo = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
+                    continue
+                    
 
         # Empty list for maniquies since this room has none
         maniquies = []
