@@ -40,8 +40,6 @@ def iniciar_sala():
     inv = crear_inventario()
 
     # Inicializar variables para la bienvenida
-    mostrar_bienvenida = True
-    tiempo_inicio = pygame.time.get_ticks()
 
     clock = pygame.time.Clock()
     while True:

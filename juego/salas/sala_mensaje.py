@@ -3,7 +3,7 @@ from juego.pantalla.mensaje_bienvenida import bienvenida_textos
 
 def sala_mensaje_bienvenida():
 	pygame.init()
-	size = (1280, 720)
+	size = (1100, 600)
 	screen = pygame.display.set_mode(size)
 	fondo_negro = pygame.Surface(size)
 	fondo_negro.fill((0, 0, 0))
