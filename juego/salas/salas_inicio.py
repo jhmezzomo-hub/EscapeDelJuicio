@@ -13,7 +13,7 @@ from juego.controlador.mensaje_paso_sala import mensaje_paso_sala, devolver_pies
 # Importamos la sala dos
 from juego.salas.sala2 import iniciar_sala2
 
-def bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
+def bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, info_personaje):
     mensajes = [
         "Bienvenidos al Escape del Juicio",
         "Este es un juego de vida o muerte en el que te enfrentarás a desafíos mortales",
@@ -24,7 +24,7 @@ def bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, perso
         if tiempo_actual - tiempo_inicio < (i + 1) * 2000:
             texto_bienvenida = fuente.render(mensaje, True, (255, 255, 255))
             screen.blit(fondo, (0, 0))
-            screen.blit(personaje, personaje_rect)
+            screen.blit(info_personaje)
             screen.blit(texto_bienvenida, (screen.get_width() // 2 - texto_bienvenida.get_width() // 2, 600 - 70))
             pygame.display.flip()
             return True
@@ -34,22 +34,23 @@ def iniciar_sala():
     pygame.init()
 
     # Pantalla fija
-    WIDTH, HEIGHT = tamaño_pantallas()
+    size = tamaño_pantallas()
     screen = info_pantalla()
 
     # Cargar fondo
-    fondo_1P = cargar_fondo("Fondo_inicial.png", "Fondos", (WIDTH, HEIGHT))
-    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", (WIDTH, HEIGHT))
+    fondo_1P = cargar_fondo("Fondo_inicial.png", "Fondos", size)
+    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", size)
 
     # Cargar personaje
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+    info_personaje = cargar_personaje("mc_0.png", "mc", size)
 
     # Puerta
     puerta_interaccion = pygame.Rect(770, 400, 70, 40)
     velocidad = 5
 
-    mask = colision_piso(WIDTH, HEIGHT)
     puntos_hexagono = devolver_puntos_hexagono()
+    mask = colision_piso(puntos_hexagono, size)
+
 
     # --- Crear instancia del inventario ---
     inv = crear_inventario()
@@ -64,7 +65,7 @@ def iniciar_sala():
 
         if mostrar_bienvenida:
             tiempo_actual = pygame.time.get_ticks()
-            if not bienvenida_textos(tiempo_actual, tiempo_inicio, pygame.font.SysFont("Arial", 26), screen, fondo_1P, personaje, personaje_rect):
+            if not bienvenida_textos(tiempo_actual, tiempo_inicio, pygame.font.SysFont("Arial", 26), screen, fondo_1P, info_personaje):
                 mostrar_bienvenida = False
             continue
 
@@ -83,22 +84,22 @@ def iniciar_sala():
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
                 pies_personaje = pygame.Rect(
-                    personaje_rect.centerx - 10,
-                    personaje_rect.bottom - 5,
+                    info_personaje[1].centerx - 10,
+                    info_personaje[1].bottom - 5,
                     20, 5
                 )
                 if pies_personaje.colliderect(puerta_interaccion):
                     # PASAR A SALA 2
-                    cargar_sala(fondo_2P, (personaje, personaje_rect), (WIDTH, HEIGHT))  # <-- Aquí pasa a la Sala 2
+                    cargar_sala(fondo_2P, info_personaje, size)  # <-- Aquí pasa a la Sala 2
 
         # Empty list for maniquies since this room has none
         maniquies = []
-        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
+        manejar_mc(info_personaje[1], velocidad, inv, mask, maniquies)
         inv.update(dt)
 
-        pies_personaje = devolver_pies_personaje(personaje_rect)
+        pies_personaje = devolver_pies_personaje(info_personaje[1])
         if pies_personaje.colliderect(puerta_interaccion):
-            mensaje_paso_sala(screen, (WIDTH, HEIGHT))
+            mensaje_paso_sala(screen, size)
        
         # Dibujar contorno del hexágono (solo si debug está activo)
         if mostrar_contorno:
