@@ -1,19 +1,7 @@
 import pygame, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
-
-def pantalla_de_inicio():
-    pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Escape del Juicio")
-
-    bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
-    font = pygame.font.SysFont("arial", 48, bold=True)
-    fuente_agresiva = pygame.font.SysFont("impact", 60)
-    color_rojo = (255, 0, 0)
-
-    class Button:
+class Button:
         def __init__(self, rect, text, callback):
             self.rect = pygame.Rect(rect)
             self.text = text
@@ -39,6 +27,18 @@ def pantalla_de_inicio():
                 if self.rect.collidepoint(event.pos):
                     self.callback()
 
+def pantalla_de_inicio():
+    pygame.init()
+    WIDTH, HEIGHT = 1100, 600
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Escape del Juicio")
+
+    bg = cargar_fondo("pantallainicial.png", "Fondos", (WIDTH, HEIGHT))
+    font = pygame.font.SysFont("arial", 48, bold=True)
+    fuente_agresiva = pygame.font.SysFont("impact", 60)
+    color_rojo = (255, 0, 0)
+
+    
     running = True
     def start_game():
         nonlocal running
