@@ -3,32 +3,29 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controlador.rutas import rutas_img
-from controlador.cargar_fondos import cargar_fondo
-from controlador.colisiones import crear_mascara
-from controlador.cargar_personaje import cargar_personaje
-from controlador.controles import manejar_mc
+from juego.controlador.cargar_fondos import cargar_fondo
+from juego.limite_colisiones.crear_mascara import crear_mascara
+from juego.controlador.cargar_personaje import cargar_personaje
+from juego.controlador.controles import manejar_mc
+from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
+from juego.limite_colisiones.colision_piso import devolver_puntos_hexagono
 from juego.ui.inventory import Inventory
 
 def iniciar_sala2():
     pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Escape Del Juicio - Sala 2")
+    size = tamaño_pantallas()
+    screen = info_pantalla()
 
     fuente = pygame.font.SysFont("Arial", 26)
-    fondo = cargar_fondo("Fondo_sala1.png", "Fondos", (WIDTH, HEIGHT))
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+    fondo = cargar_fondo("Fondo_sala1.png", "Fondos", size)
+    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size)
     velocidad = 5
 
     #Crear puerta de regreso a sala 1
     puerta_regreso = pygame.Rect(550 - 80, 550, 180, 180)
 
-    puntos_hexagono = [
-        (132, 411), (980, 411), (1100, 488),
-        (1100, 600), (0, 600), (0, 491)
-    ]
-    mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
+    puntos_hexagono = devolver_puntos_hexagono()
+    mask = crear_mascara(puntos_hexagono, size)
 
     maniquies = []
     posiciones = [
@@ -42,7 +39,7 @@ def iniciar_sala2():
     ]
 
     for img, pos, (ancho, alto) in zip(imagenes, posiciones, tamaños):
-        maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", WIDTH, HEIGHT)
+        maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", size)
         maniquie_img = pygame.transform.scale(maniquie_img, (ancho, alto))
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
@@ -108,12 +105,12 @@ def iniciar_sala2():
 
                 if personaje_rect.colliderect(hitbox_rect):
                     texto = fuente.render("¡Colisión con maniquí!", True, (255, 0, 0))
-                    screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+                    screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
         # Verificar si el personaje está en la puerta y mostrar mensaje
         if pies_personaje.colliderect(puerta_regreso):
             texto = fuente.render("Presiona E para regresar a la sala anterior", True, (255, 255, 255))
-            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
 
         inv.update(dt)
