@@ -4,11 +4,11 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.limite_colisiones.crear_mascara import crear_mascara
+from juego.limite_colisiones.colision_piso import colision_piso
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import manejar_mc
-from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
-from juego.limite_colisiones.colision_piso import devolver_puntos_hexagono
+from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas 
+from juego.pantalla.ensombrecer import ensombrecer
 from juego.ui.inventory import Inventory
 
 def iniciar_sala2():
@@ -24,8 +24,7 @@ def iniciar_sala2():
     #Crear puerta de regreso a sala 1
     puerta_regreso = pygame.Rect(550 - 80, 550, 180, 180)
 
-    puntos_hexagono = devolver_puntos_hexagono()
-    mask = crear_mascara(puntos_hexagono, size)
+    mask = colision_piso(size)
 
     maniquies = []
     posiciones = [
@@ -78,9 +77,9 @@ def iniciar_sala2():
                 )
                 if pies_personaje.colliderect(puerta_regreso):
                     # Regresar a la sala anterior
-                    return
+                    return "sala1"
 
-        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
+        manejar_mc(personaje_rect, inv, mask, velocidad, maniquies)
 
         # Primero dibujamos el fondo
         screen.blit(fondo, (0, 0))
@@ -112,9 +111,10 @@ def iniciar_sala2():
             texto = fuente.render("Presiona E para regresar a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
-
         inv.update(dt)
+
         inv.draw(screen)
+        ensombrecer(screen)
         pygame.display.flip()
 
 if __name__ == "__main__":

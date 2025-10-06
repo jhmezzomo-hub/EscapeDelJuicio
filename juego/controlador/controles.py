@@ -28,14 +28,14 @@ def teclas_movimiento(personaje_rect, velocidad, last_direction="left"):
         # No cambiamos la orientación horizontal al mover verticalmente
     return moving, direction
 
-def manejar_mc(personaje_rect, inv, mask):
+def manejar_mc(personaje_rect, inv, mask, velocidad, maniquies=[]):
     # Movimiento del personaje: solo si el inventario NO está abierto
     old_pos = personaje_rect.topleft
 
     if not inv.is_open:
         # usar una velocidad por defecto (consistente con otras partes)
         # ignoramos la dirección devuelta aquí (este handler solo gestiona colisiones)
-        teclas_movimiento(personaje_rect, 5)
+        teclas_movimiento(personaje_rect, velocidad)
         # ---- Verificación de colisión ----
         if not verificar_colision(mask, personaje_rect):
             personaje_rect.topleft = old_pos

@@ -11,8 +11,8 @@ def devolver_puntos_hexagono():
     ]
     return puntos_hexagono
 
-def colision_piso(WIDTH, HEIGHT):
+def colision_piso(size):
     # ---- CREAR MÁSCARA HEXAGONAL (usando el controlador) ----
     
-    mask = crear_mascara(devolver_puntos_hexagono(), WIDTH, HEIGHT)
+    mask = crear_mascara(devolver_puntos_hexagono(), size)
     return mask
