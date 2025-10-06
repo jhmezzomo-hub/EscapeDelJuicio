@@ -22,7 +22,7 @@ def iniciar_sala2():
     velocidad = 5
 
     #Crear puerta de regreso a sala 1
-    puerta_regreso = pygame.Rect(550 - 80, 550, 70, 40)
+    puerta_regreso = pygame.Rect(550 - 80, 550, 180, 180)
 
     puntos_hexagono = [
         (132, 411), (980, 411), (1100, 488),
@@ -79,20 +79,21 @@ def iniciar_sala2():
                     personaje_rect.bottom - 5,
                     20, 5
                 )
-            
+                if pies_personaje.colliderect(puerta_regreso):
+                    # Regresar a la sala anterior
+                    return
+
+        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
+
+        # Primero dibujamos el fondo
+        screen.blit(fondo, (0, 0))
+
+        # Luego verificamos la colisión con la puerta
         pies_personaje = pygame.Rect(
             personaje_rect.centerx - 10,
             personaje_rect.bottom - 5,
             20, 5
         )
-        
-        if pies_personaje.colliderect(puerta_regreso):
-            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
-
-        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
-
-        screen.blit(fondo, (0, 0))
 
         # Ordenar objetos por profundidad
         objetos = [(img, rect) for img, rect, _ in maniquies] + [(personaje, personaje_rect)]
@@ -108,6 +109,12 @@ def iniciar_sala2():
                 if personaje_rect.colliderect(hitbox_rect):
                     texto = fuente.render("¡Colisión con maniquí!", True, (255, 0, 0))
                     screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+
+        # Verificar si el personaje está en la puerta y mostrar mensaje
+        if pies_personaje.colliderect(puerta_regreso):
+            texto = fuente.render("Presiona E para regresar a la sala anterior", True, (255, 255, 255))
+            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+
 
         inv.update(dt)
         inv.draw(screen)
