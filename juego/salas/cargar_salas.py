@@ -1,7 +1,7 @@
 import pygame, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.controlador.cargar_personaje import cargar_personaje
+from juego.controlador.cargar_personaje import crear_personaje
 from limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
@@ -10,15 +10,21 @@ from info_pantalla.info_pantalla import tamaño_pantallas
 from juego.controlador.inventario import crear_inventario
 
 def cargar_sala(config):
+    width = 1100
+    height = 600
     """Carga una sala con un fondo dado. 
     Más adelante podés expandirla con enemigos, puertas, etc."""
+
     screen = config["screen"]
     pygame.display.set_caption(config["caption"])
     fuente = pygame.font.SysFont("Arial", 26)
     size = tamaño_pantallas()
     
-    fondo = cargar_fondo(config["fondo"], "Fondos", size)
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size)
+    fondo = cargar_fondo(config["fondo"], "Fondos")
+    personaje, personaje_rect = crear_personaje(
+        pos_inicial=config["personaje"]["pos_inicial"],
+        tamaño=config["personaje"]["tamaño"]
+    )
 
     # Puerta
     puerta_interaccion = config["puertas"]["salida"]
@@ -68,7 +74,11 @@ def cargar_sala(config):
 
         # Empty list for maniquies since this room has none
         maniquies = []
-        manejar_mc(personaje_rect, velocidad, inv, mask, maniquies)
+        manejar_mc(
+            teclas, 
+            personaje_rect, 
+            config["personaje"]["velocidad"]
+        )
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
@@ -98,5 +108,5 @@ def cargar_sala(config):
         inv.draw(screen)
         pygame.display.flip()
 
-       
+
 
