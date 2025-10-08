@@ -1,33 +1,34 @@
 import pygame, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.controlador.cargar_personaje import crear_personaje
+from juego.controlador.cargar_personaje import cargar_personaje
 from limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
-from juego.controlador.controles import manejar_mc
-from juego.ui.inventory import Inventory
-from juego.pantalla.mensaje_bienvenida import bienvenida_textos
-from info_pantalla.info_pantalla import tamaño_pantallas
+from juego.controlador.sprites_caminar import sprites_caminar
+from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
+from juego.controlador.cargar_config import get_config_sala
 
-def cargar_sala(config):
-    width = 1100
-    height = 600
+def cargar_sala(nombre_sala):
     """Carga una sala con un fondo dado. 
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
-    screen = config["screen"]
-    pygame.display.set_caption(config["caption"])
-    fuente = pygame.font.SysFont("Arial", 26)
     size = tamaño_pantallas()
+    screen = info_pantalla()
+    fuente = pygame.font.SysFont("Arial", 26)
+    config = get_config_sala(nombre_sala)
     
     fondo = cargar_fondo(config["fondo"], "Fondos")
-    personaje, personaje_rect = crear_personaje(
-        pos_inicial=config["personaje"]["pos_inicial"],
-        tamaño=config["personaje"]["tamaño"]
+    personaje, personaje_rect = cargar_personaje(
+        pos_inicial = config["personaje"]["pos_inicial"],
+        tamaño = config["personaje"]["tamaño"]
     )
 
     # Puerta
-    puerta_interaccion = config["puertas"]["salida"]
+    puerta_interaccion_salida = config["puertas"]["salida"]
+    try:
+        puerta_interaccion_volver = config["puertas"]["volver"]
+    except KeyError:
+        puerta_interaccion_volver = None
     velocidad = 5
 
     puntos_hexagono = devolver_puntos_hexagono()
@@ -36,19 +37,9 @@ def cargar_sala(config):
     mostrar_contorno = False
     inv = crear_inventario()
 
-    # Inicializar variables para la bienvenida
-    mostrar_bienvenida = True
-    tiempo_inicio = pygame.time.get_ticks()
-
     clock = pygame.time.Clock()
     while True:
         dt = clock.tick(60) / 1000.0
-
-        if mostrar_bienvenida:
-            tiempo_actual = pygame.time.get_ticks()
-            if not bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo, personaje, personaje_rect):
-                mostrar_bienvenida = False
-            continue
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -69,16 +60,14 @@ def cargar_sala(config):
                     personaje_rect.bottom - 5,
                     20, 5
                 )
-                if pies_personaje.colliderect(puerta_interaccion):
-                    return 'sala2'
+                if pies_personaje.colliderect(puerta_interaccion_salida):
+                    return config["siguiente_sala"]
+                elif pies_personaje.colliderect(puerta_interaccion_volver):
+                    return config["sala_anterior"]
 
         # Empty list for maniquies since this room has none
         maniquies = []
-        manejar_mc(
-            teclas, 
-            personaje_rect, 
-            config["personaje"]["velocidad"]
-        )
+        sprites_caminar(size, screen)
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
@@ -107,6 +96,7 @@ def cargar_sala(config):
 
         inv.draw(screen)
         pygame.display.flip()
+        
 
 
 

@@ -3,7 +3,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 from juego.salas.salas_inicio import iniciar_sala_inicio
-from juego.controlador.salas import cargar_sala
+from juego.salas.cargar_salas import cargar_sala
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
 from juego.controlador.cargar_config import get_config_sala
 
