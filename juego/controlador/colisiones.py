@@ -1,6 +1,8 @@
 import pygame
 
-def crear_mascara(puntos, width, height):
+def crear_mascara(puntos):
+    width = 1100
+    height = 600
     superficie = pygame.Surface((width, height), pygame.SRCALPHA)
     pygame.draw.polygon(superficie, (255, 255, 255), puntos)
     return pygame.mask.from_surface(superficie)
