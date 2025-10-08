@@ -14,15 +14,12 @@ from juego.controlador.mensaje_paso_sala import mensaje_paso_sala, devolver_pies
 from juego.salas.sala2 import iniciar_sala2
 
 def iniciar_sala():
-    pygame.init()
-
     # Pantalla fija
     size = tamaño_pantallas()
     screen = info_pantalla()
 
     # Cargar fondo
-    fondo_1P = cargar_fondo("Fondo_inicial.png", "Fondos", size)
-    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", size)
+    fondo = cargar_fondo("Fondo_inicial.png", "Fondos", size)
 
     # Cargar personaje
     info_personaje = cargar_personaje("mc_0.png", "mc", size)
@@ -81,7 +78,7 @@ def iniciar_sala():
         if mostrar_contorno:
             pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
 
-        mostrar_pantalla(fondo_1P, info_personaje, screen, inv)
+        mostrar_pantalla(fondo, info_personaje, screen, inv)
 
 
 if __name__ == '__main__':
