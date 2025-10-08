@@ -1,3 +1,4 @@
+import pygame
 def get_config_sala(nombre_sala, screen):
     configs = {
         "inicio": {

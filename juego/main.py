@@ -14,9 +14,9 @@ def main():
     sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
     while True:
         if sala_actual == "sala1":
-            siguiente = iniciar_sala_inicio()
+            siguiente = cargar_sala()
         elif sala_actual == "sala2":
-            siguiente = iniciar_sala2()
+            siguiente = cargar_sala()
         else:
             break  # Termina el juego si no hay más salas
 
