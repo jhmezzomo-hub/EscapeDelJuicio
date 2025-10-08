@@ -12,7 +12,6 @@ from juego.pantalla.ensombrecer import ensombrecer
 from juego.ui.inventory import Inventory
 
 def iniciar_sala2():
-    pygame.init()
     size = tamaño_pantallas()
     screen = info_pantalla()
 

@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from juego.controlador.cargar_fondos import cargar_fondo
 from juego.limite_colisiones.colision_piso import devolver_puntos_hexagono, colision_piso
 from juego.controlador.cargar_personaje import cargar_personaje
-from juego.controlador.cargar_salas import cargar_sala
+from juego.salas.cargar_salas import cargar_sala
 from juego.controlador.controles import manejar_mc
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from info_pantalla.mostrar_pantalla import mostrar_pantalla
