@@ -1,10 +1,13 @@
 import pygame, sys
 
-from controlador.cargar_fondos import cargar_fondo
-from limite_colisiones.colision_piso import colision_piso
-from controlador.controles import manejar_mc
+from juego.controlador.cargar_fondos import cargar_fondo
+from juego.controlador.cargar_personaje import cargar_personaje
+from limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
+from juego.controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
-from juego.salas.salas_inicio import bienvenida_textos
+from juego.pantalla.mensaje_bienvenida import bienvenida_textos
+from info_pantalla.info_pantalla import tamaño_pantallas
+from juego.controlador.inventario import crear_inventario
 
 def cargar_sala(config):
     """Carga una sala con un fondo dado. 
@@ -12,26 +15,20 @@ def cargar_sala(config):
     screen = config["screen"]
     pygame.display.set_caption(config["caption"])
     fuente = pygame.font.SysFont("Arial", 26)
+    size = tamaño_pantallas()
     
-    fondo = cargar_fondo(config["fondo"], "Fondos", (config["WIDTH"], config["HEIGHT"]))"))
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+    fondo = cargar_fondo(config["fondo"], "Fondos", size)
+    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size)
 
     # Puerta
     puerta_interaccion = config["puertas"]["salida"]
     velocidad = 5
 
-    # Máscara para límites de movimiento
-    puntos_hexagono = [
-        (132, 411), (980, 411), (1100, 488),
-        (1100, 600), (0, 600), (0, 491)
-    ]
-    
-
-    mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
+    puntos_hexagono = devolver_puntos_hexagono()
+    mask = colision_piso(size)
 
     mostrar_contorno = False
-    inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
-    inv.is_open = False
+    inv = crear_inventario()
 
     # Inicializar variables para la bienvenida
     mostrar_bienvenida = True
@@ -96,7 +93,7 @@ def cargar_sala(config):
         )
         if pies_personaje.colliderect(puerta_interaccion):
             texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (WIDTH // 2 - texto.get_width() // 2, HEIGHT - 40))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
         inv.draw(screen)
         pygame.display.flip()
