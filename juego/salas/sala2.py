@@ -1,8 +1,6 @@
 import pygame
 import sys
-from juego.controlador.salas import cargar_sala
-from juego.controlador.cargar_config import get_config_sala
-
+from juego.controlador.salas import cargar_sala2
 
 def iniciar_sala2():
-    cargar_sala(get_config_sala("sala2"))
+    cargar_sala(config)

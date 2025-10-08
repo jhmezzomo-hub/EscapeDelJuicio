@@ -2,8 +2,7 @@ import pygame
 
 from juego.controlador.rutas import rutas_img
 
-def cargar_fondo(nombre_img, carpeta):
-    size = (1100, 600)
+def cargar_fondo(nombre_img, carpeta, size):
     try:
         path = rutas_img(nombre_img, carpeta)
         fondo = pygame.image.load(path).convert()

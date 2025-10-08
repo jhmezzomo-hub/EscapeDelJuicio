@@ -7,7 +7,7 @@ if project_root not in sys.path:
 
 from .rutas import rutas_img
 
-def crear_personaje(nombre_img, personaje, WIDTH, HEIGHT):
+def cargar_personaje(nombre_img, personaje, WIDTH, HEIGHT):
     path = rutas_img(nombre_img, personaje)
     personaje = pygame.image.load(path).convert_alpha()
     personaje = pygame.transform.scale(personaje, (120, 200))
