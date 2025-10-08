@@ -5,6 +5,7 @@ from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 from juego.salas.salas_inicio import iniciar_sala
 from juego.salas.sala2 import iniciar_sala2
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
+from juego.salas.salas_inicio import iniciar_sala_inicio
 
 def main():
     print("Iniciando juego desde main.py...")
