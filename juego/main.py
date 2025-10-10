@@ -10,13 +10,13 @@ from juego.controlador.cargar_config import get_config_sala
 def main():
     print("Iniciando juego desde main.py...")
     pantalla_de_inicio()  # Mostrar menú principal
-    sala_actual = "sala1"
+    sala_actual = "inicio"
     sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
     while True:
-        if sala_actual == "sala1":
-            siguiente = iniciar_sala_inicio()
+        if sala_actual == "inicio":
+            siguiente = cargar_sala("inicio")
         elif sala_actual == "sala2":
-            siguiente = iniciar_sala2()
+            siguiente = cargar_sala("sala2")
         else:
             break  # Termina el juego si no hay más salas
 
