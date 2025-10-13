@@ -8,8 +8,8 @@ from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
 
-def cargar_sala(nombre_sala):
-    """Carga una sala con un fondo dado. 
+def cargar_sala(nombre_sala, maniquies=[]):
+    """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
     size = tamaño_pantallas()
@@ -29,7 +29,6 @@ def cargar_sala(nombre_sala):
         puerta_interaccion_volver = config["puertas"]["volver"]
     except KeyError:
         puerta_interaccion_volver = None
-    velocidad = 5
 
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
@@ -66,8 +65,8 @@ def cargar_sala(nombre_sala):
                     return config["sala_anterior"]
 
         # Empty list for maniquies since this room has none
-        maniquies = []
-        sprites_caminar(size, screen)
+        maniquies = maniquies if maniquies else []
+        sprites_caminar(size, screen, inv, mask, maniquies)
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
@@ -81,7 +80,9 @@ def cargar_sala(nombre_sala):
                 20, 5
             )
             pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)
-            pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion, 2)
+            pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
+            if puerta_interaccion_volver:
+                pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
 
         screen.blit(personaje, personaje_rect)
 
@@ -90,8 +91,11 @@ def cargar_sala(nombre_sala):
             personaje_rect.bottom - 5,
             20, 5
         )
-        if pies_personaje.colliderect(puerta_interaccion):
+        if pies_personaje.colliderect(puerta_interaccion_salida):
             texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
+            texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
         inv.draw(screen)

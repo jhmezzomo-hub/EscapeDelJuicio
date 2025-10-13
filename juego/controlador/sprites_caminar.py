@@ -2,7 +2,7 @@ import pygame, sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from juego.controlador.cargar_personaje import cargar_personaje
-from juego.controlador.controles import teclas_movimiento  
+from juego.controlador.controles import teclas_movimiento
 
 def sprites_caminar(size, screen, inv, mask,maniquies):
 # Cambiá estas rutas por las de tus imágenes
