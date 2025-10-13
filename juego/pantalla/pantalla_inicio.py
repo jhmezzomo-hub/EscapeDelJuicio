@@ -8,7 +8,7 @@ def pantalla_de_inicio():
     size = tamaño_pantallas()
     screen = info_pantalla()
 
-    bg = cargar_fondo("pantallainicial.png", "Fondos", size)
+    bg = cargar_fondo("pantallainicial.png", "Fondos")
 
     # Usamos freetype para fuente con contorno
     fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)

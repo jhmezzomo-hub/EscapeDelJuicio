@@ -16,12 +16,12 @@ def cargar_sala(nombre_sala, maniquies=[]):
     screen = info_pantalla()
     fuente = pygame.font.SysFont("Arial", 26)
     config = get_config_sala(nombre_sala)
-    
+
+    pos_inicial = config["personaje"]["pos_inicial"],
+    tamaño = config["personaje"]["tamaño"]
+
     fondo = cargar_fondo(config["fondo"], "Fondos")
-    personaje, personaje_rect = cargar_personaje(
-        pos_inicial = config["personaje"]["pos_inicial"],
-        tamaño = config["personaje"]["tamaño"]
-    )
+    personaje, personaje_rect = cargar_personaje("mc", "mc", size, tamaño)
 
     # Puerta
     puerta_interaccion_salida = config["puertas"]["salida"]

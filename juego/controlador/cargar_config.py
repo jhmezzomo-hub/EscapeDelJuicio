@@ -3,7 +3,7 @@ import pygame
 def get_config_sala(nombre_sala):
     configs = {
         "inicio": {
-            "fondo": "Fondo_sala1",
+            "fondo": "Fondo_inicial.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 
@@ -18,7 +18,7 @@ def get_config_sala(nombre_sala):
             "siguiente_sala": "sala2"
         },
         "sala2": {
-            "fondo": "Fondo_sala1",
+            "fondo": "Fondo_sala1.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (100, 400),
