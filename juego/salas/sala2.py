@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 import random
+import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.controlador.cargar_fondos import cargar_fondo
@@ -10,10 +11,10 @@ from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory, Item
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
-from juego.pantalla.ensombrecer import ensombrecer
 
 def iniciar_sala2():
-    pygame.init()
+    random.seed()  # se resetea la semilla cada vez que inicia el juego
+
     size = tamaño_pantallas()
     screen = info_pantalla()
 
@@ -26,13 +27,12 @@ def iniciar_sala2():
         (132, 411), (980, 411), (1100, 488),
         (1100, 600), (0, 600), (0, 491)
     ]
-    # crear_mascara espera (puntos, width, height)
     mask = crear_mascara(puntos_hexagono, *size)
 
     maniquies = []
     posiciones = [
-        (850, 250), (910, 400), (730, 340),
-        (20, 400), (150, 250), (250, 340)
+        (850, 250), (910, 450), (730, 340),
+        (20, 450), (150, 250), (250, 340)
     ]
     imagenes = ["mm1.png", "mm2.png", "mm3.png", "mm4.png", "mm5.png", "mm6.png"]
     tamaños = [
@@ -40,8 +40,11 @@ def iniciar_sala2():
         (110, 200), (110, 200), (186, 200)
     ]
 
+    # Randomización garantizada de los maniquíes
     llave_correcta_index = random.randint(0, len(imagenes) - 1)
-    maniquie_malo_index = random.choice([i for i in range(len(imagenes)) if i != llave_correcta_index])
+    maniquie_malo_index = random.randint(0, len(imagenes) - 1)
+    while maniquie_malo_index == llave_correcta_index:
+        maniquie_malo_index = random.randint(0, len(imagenes) - 1)
 
     for idx, (img, pos, (ancho, alto)) in enumerate(zip(imagenes, posiciones, tamaños)):
         maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", size)
@@ -71,14 +74,24 @@ def iniciar_sala2():
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
 
+    # Linterna permanente
+    linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=None)
+    inv.inventory_slots[0] = linterna_item
+
     mostrar_hitboxes = False
     mensaje_texto = ""
     mensaje_color = (255, 255, 255)
     mensaje_timer = 0
+    linterna_encendida = False
+
+    mostrar_mensaje_linterna = True
+    timer_mensaje_linterna = 1.0  # segundos
 
     puerta_interaccion = pygame.Rect(500, 400, 70, 40)
 
+    oscuridad = pygame.Surface(size, pygame.SRCALPHA)
     clock = pygame.time.Clock()
+
     while True:
         dt = clock.tick(60) / 1000.0
 
@@ -90,20 +103,21 @@ def iniciar_sala2():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F1:
                     mostrar_hitboxes = not mostrar_hitboxes
+                if event.key == pygame.K_g:
+                    linterna_encendida = not linterna_encendida
+                    if mostrar_mensaje_linterna:
+                        mostrar_mensaje_linterna = False
+                    mensaje_texto = "Linterna encendida" if linterna_encendida else "Linterna apagada"
+                    mensaje_color = (255, 255, 150) if linterna_encendida else (255, 255, 255)
+                    mensaje_timer = 2.0
 
         teclas = pygame.key.get_pressed()
-        if not inv.is_open:
-            if teclas[pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
+        if not inv.is_open and teclas[pygame.K_ESCAPE]:
+            pygame.quit()
+            sys.exit()
 
         screen.blit(fondo, (0, 0))
-        # pasar maniquies como lista de dicts (la función verificar_colision_maniquies
-        # acepta ahora dicts o tuplas). Asegurarse del orden de parámetros en manejar_mc:
-        # manejar_mc(personaje_rect, inv, mask, velocidad, maniquies)
         manejar_mc(personaje_rect, inv, mask, velocidad, maniquies)
-
-        screen.blit(fondo, (0, 0))
 
         objetos = [(m["img"], m["rect"]) for m in maniquies] + [(personaje, personaje_rect)]
         objetos.sort(key=lambda x: x[1].bottom)
@@ -121,7 +135,7 @@ def iniciar_sala2():
                     mensaje_texto = "¡Este maniquí te atacó! Game Over"
                     mensaje_color = (255, 0, 0)
                     pygame.time.delay(1500)
-                    iniciar_sala2()
+                    iniciar_sala2()  # ✅ al reiniciar, se vuelve a randomizar
                     return
 
                 if not m["llave_agarrada"]:
@@ -140,12 +154,7 @@ def iniciar_sala2():
                     mensaje_texto = "Ya agarraste la llave de este maniquí"
                 break
 
-        pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
-
+        pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
         if pies_personaje.colliderect(puerta_interaccion):
             mensaje_maniqui = True
             mensaje_texto = "Usar llave presionando F"
@@ -169,23 +178,43 @@ def iniciar_sala2():
                     mensaje_color = (255, 0, 0)
                     mensaje_timer = 2.0
 
-        if mensaje_maniqui:
-            texto = fuente.render(mensaje_texto, True, mensaje_color)
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-
-        if mostrar_hitboxes:
-            for m in maniquies:
-                pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
-
         if mensaje_timer > 0:
             mensaje_timer -= dt
         else:
             mensaje_color = (255, 255, 255)
 
+        if mostrar_mensaje_linterna:
+            timer_mensaje_linterna -= dt
+            if timer_mensaje_linterna <= 0:
+                mostrar_mensaje_linterna = False
+
+        if mostrar_hitboxes:
+            for m in maniquies:
+                pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
+
+        oscuridad.fill((0, 0, 0, 240))
+        if linterna_encendida:
+            gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
+            for r in range(200, 0, -1):
+                alpha = int(255 * (r / 200))
+                pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
+            pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
+            oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
+
+        screen.blit(oscuridad, (0, 0))
+
+        if mostrar_mensaje_linterna:
+            alpha = int((math.sin(pygame.time.get_ticks() * 0.005) + 1) * 127)
+            texto = fuente.render("Presiona G para prender linterna", True, (255, 255, 150))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        elif mensaje_maniqui or mensaje_texto:
+            texto = fuente.render(mensaje_texto, True, mensaje_color)
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+
         inv.update(dt)
         inv.draw(screen)
-        ensombrecer(screen)
         pygame.display.flip()
+
 
 if __name__ == "__main__":
     iniciar_sala2()
