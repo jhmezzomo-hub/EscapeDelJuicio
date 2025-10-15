@@ -39,3 +39,5 @@ def manejar_mc(personaje_rect, inv, mask, velocidad, maniquies=[]):
         # ---- Verificación de colisión ----
         if not verificar_colision(mask, personaje_rect):
             personaje_rect.topleft = old_pos
+        if maniquies and verificar_colision_maniquies(maniquies, personaje_rect):
+            personaje_rect.topleft = old_pos
