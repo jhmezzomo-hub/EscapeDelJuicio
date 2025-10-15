@@ -4,7 +4,6 @@ from juego.controlador.cargar_fondos import cargar_fondo
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 
 def pantalla_de_inicio():
-    pygame.init()
     size = tamaño_pantallas()
     screen = info_pantalla()
 
