@@ -1,0 +1,16 @@
+{
+  "salas_completadas": {
+    "sala_1": true,
+    "sala_2": false,
+    "sala_3": false,
+    "sala_4": false,
+    "sala_5": false,
+    "sala_6": false,
+    "sala_7": false,
+    "sala_8": false,
+    "sala_9": false,
+    "sala_10": false,
+    "sala_11": false,
+    "sala_12": false
+  }
+}

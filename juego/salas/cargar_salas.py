@@ -1,39 +1,26 @@
-import pygame, sys, os
+import pygame, sys
 
 from controlador.cargar_fondos import cargar_fondo
-from controlador.cargar_personaje import cargar_personaje
-from controlador.colisiones import crear_mascara
+from limite_colisiones.colision_piso import colision_piso
 from controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory
 
-def cargar_sala(nombre_fondo, carpeta):
+def cargar_sala(fondo, personaje_info, size):
     """Carga una sala con un fondo dado. 
     Más adelante podés expandirla con enemigos, puertas, etc."""
-    pygame.init()
-    WIDTH, HEIGHT = 1100, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption(f"Sala: {nombre_fondo}")
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("Escape Del Juicio")
 
     # Fondo según el nombre
-    fondo = cargar_fondo(nombre_fondo, carpeta, (WIDTH, HEIGHT))
-
-    # Personaje
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)
+    fondo_1P = fondo
+    fondo_2P = cargar_fondo("Fondo_sala1.png", "Fondos", size)
 
     # Inventario
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
 
     # Hexágono igual que antes
-    puntos_hexagono = [
-        (132, 411),
-        (980, 411),
-        (1100, 488),
-        (1100, 600),
-        (0, 600),
-        (0, 491)
-    ]
-    mask = crear_mascara(puntos_hexagono, WIDTH, HEIGHT)
+    mask = colision_piso(size)
 
     velocidad = 5
     clock = pygame.time.Clock()
@@ -55,11 +42,12 @@ def cargar_sala(nombre_fondo, carpeta):
                         sys.exit()
 
         # Movimiento
-        manejar_mc(personaje_rect, velocidad, inv, mask)
+        manejar_mc(personaje_info[1], inv, mask, velocidad, maniquies=[])
         inv.update(dt)
 
         # Dibujos
-        screen.blit(fondo, (0, 0))
-        screen.blit(personaje, personaje_rect)
+        persoanje, personaje_rect = personaje_info
+        screen.blit(fondo_1P, (0, 0))
+        screen.blit(persoanje, personaje_rect)
         inv.draw(screen)
         pygame.display.flip()
