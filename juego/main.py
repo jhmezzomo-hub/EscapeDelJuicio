@@ -6,11 +6,11 @@ from juego.salas.cargar_salas import cargar_sala
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
 
 def main():
+    print("Iniciando juego desde main.py...")    
     pygame.init()
-    print("Iniciando juego desde main.py...")
     pantalla_de_inicio()  # Mostrar menú principal
     sala_actual = "inicio"
-    sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
+    #sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
     while True:
         if sala_actual == "inicio":
             siguiente = cargar_sala("inicio")
