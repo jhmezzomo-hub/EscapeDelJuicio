@@ -4,15 +4,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import teclas_movimiento
 
-def sprites_caminar(size, screen, inv, mask,maniquies):
+def sprites_caminar(size, screen, inv, mask,maniquies, tamaño):
 # Cambiá estas rutas por las de tus imágenes
-    personaje_rect = cargar_personaje("mc_0.png", "mc", size)[1]
-    idle_left = cargar_personaje("mc_0.png", "mc", size)[0]
+    personaje_rect = cargar_personaje("mc_0.png", "mc", size, tamaño)[1]
+    idle_left = cargar_personaje("mc_0.png", "mc", size, tamaño)[0]
     idle_right = pygame.transform.flip(idle_left, True, False)
 
     walk_left = [
-        cargar_personaje("mc_1.png", "mc", size)[0],
-        cargar_personaje("mc_2.png", "mc", size)[0],
+        cargar_personaje("mc_1.png", "mc", size, tamaño)[0],
+        cargar_personaje("mc_2.png", "mc", size, tamaño)[0],
     ]
     walk_right = [pygame.transform.flip(img, True, False) for img in walk_left]
 
