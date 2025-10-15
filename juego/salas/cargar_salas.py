@@ -66,7 +66,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
-        sprites_caminar(size, screen, inv, mask, maniquies)
+        sprites_caminar(size, screen, inv, mask, maniquies, tamaño)
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))

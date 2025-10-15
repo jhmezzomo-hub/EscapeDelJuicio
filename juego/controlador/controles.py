@@ -1,5 +1,5 @@
 import pygame
-from juego.controlador.verificar_colisiones import verificar_colision
+from juego.controlador.verificar_colisiones import verificar_colision, verificar_colision_maniquies
 
 def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_direction="left"):
     """Mueve el rect del personaje y devuelve (moving, direction).
@@ -28,7 +28,9 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
             personaje_rect.y += velocidad
             moving = True
             # No cambiamos la orientación horizontal al mover verticalmente
-        if not verificar_colision(mask, personaje_rect, maniquies):
+        if not verificar_colision(mask, personaje_rect):
+            personaje_rect.topleft = old_pos
+        elif verificar_colision_maniquies(maniquies, personaje_rect):
             personaje_rect.topleft = old_pos
     return moving, direction
 
