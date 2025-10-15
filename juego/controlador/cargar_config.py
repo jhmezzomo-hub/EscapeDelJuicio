@@ -8,7 +8,7 @@ def get_config_sala(nombre_sala):
             "personaje": {
                 
                 "pos_inicial": (100, 400),
-                "tamaño": (50, 70),
+                "tamaño": (125, 150),
                 "pos_final":(770, 400),
             },
             "puertas": {
@@ -22,7 +22,7 @@ def get_config_sala(nombre_sala):
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (100, 400),
-                "tamaño": (50, 70),
+                "tamaño": (125, 150),
             },
             "caption": "Sala 2",
             "puertas": {
