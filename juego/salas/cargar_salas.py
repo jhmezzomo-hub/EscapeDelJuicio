@@ -30,6 +30,13 @@ def cargar_sala(nombre_sala, maniquies=[]):
     except KeyError:
         puerta_interaccion_volver = None
 
+    #pies_personjae
+    pies_personaje = pygame.Rect(
+            personaje_rect.centerx - 10,
+            personaje_rect.bottom - 5,
+            20, 5
+        )
+
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
 
@@ -48,17 +55,13 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         if not inv.is_open:
             teclas = pygame.key.get_pressed()
+            sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
             if teclas[pygame.K_ESCAPE]:
                 pygame.quit()
                 sys.exit()
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
-                pies_personaje = pygame.Rect(
-                    personaje_rect.centerx - 10,
-                    personaje_rect.bottom - 5,
-                    20, 5
-                )
                 if pies_personaje.colliderect(puerta_interaccion_salida):
                     return config["siguiente_sala"]
                 elif pies_personaje.colliderect(puerta_interaccion_volver):
@@ -66,9 +69,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
-        while True:
-            sprites_caminar(size, screen, inv, mask, maniquies, tamaño)
-            break
+
         inv.update(dt)
 
         screen.blit(fondo, (0, 0))
@@ -76,11 +77,6 @@ def cargar_sala(nombre_sala, maniquies=[]):
         if mostrar_contorno:
             pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
             pygame.draw.rect(screen, (0, 0, 255), personaje_rect, 1)
-            pies_personaje = pygame.Rect(
-                personaje_rect.centerx - 10,
-                personaje_rect.bottom - 5,
-                20, 5
-            )
             pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)
             pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
             if puerta_interaccion_volver:
@@ -88,11 +84,6 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         screen.blit(personaje, personaje_rect)
 
-        pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
         if pies_personaje.colliderect(puerta_interaccion_salida):
             texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
