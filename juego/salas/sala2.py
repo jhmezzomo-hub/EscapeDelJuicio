@@ -3,6 +3,8 @@ import sys
 import os
 import random
 import math
+import pygame.freetype
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.controlador.cargar_fondos import cargar_fondo
@@ -11,13 +13,125 @@ from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import manejar_mc
 from juego.ui.inventory import Inventory, Item
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
+from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 
-def iniciar_sala2():
-    random.seed()  # se resetea la semilla cada vez que inicia el juego
-
+# ------------------- PANTALLA GAME OVER NUEVA -------------------
+def pantalla_fin():
     size = tamaño_pantallas()
     screen = info_pantalla()
 
+    bg = cargar_fondo("game_over.png", "Fondos", size)
+    if bg is None:
+        try:
+            bg = pygame.image.load(os.path.join("Fondos", "game_over.png"))
+            bg = pygame.transform.scale(bg, size)
+        except Exception:
+            bg = pygame.Surface(size)
+            bg.fill((10, 10, 10))
+
+    try:
+        fuente_agresiva = pygame.freetype.SysFont("impact", 48, bold=True)
+    except Exception:
+        fuente_agresiva = pygame.freetype.SysFont(None, 48, bold=True)
+
+    color_texto_normal = (110, 10, 10)
+    color_texto_hover = (170, 20, 20)
+    outline_color = (0, 0, 0)
+    outline_size = 3
+
+    def render_texto(texto, color, center):
+        rect_medida = fuente_agresiva.get_rect(texto)
+        w = rect_medida.width + outline_size * 2 + 6
+        h = rect_medida.height + outline_size * 2 + 6
+
+        text_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+        text_surf.fill((0, 0, 0, 0))
+
+        for ox in range(-outline_size, outline_size + 1):
+            for oy in range(-outline_size, outline_size + 1):
+                if ox == 0 and oy == 0:
+                    continue
+                fuente_agresiva.render_to(text_surf, (outline_size + ox, outline_size + oy),
+                                         texto, fgcolor=outline_color, bgcolor=None)
+
+        fuente_agresiva.render_to(text_surf, (outline_size, outline_size),
+                                 texto, fgcolor=color, bgcolor=None)
+
+        text_rect = text_surf.get_rect(center=center)
+        return text_surf, text_rect
+
+    class Button:
+        def __init__(self, rect, text, callback):
+            self.rect = pygame.Rect(rect)
+            self.text = text
+            self.callback = callback
+            self.hover = False
+            self.text_surf = None
+            self.text_rect = None
+            self.mask = None
+
+        def draw(self, surface):
+            text_color = color_texto_hover if self.hover else color_texto_normal
+            self.text_surf, self.text_rect = render_texto(self.text, text_color, self.rect.center)
+            self.mask = pygame.mask.from_surface(self.text_surf)
+            surface.blit(self.text_surf, self.text_rect)
+
+        def handle_event(self, event):
+            if self.text_rect is None or self.mask is None:
+                return
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
+                mouse_pos = event.pos
+                if self.text_rect.collidepoint(mouse_pos):
+                    local_x = mouse_pos[0] - self.text_rect.x
+                    local_y = mouse_pos[1] - self.text_rect.y
+                    if 0 <= local_x < self.text_surf.get_width() and 0 <= local_y < self.text_surf.get_height():
+                        if self.mask.get_at((int(local_x), int(local_y))):
+                            self.hover = True
+                            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                                if callable(self.callback):
+                                    self.callback()
+                            return
+                self.hover = False
+
+    running = True
+    def start_game():
+        nonlocal running
+        running = False
+
+    def exit_game():
+        pygame.quit()
+        sys.exit()
+
+    btn_w, btn_h = 300, 70
+    gap = btn_h + 20
+    x = int(size[0] * 0.75)
+    y0 = int(size[1] * 0.50)
+
+    btn_play = Button((x - btn_w//2, y0, btn_w, btn_h), "VOLVER A JUGAR", start_game)
+    btn_menu = Button((x - btn_w//2, y0 + gap, btn_w, btn_h), "VOLVER AL MENU", pantalla_de_inicio)
+    btn_exit = Button((x - btn_w//2, y0 + 2*gap, btn_w, btn_h), "SALIR", exit_game)
+    buttons = [btn_play, btn_menu, btn_exit]
+
+    clock = pygame.time.Clock()
+    while running:
+        screen.blit(bg, (0, 0))
+        for b in buttons:
+            b.draw(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            for b in buttons:
+                b.handle_event(event)
+        pygame.display.flip()
+        clock.tick(60)
+
+# ------------------- SALA 2 -------------------
+def iniciar_sala2():
+    random.seed()
+
+    size = tamaño_pantallas()
+    screen = info_pantalla()
     fuente = pygame.font.SysFont("Arial", 26)
     fondo = cargar_fondo("Fondo_sala1.png", "Fondos", size)
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size)
@@ -31,8 +145,8 @@ def iniciar_sala2():
 
     maniquies = []
     posiciones = [
-        (850, 250), (910, 450), (730, 340),
-        (20, 450), (150, 250), (250, 340)
+        (850, 250), (910, 350), (730, 340),
+        (20, 350), (150, 250), (250, 340)
     ]
     imagenes = ["mm1.png", "mm2.png", "mm3.png", "mm4.png", "mm5.png", "mm6.png"]
     tamaños = [
@@ -40,7 +154,6 @@ def iniciar_sala2():
         (110, 200), (110, 200), (186, 200)
     ]
 
-    # Randomización garantizada de los maniquíes
     llave_correcta_index = random.randint(0, len(imagenes) - 1)
     maniquie_malo_index = random.randint(0, len(imagenes) - 1)
     while maniquie_malo_index == llave_correcta_index:
@@ -74,27 +187,24 @@ def iniciar_sala2():
     inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
     inv.is_open = False
 
-    # Linterna permanente
     linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=None)
     inv.inventory_slots[0] = linterna_item
 
     mostrar_hitboxes = False
+    mostrar_malo = False
     mensaje_texto = ""
     mensaje_color = (255, 255, 255)
     mensaje_timer = 0
     linterna_encendida = False
-
     mostrar_mensaje_linterna = True
-    timer_mensaje_linterna = 1.0  # segundos
+    timer_mensaje_linterna = 1.0
 
     puerta_interaccion = pygame.Rect(500, 400, 70, 40)
-
     oscuridad = pygame.Surface(size, pygame.SRCALPHA)
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60) / 1000.0
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -103,6 +213,7 @@ def iniciar_sala2():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F1:
                     mostrar_hitboxes = not mostrar_hitboxes
+                    mostrar_malo = not mostrar_malo
                 if event.key == pygame.K_g:
                     linterna_encendida = not linterna_encendida
                     if mostrar_mensaje_linterna:
@@ -123,25 +234,31 @@ def iniciar_sala2():
         objetos.sort(key=lambda x: x[1].bottom)
         for img, rect in objetos:
             screen.blit(img, rect)
+            if mostrar_malo:
+                for m in maniquies:
+                    if m["es_maniqui_malo"]:
+                        overlay = pygame.Surface(m["rect"].size, pygame.SRCALPHA)
+                        overlay.fill((255, 0, 0, 100))
+                        screen.blit(overlay, m["rect"].topleft)
 
         mensaje_maniqui = False
+        mensaje_texto = ""
+        mensaje_color = (255, 255, 255)
 
         for m in maniquies:
             if personaje_rect.colliderect(m["hitbox"]):
                 mensaje_maniqui = True
                 llave_existente = any(slot and slot.type == "llave" for slot in inv.inventory_slots + inv.quickbar)
 
-                if m["es_maniqui_malo"]:
-                    mensaje_texto = "¡Este maniquí te atacó! Game Over"
-                    mensaje_color = (255, 0, 0)
-                    pygame.time.delay(1500)
-                    iniciar_sala2()  # ✅ al reiniciar, se vuelve a randomizar
-                    return
-
                 if not m["llave_agarrada"]:
                     if not llave_existente:
                         mensaje_texto = "Presiona E para agarrar llave"
                         if teclas[pygame.K_e]:
+                            if m["es_maniqui_malo"]:
+                                pantalla_fin()
+                                iniciar_sala2()
+                                return
+
                             nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
                             for i in range(len(inv.inventory_slots)):
                                 if inv.inventory_slots[i] is None:
