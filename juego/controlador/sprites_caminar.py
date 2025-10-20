@@ -23,32 +23,38 @@ def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, pers
 
     # ===== Variables del jugador =====
     velocidad = 5
-    walk_count = 0
-    direction = "left"  # lado al que mira por defecto
+    # Guardamos estado entre frames en atributos de la función
+    walk_count = getattr(sprites_caminar, "walk_count", 0)
+    direction = getattr(sprites_caminar, "direction", "left")
 
-    # ===== Loop principal =====
-
-    # Pasamos la dirección actual para que teclas_movimiento no la sobreescriba
-    # `teclas_movimiento` modifica `personaje_rect` directamente.
+    # ===== Actualización por frame =====
+    # `teclas_movimiento` modifica `personaje_rect` directamente y devuelve
+    # si está moviendo y la nueva dirección sugerida.
     moving, new_direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, direction)
-    # Solo actualizamos `direction` si hubo movimiento horizontal (left/right)
-    # si moving es True y new_direction difiere, lo adoptamos. Si no, mantenemos
-    # la dirección previa para que el personaje siga mirando hacia el último lado.
-    if moving:
+
+    # Actualizamos la dirección solo cuando hay movimiento horizontal
+    if moving and new_direction in ("left", "right"):
         direction = new_direction
 
-    # Animación (usamos personaje_rect como posición fuente)
+    # Dibujar animación por frame
     if moving:
+        # ciclo de caminata
+        frame = walk_count // 7 % len(walk_left)
         if direction == "right":
-            screen.blit(walk_right[walk_count // 7 % len(walk_right)], personaje_rect)
+            screen.blit(walk_right[frame], personaje_rect)
         else:
-            screen.blit(walk_left[walk_count // 7 % len(walk_left)], personaje_rect)
+            screen.blit(walk_left[frame], personaje_rect)
         walk_count += 1
-        if walk_count >= 14:  # 2 frames * 7 ticks
+        if walk_count >= 14:  # reiniciar ciclo
             walk_count = 0
     else:
+        # idle
         walk_count = 0
         if direction == "right":
             screen.blit(idle_right, personaje_rect)
         else:
             screen.blit(idle_left, personaje_rect)
+
+    # Guardamos el estado para el siguiente frame
+    sprites_caminar.walk_count = walk_count
+    sprites_caminar.direction = direction
