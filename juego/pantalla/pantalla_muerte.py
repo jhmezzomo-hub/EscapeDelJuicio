@@ -27,9 +27,9 @@ def pantalla_fin():
 
     # Fuente freetype (con contorno)
     try:
-        fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
+        fuente_agresiva = pygame.freetype.SysFont("impact", 48, bold=True)
     except Exception:
-        fuente_agresiva = pygame.freetype.SysFont(None, 72, bold=True)
+        fuente_agresiva = pygame.freetype.SysFont(None, 48, bold=True)
 
     color_texto_normal = (110, 10, 10)   # rojo oscuro
     color_texto_hover = (170, 20, 20)    # rojo más brillante
@@ -138,3 +138,5 @@ def pantalla_fin():
 
         pygame.display.flip()
         clock.tick(60)
+
+pantalla_fin()
