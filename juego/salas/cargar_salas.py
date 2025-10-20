@@ -76,10 +76,12 @@ def cargar_sala(nombre_sala, maniquies=[]):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
-                if pies_personaje.colliderect(puerta_interaccion_salida):
-                    return config["siguiente_sala"]
-                elif pies_personaje.colliderect(puerta_interaccion_volver):
-                    return config["sala_anterior"]
+                if puerta_interaccion_salida:
+                    if pies_personaje.colliderect(puerta_interaccion_salida):
+                        return config["siguiente_sala"]
+                if puerta_interaccion_volver:
+                    if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
+                        return config["sala_anterior"]
 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
