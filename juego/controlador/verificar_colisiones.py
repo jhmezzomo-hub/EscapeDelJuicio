@@ -11,11 +11,17 @@ def verificar_colision(mask, personaje_rect, margen_x=10, margen_y=4):
     cx_left = personaje_rect.left + margen_x
     cx_right = personaje_rect.right - margen_x
     cy = personaje_rect.bottom - margen_y
+    width, height = mask.get_size()
+    # Si alguna coordenada está fuera de la máscara, consideramos colisión (no transitable)
+    if not (0 <= cx_left < width and 0 <= cy < height and 0 <= cx_right < width and 0 <= cy < height):
+        return True
 
-    if 0 <= cx_left < mask.get_size()[0] and 0 <= cy < mask.get_size()[1] and \
-       0 <= cx_right < mask.get_size()[0] and 0 <= cy < mask.get_size()[1]:
-        return mask.get_at((cx_left, cy)) != 0 and mask.get_at((cx_right, cy)) != 0
-    return False
+    inside_left = mask.get_at((cx_left, cy)) != 0
+    inside_right = mask.get_at((cx_right, cy)) != 0
+
+    # Si ambos puntos están dentro de la máscara, NO hay colisión (zona transitable).
+    # Colisión ocurre cuando alguno de los puntos está fuera de la zona transitable.
+    return not (inside_left and inside_right)
 
 def verificar_colision_maniquies(maniquies, personaje_rect):
     """
