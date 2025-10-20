@@ -20,7 +20,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
     pos_inicial = config["personaje"]["pos_inicial"],
     tamaño = config["personaje"]["tamaño"]
 
-    fondo = cargar_fondo(config["fondo"], "Fondos", size)
+    fondo = cargar_fondo(config["fondo"], "Fondos")
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size, tamaño)
 
     # Puerta
