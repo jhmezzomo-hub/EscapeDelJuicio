@@ -7,9 +7,9 @@ if project_root not in sys.path:
 
 from juego.controlador.rutas import rutas_img
 
-def cargar_personaje(nombre_img, personaje, size):
+def cargar_personaje(nombre_img, personaje, size, tamaño):
     path = rutas_img(nombre_img, personaje)
     personaje = pygame.image.load(path).convert_alpha()
-    personaje = pygame.transform.scale(personaje, (120, 200))
+    personaje = pygame.transform.scale(personaje, tamaño)
     personaje_rect = personaje.get_rect(center=(size[0]//2, size[1] - 150))
     return personaje, personaje_rect
