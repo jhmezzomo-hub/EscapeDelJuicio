@@ -34,11 +34,10 @@ def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, pers
     # Solo actualizamos `direction` si hubo movimiento horizontal (left/right)
     # si moving es True y new_direction difiere, lo adoptamos. Si no, mantenemos
     # la dirección previa para que el personaje siga mirando hacia el último lado.
-    if moving:
+    while moving:
         direction = new_direction
 
     # Animación (usamos personaje_rect como posición fuente)
-    if moving:
         if direction == "right":
             screen.blit(walk_right[walk_count // 7 % len(walk_right)], personaje_rect)
         else:
