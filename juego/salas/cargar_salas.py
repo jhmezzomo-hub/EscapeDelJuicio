@@ -130,6 +130,3 @@ def cargar_sala(nombre_sala, maniquies=[]):
             traceback.print_exc()
         pygame.display.flip()
         
-
-
-
