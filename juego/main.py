@@ -16,6 +16,10 @@ def main():
             siguiente = cargar_sala("inicio")
         elif sala_actual == "sala2":
             siguiente = cargar_sala("sala2")
+        elif sala_actual == "sala3":
+            siguiente = cargar_sala("sala3")
+        elif sala_actual == "sala4":
+            siguiente = cargar_sala("sala4")
         else:
             break  # Termina el juego si no hay más salas
 

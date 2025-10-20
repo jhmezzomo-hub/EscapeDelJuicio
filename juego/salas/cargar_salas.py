@@ -53,7 +53,13 @@ def cargar_sala(nombre_sala, maniquies=[]):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            inv.handle_event(event)
+            # Llamada al manejador del inventario con protección para evitar crash
+            try:
+                inv.handle_event(event)
+            except Exception as e:
+                import traceback
+                print("ERROR en inv.handle_event:")
+                traceback.print_exc()
 
         if not inv.is_open:
             # Actualizar posición del personaje según teclas antes de comprobar interacciones
@@ -86,7 +92,12 @@ def cargar_sala(nombre_sala, maniquies=[]):
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
 
-        inv.update(dt)
+        try:
+            inv.update(dt)
+        except Exception:
+            import traceback
+            print("ERROR en inv.update:")
+            traceback.print_exc()
 
         # Dibujar fondo primero
         screen.blit(fondo, (0, 0))
@@ -111,7 +122,12 @@ def cargar_sala(nombre_sala, maniquies=[]):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
-        inv.draw(screen)
+        try:
+            inv.draw(screen)
+        except Exception:
+            import traceback
+            print("ERROR en inv.draw:")
+            traceback.print_exc()
         pygame.display.flip()
         
 
