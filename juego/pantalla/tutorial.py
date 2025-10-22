@@ -41,7 +41,7 @@ def tutorial():
          "Para realizar acciones: Selecciona cualquier objeto en el inventario y pulsa E cerca de una zona interactiva.",
          "Objetivo: Escapar del juicio agarrando objetos y resolviendo puzzles.",
          "",
-         "Pulsa ESC o usa VOLVER para volver al menú"
+         "Pulsa ESC para volver al menú"
      ]
  
      running = True
