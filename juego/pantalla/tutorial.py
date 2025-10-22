@@ -73,7 +73,7 @@ def tutorial():
  
          y0 = 170
          for i, linea in enumerate(instrucciones):
-             fuente.render_to(screen, (80, y0 + i * 34), linea, (220, 220, 220))
+             fuente.render_to(screen, (60, y0 + i * 34), linea, (220, 220, 220))
  
          screen.blit(volver_surf, volver_rect)
  
