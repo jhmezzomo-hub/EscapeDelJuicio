@@ -3,11 +3,9 @@ import sys
 import os
 import random
 import math
-import pygame.freetype
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from juego.controlador.cargar_fondos import cargar_fondo
+from juego.salas.cargar_salas import cargar_sala
 from juego.controlador.verificar_colisiones import crear_mascara
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.pantalla.pantalla_muerte import pantalla_fin
@@ -20,16 +18,6 @@ def iniciar_sala2():
 
     size = tamaño_pantallas()
     screen = info_pantalla()
-    fuente = pygame.font.SysFont("Arial", 26)
-    fondo = cargar_fondo("Fondo_sala1.png", "Fondos", size)
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size)
-    velocidad = 5
-
-    puntos_hexagono = [
-        (132, 411), (980, 411), (1100, 488),
-        (1100, 600), (0, 600), (0, 491)
-    ]
-    mask = crear_mascara(puntos_hexagono, *size)
 
     maniquies = []
     posiciones = [
@@ -72,8 +60,14 @@ def iniciar_sala2():
             "es_maniqui_malo": idx == maniquie_malo_index
         })
 
-    inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
-    inv.is_open = False
+    info_en_cargar_salas = cargar_sala("sala2", maniquies=maniquies)
+
+    inv = info_en_cargar_salas[2]
+    fuente = info_en_cargar_salas[1]
+    personaje, personaje_rect = info_en_cargar_salas[0]
+    pies_personaje = info_en_cargar_salas[3]
+    teclas = info_en_cargar_salas[4]
+    puerta_interaccion = info_en_cargar_salas[5]
 
     linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=None)
     inv.inventory_slots[0] = linterna_item
@@ -87,7 +81,6 @@ def iniciar_sala2():
     mostrar_mensaje_linterna = True
     timer_mensaje_linterna = 1.0
 
-    puerta_interaccion = pygame.Rect(500, 400, 70, 40)
     oscuridad = pygame.Surface(size, pygame.SRCALPHA)
     clock = pygame.time.Clock()
 
@@ -99,9 +92,6 @@ def iniciar_sala2():
                 sys.exit()
             inv.handle_event(event)
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F1:
-                    mostrar_hitboxes = not mostrar_hitboxes
-                    mostrar_malo = not mostrar_malo
                 if event.key == pygame.K_g:
                     linterna_encendida = not linterna_encendida
                     if mostrar_mensaje_linterna:
@@ -109,14 +99,6 @@ def iniciar_sala2():
                     mensaje_texto = "Linterna encendida" if linterna_encendida else "Linterna apagada"
                     mensaje_color = (255, 255, 150) if linterna_encendida else (255, 255, 255)
                     mensaje_timer = 2.0
-
-        teclas = pygame.key.get_pressed()
-        if not inv.is_open and teclas[pygame.K_ESCAPE]:
-            pygame.quit()
-            sys.exit()
-
-        screen.blit(fondo, (0, 0))
-        manejar_mc(personaje_rect, inv, mask, velocidad, maniquies)
 
         objetos = [(m["img"], m["rect"]) for m in maniquies] + [(personaje, personaje_rect)]
         objetos.sort(key=lambda x: x[1].bottom)

@@ -26,7 +26,7 @@ def get_config_sala(nombre_sala):
             },
             "puertas": {
                 "volver": pygame.Rect(100, 400, 70, 40),
-                "salida": pygame.Rect(770, 400, 70, 40)
+                "salida": pygame.Rect(500, 400, 70, 40)
             },
             
             "sala_anterior": "inicio",

@@ -122,6 +122,8 @@ def cargar_sala(nombre_sala, maniquies=[]):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
+        info_personaje = (personaje, personaje_rect)
+
         try:
             inv.draw(screen)
         except Exception:
@@ -129,4 +131,5 @@ def cargar_sala(nombre_sala, maniquies=[]):
             print("ERROR en inv.draw:")
             traceback.print_exc()
         pygame.display.flip()
-        
+
+        return info_personaje, fuente, inv, pies_personaje, teclas, puerta_interaccion_salida
