@@ -4,6 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 from juego.salas.cargar_salas import cargar_sala
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
+from juego.limite_colisiones.colision_piso import colision_piso
 
 def main():
     print("Iniciando juego desde main.py...")    
@@ -11,11 +12,16 @@ def main():
     pantalla_de_inicio()  # Mostrar menú principal
     sala_actual = "inicio"
     #sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
+
+    # Crear máscara de colisiones
+    size = (1100, 600)
+    mask = colision_piso(size)
+    
     while True:
         if sala_actual == "inicio":
-            siguiente = cargar_sala("inicio")
+            siguiente = cargar_sala("inicio", mask)
         elif sala_actual == "sala2":
-            siguiente = cargar_sala("sala2")
+            siguiente = cargar_sala("sala2", mask)
         else:
             break  # Termina el juego si no hay más salas
 
@@ -24,6 +30,6 @@ def main():
         sala_actual = siguiente
 
     print("Juego terminado.")
-        # Iniciar el juego si se ejecuta directamente
+
 if __name__ == "__main__":
     main()

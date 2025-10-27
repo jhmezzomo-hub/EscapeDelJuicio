@@ -8,10 +8,12 @@ from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
+from juego.salas.salas_inicio import SalaInicio
+from juego.salas.sala2 import Sala2
+from juego.controlador.sprites_caminar import direction
 
-def cargar_sala(nombre_sala, maniquies=[]):
-    """Carga una sala con un fondo dado.
-    Más adelante podés expandirla con enemigos, puertas, etc."""
+def cargar_sala(nombre_sala, mask, maniquies=[]):
+    """Carga una sala con un fondo dado."""
 
     size = tamaño_pantallas()
     screen = info_pantalla()
@@ -24,6 +26,9 @@ def cargar_sala(nombre_sala, maniquies=[]):
     fondo = cargar_fondo(config["fondo"], "Fondos")
     personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size, tamaño)
 
+    # Create inventory with screen parameter
+    inv = crear_inventario(screen)
+
     # Puerta
     puerta_interaccion_salida = config["puertas"]["salida"]
     try:
@@ -33,19 +38,23 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
     #pies_personjae
     pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
+        personaje_rect.centerx - 10,
+        personaje_rect.bottom - 5,
+        20, 5
+    )
 
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
 
     mostrar_contorno = False
-    inv = crear_inventario()
-
     clock = pygame.time.Clock()
     velocidad = 5
+    # Crear sala específica según el nombre
+    if nombre_sala == "inicio":
+        sala = SalaInicio(screen)
+    elif nombre_sala == "sala2":
+        sala = Sala2(screen)
+    
     while True:
         dt = clock.tick(60) / 1000.0
 
@@ -53,64 +62,19 @@ def cargar_sala(nombre_sala, maniquies=[]):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            inv.handle_event(event)
-
-        if not inv.is_open:
-            # Actualizar posición del personaje según teclas antes de comprobar interacciones
-            # DEBUG: imprimir posición antes
-            # print(f"DEBUG antes movimiento: {personaje_rect.topleft}")
-            moving, direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies)
-            # DEBUG: imprimir posición despues si hubo movimiento
-            if moving:
-                print(f"DEBUG movimiento: new topleft={personaje_rect.topleft} moving={moving} direction={direction}")
-            # Recalcular pies del personaje con la nueva posición
-            pies_personaje = pygame.Rect(
-                personaje_rect.centerx - 10,
-                personaje_rect.bottom - 5,
-                20, 5
-            )
-            teclas = pygame.key.get_pressed()
-            if teclas[pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
-            elif teclas[pygame.K_F1]:
-                mostrar_contorno = not mostrar_contorno
-            elif teclas[pygame.K_e]:
-                if puerta_interaccion_salida:
-                    if pies_personaje.colliderect(puerta_interaccion_salida):
-                        return config["siguiente_sala"]
-                if puerta_interaccion_volver:
-                    if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
-                        return config["sala_anterior"]
-
-        # Empty list for maniquies since this room has none
-        maniquies = maniquies if maniquies else []
-
-        inv.update(dt)
 
         # Dibujar fondo primero
         screen.blit(fondo, (0, 0))
 
-        # Mostrar contornos de debug si corresponde
-        if mostrar_contorno:
-            pygame.draw.polygon(screen, (0, 255, 0), puntos_hexagono, 2)
-            pygame.draw.rect(screen, (0, 0, 255), personaje_rect, 1)
-            pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)
-            pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
-            if puerta_interaccion_volver:
-                pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
+        # Verificar colisiones antes de mover
+        teclas_movimiento(direction, personaje_rect, velocidad, sala.inventario, mask, maniquies)
 
-        # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
-        sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
+        # Renderizar sprites
+        sprites_caminar(size, screen, sala.inventario, mask, maniquies, tamaño, personaje, personaje_rect)
 
-        # Mensajes de interacción con puertas
-        if pies_personaje.colliderect(puerta_interaccion_salida):
-            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-        elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
-            texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        # Actualizar sala
+        siguiente = sala.actualizar(personaje_rect, puerta_interaccion_salida)
+        if siguiente:
+            return siguiente
 
-        inv.draw(screen)
         pygame.display.flip()
-        

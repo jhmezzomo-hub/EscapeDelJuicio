@@ -1,7 +1,11 @@
-from juego.ui.inventory import Inventory
+from juego.ui.inventory import Inventario
 
-def crear_inventario():
-    # Inventario
-    inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40, 40))
-    inv.is_open = False
-    return inv
+def crear_inventario(ventana):
+    """
+    Crea una nueva instancia del inventario
+    Args:
+        ventana: Superficie de pygame donde se dibujará el inventario
+    Returns:
+        Inventario: Nueva instancia del inventario
+    """
+    return Inventario(ventana)
