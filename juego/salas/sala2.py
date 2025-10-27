@@ -36,7 +36,7 @@ def iniciar_sala2():
         maniquie_malo_index = random.randint(0, len(imagenes) - 1)
 
     for idx, (img, pos, (ancho, alto)) in enumerate(zip(imagenes, posiciones, tamaños)):
-        maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", size)
+        maniquie_img, maniquie_rect = cargar_personaje(img, "Michael Myers", size, tamaño=(150,200))
         maniquie_img = pygame.transform.scale(maniquie_img, (ancho, alto))
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos

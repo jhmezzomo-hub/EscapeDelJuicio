@@ -2,9 +2,10 @@ import pygame, sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.pantalla.pantalla_inicio import pantalla_de_inicio
-from juego.salas.salas_inicio import cargar_sala
+from juego.salas.cargar_salas import cargar_sala
 from juego.salas.salas_inicio import iniciar_sala_inicio
 from juego.salas.sala2 import iniciar_sala2
+
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
 
 def main():
