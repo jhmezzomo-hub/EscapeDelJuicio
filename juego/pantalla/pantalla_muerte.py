@@ -1,8 +1,5 @@
-import pygame
-import sys
-import os
+import pygame, sys, os
 import pygame.freetype
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.controlador.cargar_fondos import cargar_fondo
