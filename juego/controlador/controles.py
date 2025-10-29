@@ -7,10 +7,12 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
     Cuando no hay tecla de movimiento, devuelve la `last_direction` sin
     cambiarla, de modo que el render pueda mantener la orientación.
     """
+    # Inicializar para asegurar valores incluso si inv.is_open es True
+    moving = False
+    direction = last_direction
+
     if not inv.is_open:
         old_pos = personaje_rect.topleft
-        moving = False
-        direction = last_direction
         keys = pygame.key.get_pressed()
 
         # Movimiento horizontal
@@ -36,4 +38,3 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
             personaje_rect.topleft = old_pos
     return moving, direction
 
-        
