@@ -11,6 +11,8 @@ from juego.pantalla.pantalla_muerte import pantalla_fin
 from juego.ui.inventory import Inventory, Item
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
 from juego.controlador.cargar_config import get_config_sala
+from juego.controlador.sprites_caminar import sprites_caminar
+from limite_colisiones.colision_piso import colision_piso
 
 # ------------------- SALA 2 -------------------
 def iniciar_sala2(inv=None):
@@ -77,12 +79,39 @@ def iniciar_sala2(inv=None):
     timer_mensaje_linterna = 1.0
 
     oscuridad = pygame.Surface(size, pygame.SRCALPHA)
+    # máscara para colisiones y contraste de piso
+    mask = colision_piso(size)
+    # No dibujamos los maniquíes aquí una sola vez: los dibujaremos cada frame
+    oscuridad.fill((0, 0, 0, 240))
+    if linterna_encendida:
+        gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
+        for r in range(200, 0, -1):
+            alpha = int(255 * (r / 200))
+            pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
+        pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
+        oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
+
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60) / 1000.0
         teclas = pygame.key.get_pressed()
-        cargar_sala("sala2", maniquies=maniquies, inv=inv)
+
+        # Actualizar movimiento y animación del personaje
+        # Usar el tamaño actual del rect del personaje para las superficies
+        sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
+
+        # Dibujar maniquíes y personaje según profundidad (bottom)
+        objetos = [(m["img"], m["rect"]) for m in maniquies] + [(personaje, personaje_rect)]
+        objetos.sort(key=lambda x: x[1].bottom)
+        for img, rect in objetos:
+            screen.blit(img, rect)
+        if mostrar_malo:
+            for m in maniquies:
+                if m["es_maniqui_malo"]:
+                    overlay = pygame.Surface(m["rect"].size, pygame.SRCALPHA)
+                    overlay.fill((255, 0, 0, 100))
+                    screen.blit(overlay, m["rect"].topleft)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -96,17 +125,6 @@ def iniciar_sala2(inv=None):
                     mensaje_texto = "Linterna encendida" if linterna_encendida else "Linterna apagada"
                     mensaje_color = (255, 255, 150) if linterna_encendida else (255, 255, 255)
                     mensaje_timer = 2.0
-
-        objetos = [(m["img"], m["rect"]) for m in maniquies] + [(personaje, personaje_rect)]
-        objetos.sort(key=lambda x: x[1].bottom)
-        for img, rect in objetos:
-            screen.blit(img, rect)
-            if mostrar_malo:
-                for m in maniquies:
-                    if m["es_maniqui_malo"]:
-                        overlay = pygame.Surface(m["rect"].size, pygame.SRCALPHA)
-                        overlay.fill((255, 0, 0, 100))
-                        screen.blit(overlay, m["rect"].topleft)
 
         mensaje_maniqui = False
         mensaje_texto = ""
@@ -176,17 +194,6 @@ def iniciar_sala2(inv=None):
             for m in maniquies:
                 pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
 
-        oscuridad.fill((0, 0, 0, 240))
-        if linterna_encendida:
-            gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
-            for r in range(200, 0, -1):
-                alpha = int(255 * (r / 200))
-                pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
-            pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
-            oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
-
-        screen.blit(oscuridad, (0, 0))
-
         if mostrar_mensaje_linterna:
             alpha = int((math.sin(pygame.time.get_ticks() * 0.005) + 1) * 127)
             texto = fuente.render("Presiona G para prender linterna", True, (255, 255, 150))
@@ -197,6 +204,7 @@ def iniciar_sala2(inv=None):
 
         inv.update(dt)
         inv.draw(screen)
+        screen.blit(oscuridad, (0, 0))
         pygame.display.flip()
 
 
