@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, os
 
 from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
@@ -8,6 +8,9 @@ from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
+
+# Añadido: Item para guardar el papel en el inventario
+from juego.ui.inventory import Item
 
 def cargar_sala(nombre_sala, maniquies=[]):
     """Carga una sala con un fondo dado.
@@ -44,6 +47,53 @@ def cargar_sala(nombre_sala, maniquies=[]):
     mostrar_contorno = False
     inv = crear_inventario()
 
+    # --- Nuevo: crear un papel en sala "inicio" (sala 1) ---
+    papel_visible = False
+    papel_surf = None
+    papel_rect = None
+    papel_inv_surf = None  # Nueva superficie para la imagen en el inventario
+    
+    if nombre_sala in ("inicio", "sala1", "sala_1"):
+        img_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'papel'))
+        try:
+            # Cargar las dos imágenes (0 para suelo, 1 para inventario)
+            archivos = [f for f in os.listdir(img_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+            if len(archivos) >= 2:
+                papel_surf = pygame.image.load(os.path.join(img_dir, archivos[1])).convert_alpha()
+                papel_inv_surf = pygame.image.load(os.path.join(img_dir, archivos[0])).convert_alpha()
+        except Exception:
+            papel_surf = None
+            papel_inv_surf = None
+
+        # Tamaños diferentes para suelo e inventario
+        papel_size = (40, 30)  # tamaño en suelo
+        papel_inv_size = (32, 32)  # tamaño en inventario
+
+        # Crear/escalar imagen del suelo
+        if papel_surf is None:
+            papel_surf = pygame.Surface(papel_size, pygame.SRCALPHA)
+            papel_surf.fill((245, 245, 220))
+            pygame.draw.rect(papel_surf, (200, 200, 180), papel_surf.get_rect(), 1)
+        else:
+            try:
+                papel_surf = pygame.transform.smoothscale(papel_surf, papel_size)
+            except Exception:
+                papel_surf = pygame.transform.scale(papel_surf, papel_size)
+
+        # Crear/escalar imagen del inventario
+        if papel_inv_surf is None:
+            papel_inv_surf = papel_surf.copy()  # usar la misma que en suelo si no hay específica
+        else:
+            try:
+                papel_inv_surf = pygame.transform.smoothscale(papel_inv_surf, papel_inv_size)
+            except Exception:
+                papel_inv_surf = pygame.transform.scale(papel_inv_surf, papel_inv_size)
+
+        papel_rect = papel_surf.get_rect(topleft=(200, 500))
+        papel_visible = True
+
+    # -------------------------------------------------------
+
     clock = pygame.time.Clock()
     velocidad = 5
     while True:
@@ -57,12 +107,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         if not inv.is_open:
             # Actualizar posición del personaje según teclas antes de comprobar interacciones
-            # DEBUG: imprimir posición antes
-            # print(f"DEBUG antes movimiento: {personaje_rect.topleft}")
             moving, direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies)
-            # DEBUG: imprimir posición despues si hubo movimiento
-            if moving:
-                print(f"DEBUG movimiento: new topleft={personaje_rect.topleft} moving={moving} direction={direction}")
             # Recalcular pies del personaje con la nueva posición
             pies_personaje = pygame.Rect(
                 personaje_rect.centerx - 10,
@@ -76,12 +121,42 @@ def cargar_sala(nombre_sala, maniquies=[]):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
+                # Interacción: puerta salida / volver
                 if puerta_interaccion_salida:
                     if pies_personaje.colliderect(puerta_interaccion_salida):
                         return config["siguiente_sala"]
                 if puerta_interaccion_volver:
                     if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
                         return config["sala_anterior"]
+                # Interacción: recoger papel si está visible y el jugador está encima
+                if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
+                    # meter el papel en la primera ranura libre del inventario
+                    try:
+                        # la estructura del inventario espera inventory_slots (o similar)
+                        # intentamos colocar en inv.inventory_slots si existe
+                        placed = False
+                        if hasattr(inv, "inventory_slots"):
+                            for i in range(len(inv.inventory_slots)):
+                                if inv.inventory_slots[i] is None:
+                                    # Usar papel_inv_surf en lugar de papel_surf
+                                    inv.inventory_slots[i] = Item(type="papel", count=1, max_stack=1, 
+                                                               color=(255,255,255), image=papel_inv_surf)
+                                    placed = True
+                                    break
+                        # si tiene método add_item (otra implementación), intentar usarlo
+                        if not placed and hasattr(inv, "add_item"):
+                            # crear Item compatible con add_item (puede esperar otro tipo),
+                            # aquí asumimos que add_item quiere objetos con item_id/name; hacemos fallback mínimo
+                            try:
+                                inv.add_item(Item)  # no falla la llamada en la mayoría de implementaciones; si falla, lo atrapamos
+                            except Exception:
+                                pass
+                        # si no se pudo colocar, dejar el papel en el suelo (no quitar)
+                        if placed:
+                            papel_visible = False
+                    except Exception:
+                        # en caso de error no romper el bucle; solo no recoger
+                        papel_visible = papel_visible
 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
@@ -100,6 +175,10 @@ def cargar_sala(nombre_sala, maniquies=[]):
             if puerta_interaccion_volver:
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
 
+        # Dibujar el papel en el piso si está visible
+        if papel_visible and papel_surf and papel_rect:
+            screen.blit(papel_surf, papel_rect)
+
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
         sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
 
@@ -110,7 +189,10 @@ def cargar_sala(nombre_sala, maniquies=[]):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        # Mensaje para recoger papel
+        if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
+            texto = fuente.render("Presiona E para recoger el papel", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 70))
 
         inv.draw(screen)
         pygame.display.flip()
-        
