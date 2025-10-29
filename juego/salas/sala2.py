@@ -6,18 +6,19 @@ import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.salas.cargar_salas import cargar_sala
-from juego.controlador.verificar_colisiones import crear_mascara
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.pantalla.pantalla_muerte import pantalla_fin
 from juego.ui.inventory import Inventory, Item
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
+from juego.controlador.cargar_config import get_config_sala
 
 # ------------------- SALA 2 -------------------
-def iniciar_sala2():
+def iniciar_sala2(inv=None):
     random.seed()
 
     size = tamaño_pantallas()
     screen = info_pantalla()
+    general = get_config_sala("general")
 
     maniquies = []
     posiciones = [
@@ -60,14 +61,8 @@ def iniciar_sala2():
             "es_maniqui_malo": idx == maniquie_malo_index
         })
 
-    info_en_cargar_salas = cargar_sala("sala2", maniquies=maniquies)
-
-    inv = info_en_cargar_salas[2]
-    fuente = info_en_cargar_salas[1]
-    personaje, personaje_rect = info_en_cargar_salas[0]
-    pies_personaje = info_en_cargar_salas[3]
-    teclas = info_en_cargar_salas[4]
-    puerta_interaccion = info_en_cargar_salas[5]
+    personaje, personaje_rect = general["personaje"], general["personaje_rect"]
+    fuente = general["fuente"]
 
     linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=None)
     inv.inventory_slots[0] = linterna_item
@@ -86,6 +81,8 @@ def iniciar_sala2():
 
     while True:
         dt = clock.tick(60) / 1000.0
+        teclas = pygame.key.get_pressed()
+        cargar_sala("sala2", maniquies=maniquies, inv=inv)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -142,7 +139,7 @@ def iniciar_sala2():
                 break
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
-        if pies_personaje.colliderect(puerta_interaccion):
+        if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
             mensaje_maniqui = True
             mensaje_texto = "Usar llave presionando F"
             if teclas[pygame.K_f]:

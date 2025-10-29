@@ -29,7 +29,7 @@ class Inventory:
       inv.update(dt)
       inv.draw(surface)
     """
-    def __init__(self, rows=5, cols=6, quickbar_slots=8, pos=(40,40)):
+    def __init__(self, rows=1, cols=8, quickbar_slots=8, pos=(40,40)):
         # estado
         self.rows = rows
         self.cols = cols

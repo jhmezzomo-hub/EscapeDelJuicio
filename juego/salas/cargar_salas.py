@@ -9,14 +9,15 @@ from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
 
-def cargar_sala(nombre_sala, maniquies=[]):
+def cargar_sala(nombre_sala, maniquies=[], inv=None):
     """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
     print(f"[DEBUG] entrar a cargar_sala('{nombre_sala}')")
+    general = get_config_sala("general")
     size = tamaño_pantallas()
     screen = info_pantalla()
-    fuente = pygame.font.SysFont("Arial", 26)
+    fuente = general["fuente"]
     config = get_config_sala(nombre_sala)
     if config is None:
         print(f"[ERROR] No existe la config para la sala '{nombre_sala}'")
@@ -26,7 +27,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
     tamaño = config["personaje"]["tamaño"]
 
     fondo = cargar_fondo(config["fondo"], "Fondos")
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size, tamaño)
+    personaje, personaje_rect = general["personaje"], general["personaje_rect"]
 
     # Puerta
     puerta_interaccion_salida = config["puertas"]["salida"]
@@ -35,18 +36,11 @@ def cargar_sala(nombre_sala, maniquies=[]):
     except KeyError:
         puerta_interaccion_volver = None
 
-    #pies_personjae
-    pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
-
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
 
     mostrar_contorno = False
-    inv = crear_inventario()
+    inv = inv
 
     clock = pygame.time.Clock()
     velocidad = 5
@@ -130,8 +124,6 @@ def cargar_sala(nombre_sala, maniquies=[]):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
-        info_personaje = (personaje, personaje_rect)
-
         try:
             inv.draw(screen)
         except Exception:
@@ -140,5 +132,6 @@ def cargar_sala(nombre_sala, maniquies=[]):
             traceback.print_exc()
         pygame.display.flip()
         print(f"[DEBUG] finalizo cargar_sala('{nombre_sala}') ciclo principal")
+        continue
 
         #return info_personaje, fuente, inv, pies_personaje, teclas, puerta_interaccion_salida
