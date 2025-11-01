@@ -2,7 +2,7 @@ import pygame, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
-from limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
+from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.sprites_caminar import sprites_caminar
 from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla

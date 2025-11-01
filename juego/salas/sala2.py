@@ -81,15 +81,6 @@ def iniciar_sala2(inv=None):
     oscuridad = pygame.Surface(size, pygame.SRCALPHA)
     # máscara para colisiones y contraste de piso
     mask = colision_piso(size)
-    # No dibujamos los maniquíes aquí una sola vez: los dibujaremos cada frame
-    oscuridad.fill((0, 0, 0, 240))
-    if linterna_encendida:
-        gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
-        for r in range(200, 0, -1):
-            alpha = int(255 * (r / 200))
-            pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
-        pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
-        oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
 
     clock = pygame.time.Clock()
 
@@ -101,8 +92,8 @@ def iniciar_sala2(inv=None):
         # Usar el tamaño actual del rect del personaje para las superficies
         sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
 
-        # Dibujar maniquíes y personaje según profundidad (bottom)
-        objetos = [(m["img"], m["rect"]) for m in maniquies] + [(personaje, personaje_rect)]
+        # Dibujar maniquíes según profundidad (bottom)
+        objetos = [(m["img"], m["rect"]) for m in maniquies]
         objetos.sort(key=lambda x: x[1].bottom)
         for img, rect in objetos:
             screen.blit(img, rect)
@@ -204,6 +195,17 @@ def iniciar_sala2(inv=None):
 
         inv.update(dt)
         inv.draw(screen)
+        
+        # Actualizar efecto de linterna
+        oscuridad.fill((0, 0, 0, 240))
+        if linterna_encendida:
+            gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
+            for r in range(200, 0, -1):
+                alpha = int(255 * (r / 200))
+                pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
+            pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
+            oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
+        
         screen.blit(oscuridad, (0, 0))
         pygame.display.flip()
 
