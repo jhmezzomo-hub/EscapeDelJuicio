@@ -10,14 +10,20 @@ from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.pantalla.pantalla_muerte import pantalla_fin
 from juego.ui.inventory import Inventory, Item
+from juego.controlador.inventario import crear_inventario
 from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
 from juego.controlador.cargar_config import get_config_sala
 from juego.controlador.sprites_caminar import sprites_caminar
 from limite_colisiones.colision_piso import colision_piso
+from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
 # ------------------- SALA 2 -------------------
 def iniciar_sala2(inv=None):
     random.seed()
+
+    # Si no se pasa un inventario, crear uno nuevo (evita AttributeError)
+    if inv is None:
+        inv = crear_inventario()
 
     size = tamaño_pantallas()
     screen = info_pantalla()
@@ -87,19 +93,25 @@ def iniciar_sala2(inv=None):
     # máscara para colisiones y contraste de piso
     mask = colision_piso(size)
 
+    # Cargar el fondo (una vez)
+    fondo = cargar_fondo("fondo_sala1.png", "Fondos")
+
+    # Botón de configuración
+    btn_config = crear_boton_config(size[0] - 140, 20)
+
     clock = pygame.time.Clock()
 
     while True:
         dt = clock.tick(60) / 1000.0
         teclas = pygame.key.get_pressed()
-        cargar_fondo("sala2_fondo.png", "Fondos")
+        # Dibujar el fondo (ya cargado)
+        screen.blit(fondo, (0, 0))
 
-        # Actualizar movimiento y animación del personaje
-        # Usar el tamaño actual del rect del personaje para las superficies
-        sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
+        # Actualizar movimiento y animación del personaje y obtener la superficie a dibujar
+        current_player_surf = sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
 
-        # Dibujar maniquíes según profundidad (bottom)
-        objetos = [(m["img"], m["rect"]) for m in maniquies]
+        # Dibujar maniquíes y personaje según profundidad (bottom)
+        objetos = [(m["img"], m["rect"]) for m in maniquies] + [(current_player_surf, personaje_rect)]
         objetos.sort(key=lambda x: x[1].bottom)
         for img, rect in objetos:
             screen.blit(img, rect)
@@ -113,6 +125,11 @@ def iniciar_sala2(inv=None):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            # manejador del botón de configuración
+            try:
+                btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            except Exception:
+                pass
             inv.handle_event(event)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_g:
@@ -126,9 +143,6 @@ def iniciar_sala2(inv=None):
         mensaje_maniqui = False
         mensaje_texto = ""
         mensaje_color = (255, 255, 255)
-
-        oscuridad.fill((0, 0, 0, 240))
-        screen.blit(oscuridad, (0, 0))
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
@@ -167,11 +181,8 @@ def iniciar_sala2(inv=None):
         if mostrar_hitboxes:
             for m in maniquies:
                 pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
-
-        inv.update(dt)
-        inv.draw(screen)
         
-        # Actualizar efecto de linterna
+        # Interacciones con maniquíes (validar colisiones y recoger llaves)
         for m in maniquies:
             if personaje_rect.colliderect(m["hitbox"]):
                 mensaje_maniqui = True
@@ -197,13 +208,9 @@ def iniciar_sala2(inv=None):
                 else:
                     mensaje_texto = "Ya agarraste la llave de este maniquí"
                 break
-        if mostrar_mensaje_linterna:
-            alpha = int((math.sin(pygame.time.get_ticks() * 0.005) + 1) * 127)
-            texto = fuente.render("Presiona G para prender linterna", True, (255, 255, 150))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-        elif mensaje_maniqui or mensaje_texto:
-            texto = fuente.render(mensaje_texto, True, mensaje_color)
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+
+        # Actualizar efecto de linterna (se aplica sobre lo ya dibujado)
+        oscuridad.fill((0, 0, 0, 240))
         if linterna_encendida:
             gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
             for r in range(200, 0, -1):
@@ -211,8 +218,29 @@ def iniciar_sala2(inv=None):
                 pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
             pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
             oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
+
+        # Blitear la máscara de oscuridad y luego dibujar textos encima
+        screen.blit(oscuridad, (0, 0))
+
+        if mostrar_mensaje_linterna:
+            alpha = int((math.sin(pygame.time.get_ticks() * 0.005) + 1) * 127)
+            texto = fuente.render("Presiona G para prender linterna", True, (255, 255, 150))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        elif mensaje_maniqui or mensaje_texto:
+            texto = fuente.render(mensaje_texto, True, mensaje_color)
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+
+        # dibujar botón de configuración encima de la escena
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
+
+        inv.update(dt)
+        inv.draw(screen)
         pygame.display.flip()
 
 
 if __name__ == "__main__":
-    iniciar_sala2()
+    # Al ejecutar directamente, pasar un inventario creado para evitar errores
+    iniciar_sala2(crear_inventario())
