@@ -10,7 +10,7 @@ def pantalla_fin():
     size = tamaño_pantallas()
     screen = info_pantalla()
 
-    bg = cargar_fondo("game_over.png", "Fondos", size)
+    bg = cargar_fondo("game_over.png", "Fondos")
     if bg is None:
         try:
             bg = pygame.image.load(os.path.join("Fondos", "game_over.png"))
