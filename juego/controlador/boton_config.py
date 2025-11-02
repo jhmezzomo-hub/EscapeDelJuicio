@@ -4,6 +4,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
+from juego.pantalla.pantalla_inicio import pantalla_de_inicio
+
 """Botón de configuración y menú modal.
 
 Provee:
@@ -21,20 +23,23 @@ volumen = 0.5  # valor entre 0.0 y 1.0
 
 
 class Button:
-    def __init__(self, rect, text, font=None, bg=(50, 50, 50), fg=(255,255,255)):
-        self.rect = pygame.Rect(rect)
-        self.text = str(text)
+    def __init__(self, rect, text=None, font=None, bg=(50, 50, 50), fg=(255,255,255)):
+        if isinstance(rect, (tuple, list)):
+            self.rect = pygame.Rect(rect)
+        else:
+            self.rect = rect
+        self.text = str(text) if text else None
         self.font = font or pygame.font.SysFont(None, 24)
         self.bg = bg
         self.fg = fg
+        # Cargar la imagen del botón
+        image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'logos', 'boton-config.png')
+        self.image = pygame.image.load(image_path)
+        self.image = pygame.transform.scale(self.image, (50,50)))
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.bg, self.rect)
-        pygame.draw.rect(surface, (0,0,0), self.rect, 2)
-        txt = self.font.render(self.text, True, self.fg)
-        tx = self.rect.x + (self.rect.width - txt.get_width()) // 2
-        ty = self.rect.y + (self.rect.height - txt.get_height()) // 2
-        surface.blit(txt, (tx, ty))
+        # Dibujar la imagen del botón
+        surface.blit(self.image, self.rect)
 
     def is_hover(self, pos):
         return self.rect.collidepoint(pos)
@@ -75,25 +80,33 @@ def abrir_menu_config(screen):
     title_font = pygame.font.SysFont(None, 34)
 
     # Opciones del menú
-    opciones = ["Subir Volumen", "Bajar Volumen", "Volver al menú"]
+    opciones = ["Volver al menú"]
     seleccion = 0
 
     # Overlay semitransparente
     overlay = pygame.Surface((ancho, alto), pygame.SRCALPHA)
     overlay.fill((0,0,0,150))
 
-    def subir():
-        global volumen
-        volumen = min(1.0, round((volumen + 0.1), 2))
-        aplicar_volumen()
-
-    def bajar():
-        global volumen
-        volumen = max(0.0, round((volumen - 0.1), 2))
-        aplicar_volumen()
-
-    actions = [subir, bajar, lambda: None]
-
+    # Configuración del menú
+    menu_w, menu_h = 400, 300
+    # Calculamos el centro exacto de la pantalla
+    menu_x = ancho // 2 - menu_w // 2
+    menu_y = alto // 2 - menu_h // 2 - 100  # Desplazamiento hacia arriba para mejor equilibrio visual
+    
+    # Configuración de la barra de volumen
+    barra_ancho = 200
+    barra_alto = 20
+    barra_x = menu_x + (menu_w - barra_ancho) // 2
+    barra_y = menu_y + 100
+    barra_rect = pygame.Rect(barra_x, barra_y, barra_ancho, barra_alto)
+    
+    # Slider (control deslizante)
+    slider_ancho = 20
+    slider_alto = 30
+    slider_y = barra_y - (slider_alto - barra_alto) // 2
+    
+    dragging = False
+    
     running = True
     while running:
         for event in pygame.event.get():
@@ -103,69 +116,134 @@ def abrir_menu_config(screen):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                elif event.key == pygame.K_UP:
-                    seleccion = (seleccion - 1) % len(opciones)
-                elif event.key == pygame.K_DOWN:
-                    seleccion = (seleccion + 1) % len(opciones)
-                elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                    if opciones[seleccion] == "Volver al menú":
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Click izquierdo
+                    mouse_pos = event.pos
+                    
+                    if barra_rect.collidepoint(mouse_pos) or pygame.Rect(barra_x, barra_y - slider_alto//2, barra_ancho, slider_alto).collidepoint(mouse_pos):
+                        dragging = True
+                        # Actualizar volumen basado en la posición del click
+                        nuevo_x = max(barra_x, min(mouse_pos[0], barra_x + barra_ancho))
+                        volumen = (nuevo_x - barra_x) / barra_ancho
+                        aplicar_volumen()
+                    
+                    # Verificar clicks en los botones
+                    boton_y = menu_y + menu_h - 100
+                    boton_ancho = (menu_w - 60) // 2
+                    
+                    # Comprobar click en "Volver al menú"
+                    menu_rect = pygame.Rect(menu_x + 20, boton_y, boton_ancho, 40)
+                    if menu_rect.collidepoint(mouse_pos):
+                        # Guardar el estado actual
+                        old_screen = screen.copy()
+                        # Mostrar pantalla de inicio
+                        pantalla_de_inicio()
+                        # Restaurar el estado anterior
+                        screen.blit(old_screen, (0,0))
+                        pygame.display.flip()
                         running = False
-                    else:
-                        actions[seleccion]()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # detectar clicks en las opciones
-                mx, my = event.pos
-                menu_w, menu_h = 400, 260
-                menu_x = (ancho - menu_w) // 2
-                menu_y = (alto - menu_h) // 2
-                # cada opción tiene altura
-                opt_h = 60
-                for i, _ in enumerate(opciones):
-                    rect = pygame.Rect(menu_x + 20, menu_y + 60 + i * opt_h, menu_w - 40, opt_h - 10)
-                    if rect.collidepoint((mx, my)):
-                        if opciones[i] == "Volver al menú":
-                            running = False
-                        else:
-                            actions[i]()
+                    
+                    # Comprobar click en "Volver al juego"
+                    juego_rect = pygame.Rect(menu_x + 20 + boton_ancho + 20, boton_y, boton_ancho, 40)
+                    if juego_rect.collidepoint(mouse_pos):
+                        running = False
+                        
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    dragging = False
+            elif event.type == pygame.MOUSEMOTION:
+                if dragging:
+                    # Actualizar volumen mientras se arrastra
+                    nuevo_x = max(barra_x, min(event.pos[0], barra_x + barra_ancho))
+                    volumen = (nuevo_x - barra_x) / barra_ancho
+                    aplicar_volumen()
 
         # Dibujado del menú
         screen.blit(overlay, (0, 0))
-        menu_w, menu_h = 400, 260
-        menu_x = (ancho - menu_w) // 2
-        menu_y = (alto - menu_h) // 2
 
         # Panel
         panel = pygame.Surface((menu_w, menu_h))
         panel.fill((30, 30, 30))
         pygame.draw.rect(panel, (200,200,200), panel.get_rect(), 2)
+        
+        # Añadir un margen superior
+        margen_superior = 30
 
         # Título
         titulo = title_font.render("Configuración", True, (255,255,255))
-        panel.blit(titulo, ((menu_w - titulo.get_width())//2, 10))
+        panel.blit(titulo, ((menu_w - titulo.get_width())//2, margen_superior))
 
-        # Mostrar volumen actual
-        vol_txt = fuente.render(f"Volumen: {int(volumen*100)}%", True, (200,200,150))
-        panel.blit(vol_txt, ((menu_w - vol_txt.get_width())//2, 45))
+        # Barra de volumen
+        # Texto "Volumen"
+        vol_label = fuente.render("Volumen", True, (255, 255, 255))
+        menu_barra_x = (menu_w - barra_ancho) // 2
+        menu_barra_y = 100
+        panel.blit(vol_label, ((menu_w - vol_label.get_width()) // 2, menu_barra_y - 40))
+        
+        # Porcentaje de volumen
+        vol_percent = fuente.render(f"{int(volumen * 100)}%", True, (255, 255, 255))
+        panel.blit(vol_percent, ((menu_w - vol_percent.get_width()) // 2, menu_barra_y - 20))
+        
+        # Actualizar las coordenadas absolutas de la barra para la detección de clicks
+        barra_x = menu_x + menu_barra_x
+        barra_y = menu_y + menu_barra_y
+        barra_rect = pygame.Rect(barra_x, barra_y, barra_ancho, barra_alto)
+        
+        # Dibujar la barra en el panel usando coordenadas relativas al panel
+        panel_barra_rect = pygame.Rect(menu_barra_x, menu_barra_y, barra_ancho, barra_alto)
+        pygame.draw.rect(panel, (100, 100, 100), panel_barra_rect)  # Barra base
+        # Dibujar la parte llena de la barra
+        volumen_rect = pygame.Rect(menu_barra_x, menu_barra_y, barra_ancho * volumen, barra_alto)
+        pygame.draw.rect(panel, (0, 255, 0), volumen_rect)  # Barra de progreso
+        pygame.draw.rect(panel, (255, 255, 255), panel_barra_rect, 2)  # Borde
 
-        # Opciones
-        opt_h = 60
-        for i, opt in enumerate(opciones):
-            rect = pygame.Rect(20, 60 + i * opt_h, menu_w - 40, opt_h - 10)
-            color = (70,70,70) if i != seleccion else (100,100,140)
-            pygame.draw.rect(panel, color, rect)
-            txt = fuente.render(opt, True, (255,255,255))
-            panel.blit(txt, (rect.x + 10, rect.y + (rect.height - txt.get_height())//2))
+        # Slider
+        slider_x = barra_x + (barra_ancho * volumen) - (slider_ancho // 2)
+        slider_y = barra_y - (slider_alto - barra_alto) // 2
+        slider_rect = pygame.Rect(slider_x, slider_y, slider_ancho, slider_alto)
+        pygame.draw.rect(panel, (200, 200, 200), slider_rect)
+        pygame.draw.rect(panel, (100, 100, 100), slider_rect, 2)
 
-        # Blit panel
+        # Slider
+        slider_x = barra_x + (barra_ancho * volumen) - (slider_ancho // 2)
+        slider_y = barra_y - (slider_alto - barra_alto) // 2
+        slider_rect = pygame.Rect(slider_x - menu_x, slider_y - menu_y, slider_ancho, slider_alto)
+        pygame.draw.rect(panel, (200, 200, 200), slider_rect)
+        pygame.draw.rect(panel, (100, 100, 100), slider_rect, 2)
+
+        # Botones en la parte inferior
+        boton_y = menu_h - 100  # Subimos los botones
+        boton_ancho = (menu_w - 60) // 2  # Ancho para cada botón (20 de margen a los lados, 20 entre botones)
+        boton_alto = 40
+
+        # Botón Volver al menú (izquierda)
+        menu_rect = pygame.Rect(menu_w//4 - boton_ancho//2, boton_y, boton_ancho, boton_alto)
+        pygame.draw.rect(panel, (50, 50, 50), menu_rect)
+        pygame.draw.rect(panel, (200, 200, 200), menu_rect, 2)
+        menu_text = fuente.render("Volver al menú", True, (255, 255, 255))
+        menu_x = menu_rect.x + (menu_rect.width - menu_text.get_width()) // 2
+        menu_y = menu_rect.y + (menu_rect.height - menu_text.get_height()) // 2
+        panel.blit(menu_text, (menu_x, menu_y))
+
+        # Botón Volver al juego (derecha)
+        juego_rect = pygame.Rect(3*menu_w//4 - boton_ancho//2, boton_y, boton_ancho, boton_alto)
+        pygame.draw.rect(panel, (50, 50, 50), juego_rect)
+        pygame.draw.rect(panel, (200, 200, 200), juego_rect, 2)
+        juego_text = fuente.render("Volver al juego", True, (255, 255, 255))
+        juego_x = juego_rect.x + (juego_rect.width - juego_text.get_width()) // 2
+        juego_y = juego_rect.y + (juego_rect.height - juego_text.get_height()) // 2
+        panel.blit(juego_text, (juego_x, juego_y))
+
+        # Blit del panel en la pantalla
         screen.blit(panel, (menu_x, menu_y))
 
         pygame.display.flip()
         clock.tick(60)
 
 
-def crear_boton_config(x, y, w=120, h=40, text="Config"):
+def crear_boton_config(x, y, size=60, text="Config"):
     font = pygame.font.SysFont(None, 24)
-    return Button((x, y, w, h), text, font=font)
+    return Button((x, y, size, size), text, font=font)
 
 
 if __name__ == "__main__":
