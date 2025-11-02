@@ -8,6 +8,7 @@ from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
+from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
 def cargar_sala(nombre_sala, maniquies=[], inv=None):
     """Carga una sala con un fondo dado.
@@ -28,6 +29,9 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
 
     fondo = cargar_fondo(config["fondo"], "Fondos")
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
+
+    # Botón de configuración (es creado por sala para que funcione en todas las salas)
+    btn_config = crear_boton_config(size[0] - 140, 20)
 
     # Puerta
     puerta_interaccion_salida = config["puertas"]["salida"]
@@ -52,6 +56,12 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            # manejador del botón de configuración
+            try:
+                btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            except Exception:
+                pass
+
             # Llamada al manejador del inventario con protección para evitar crash
             try:
                 inv.handle_event(event)
@@ -114,7 +124,14 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
         print(f"[DEBUG] MUESTRO CONTRONO')")
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
-        sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
+        # sprites_caminar ahora devuelve la superficie del jugador para permitir ordenar
+        # por profundidad con otros objetos. Aquí la usamos y la añadimos a la lista
+        # de objetos a dibujar (esta sala no tiene maniquíes normalmente).
+        current_player_surf = sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
+        objetos = ([(m["img"], m["rect"]) for m in maniquies] if maniquies else []) + [(current_player_surf, personaje_rect)]
+        objetos.sort(key=lambda x: x[1].bottom)
+        for img, rect in objetos:
+            screen.blit(img, rect)
 
         # Mensajes de interacción con puertas
         if pies_personaje.colliderect(puerta_interaccion_salida):
@@ -123,6 +140,12 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+
+        # dibujar botón de configuración encima de la escena
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
 
         try:
             inv.draw(screen)

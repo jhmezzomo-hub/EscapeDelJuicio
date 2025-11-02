@@ -5,10 +5,11 @@ from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import teclas_movimiento
 
 def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect):
-    """Renderiza y actualiza animación/movimiento del personaje.
+    """Actualiza animación/movimiento del personaje y devuelve la superficie
+    que debe pintarse para este frame (no dibuja directamente).
 
-    Nota: ahora `personaje` y `personaje_rect` se reciben desde el llamador
-    (por ejemplo `cargar_sala`) para evitar recrear la posición cada frame.
+    Esto permite al llamador (p. ej. una sala) mezclar la superficie
+    del personaje con otros objetos y ordenar por profundidad.
     """
     # Cargamos las superficies de las distintas animaciones (pueden seguir siendo
     # cargadas cada frame; idealmente se cachearían fuera de esta función)
@@ -36,25 +37,21 @@ def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, pers
     if moving and new_direction in ("left", "right"):
         direction = new_direction
 
-    # Dibujar animación por frame
+    # Selección de la superficie del personaje para este frame (no la dibujamos aquí)
     if moving:
         # ciclo de caminata
         frame = walk_count // 7 % len(walk_left)
-        if direction == "right":
-            screen.blit(walk_right[frame], personaje_rect)
-        else:
-            screen.blit(walk_left[frame], personaje_rect)
+        current_surf = walk_right[frame] if direction == "right" else walk_left[frame]
         walk_count += 1
         if walk_count >= 14:  # reiniciar ciclo
             walk_count = 0
     else:
         # idle
         walk_count = 0
-        if direction == "right":
-            screen.blit(idle_right, personaje_rect)
-        else:
-            screen.blit(idle_left, personaje_rect)
+        current_surf = idle_right if direction == "right" else idle_left
 
     # Guardamos el estado para el siguiente frame
     sprites_caminar.walk_count = walk_count
     sprites_caminar.direction = direction
+
+    return current_surf
