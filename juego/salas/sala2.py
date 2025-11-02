@@ -6,6 +6,7 @@ import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.salas.cargar_salas import cargar_sala
+from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.pantalla.pantalla_muerte import pantalla_fin
 from juego.ui.inventory import Inventory, Item
@@ -21,6 +22,10 @@ def iniciar_sala2(inv=None):
     size = tamaño_pantallas()
     screen = info_pantalla()
     general = get_config_sala("general")
+
+    linterna_encendida = False
+    mostrar_mensaje_linterna = True
+    timer_mensaje_linterna = 1.0
 
     maniquies = []
     posiciones = [
@@ -87,6 +92,7 @@ def iniciar_sala2(inv=None):
     while True:
         dt = clock.tick(60) / 1000.0
         teclas = pygame.key.get_pressed()
+        cargar_fondo("sala2_fondo.png", "Fondos")
 
         # Actualizar movimiento y animación del personaje
         # Usar el tamaño actual del rect del personaje para las superficies
@@ -121,31 +127,8 @@ def iniciar_sala2(inv=None):
         mensaje_texto = ""
         mensaje_color = (255, 255, 255)
 
-        for m in maniquies:
-            if personaje_rect.colliderect(m["hitbox"]):
-                mensaje_maniqui = True
-                llave_existente = any(slot and slot.type == "llave" for slot in inv.inventory_slots + inv.quickbar)
-
-                if not m["llave_agarrada"]:
-                    if not llave_existente:
-                        mensaje_texto = "Presiona E para agarrar llave"
-                        if teclas[pygame.K_e]:
-                            if m["es_maniqui_malo"]:
-                                pantalla_fin()
-                                iniciar_sala2()
-                                return
-
-                            nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
-                            for i in range(len(inv.inventory_slots)):
-                                if inv.inventory_slots[i] is None:
-                                    inv.inventory_slots[i] = nueva_llave
-                                    m["llave_agarrada"] = True
-                                    break
-                    else:
-                        mensaje_texto = "Ya tienes una llave en tu inventario"
-                else:
-                    mensaje_texto = "Ya agarraste la llave de este maniquí"
-                break
+        oscuridad.fill((0, 0, 0, 240))
+        screen.blit(oscuridad, (0, 0))
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
@@ -185,6 +168,35 @@ def iniciar_sala2(inv=None):
             for m in maniquies:
                 pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
 
+        inv.update(dt)
+        inv.draw(screen)
+        
+        # Actualizar efecto de linterna
+        for m in maniquies:
+            if personaje_rect.colliderect(m["hitbox"]):
+                mensaje_maniqui = True
+                llave_existente = any(slot and slot.type == "llave" for slot in inv.inventory_slots + inv.quickbar)
+
+                if not m["llave_agarrada"]:
+                    if not llave_existente:
+                        mensaje_texto = "Presiona E para agarrar llave"
+                        if teclas[pygame.K_e]:
+                            if m["es_maniqui_malo"]:
+                                pantalla_fin()
+                                iniciar_sala2()
+                                return
+
+                            nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
+                            for i in range(len(inv.inventory_slots)):
+                                if inv.inventory_slots[i] is None:
+                                    inv.inventory_slots[i] = nueva_llave
+                                    m["llave_agarrada"] = True
+                                    break
+                    else:
+                        mensaje_texto = "Ya tienes una llave en tu inventario"
+                else:
+                    mensaje_texto = "Ya agarraste la llave de este maniquí"
+                break
         if mostrar_mensaje_linterna:
             alpha = int((math.sin(pygame.time.get_ticks() * 0.005) + 1) * 127)
             texto = fuente.render("Presiona G para prender linterna", True, (255, 255, 150))
@@ -192,12 +204,6 @@ def iniciar_sala2(inv=None):
         elif mensaje_maniqui or mensaje_texto:
             texto = fuente.render(mensaje_texto, True, mensaje_color)
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-
-        inv.update(dt)
-        inv.draw(screen)
-        
-        # Actualizar efecto de linterna
-        oscuridad.fill((0, 0, 0, 240))
         if linterna_encendida:
             gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
             for r in range(200, 0, -1):
@@ -205,8 +211,6 @@ def iniciar_sala2(inv=None):
                 pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
             pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
             oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
-        
-        screen.blit(oscuridad, (0, 0))
         pygame.display.flip()
 
 
