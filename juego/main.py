@@ -29,3 +29,4 @@ def main():
         # Iniciar el juego si se ejecuta directamente
 if __name__ == "__main__":
     main()
+    

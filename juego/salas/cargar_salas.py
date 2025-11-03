@@ -53,17 +53,30 @@ def cargar_sala(nombre_sala, maniquies=[]):
     papel_rect = None
     papel_inv_surf = None  # Nueva superficie para la imagen en el inventario
     
+    # --- Agregar variables para la linterna ---
+    linterna_visible = False
+    linterna_surf = None
+    linterna_rect = None
+    linterna_inv_surf = None
+    
     if nombre_sala in ("inicio", "sala1", "sala_1"):
-        img_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'papel'))
+        img_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'objetos'))
         try:
-            # Cargar las dos imágenes (0 para suelo, 1 para inventario)
-            archivos = [f for f in os.listdir(img_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-            if len(archivos) >= 2:
-                papel_surf = pygame.image.load(os.path.join(img_dir, archivos[1])).convert_alpha()
-                papel_inv_surf = pygame.image.load(os.path.join(img_dir, archivos[0])).convert_alpha()
-        except Exception:
+            # Cargar las imágenes usando los nombres exactos de los archivos
+            papel_inv_surf = pygame.image.load(os.path.join(img_dir, "papel_inv.png")).convert_alpha()
+            papel_surf = pygame.image.load(os.path.join(img_dir, "papel_piso.png")).convert_alpha()
+            # Para la linterna, usar la misma imagen
+            linterna_surf = pygame.image.load(os.path.join(img_dir, "linterna.png")).convert_alpha()
+            linterna_inv_surf = linterna_surf  # Usar la misma imagen
+            
+            print(f"Imágenes cargadas exitosamente desde: {img_dir}")  # Para debug
+            
+        except Exception as e:
+            print(f"Error al cargar imágenes: {e}")  # Para debug
             papel_surf = None
             papel_inv_surf = None
+            linterna_surf = None
+            linterna_inv_surf = None
 
         # Tamaños diferentes para suelo e inventario
         papel_size = (40, 30)  # tamaño en suelo
@@ -91,6 +104,33 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
         papel_rect = papel_surf.get_rect(topleft=(200, 500))
         papel_visible = True
+
+        # Configurar linterna
+        linterna_size = (40, 30)  # tamaño en suelo
+        linterna_inv_size = (32, 32)  # tamaño en inventario
+
+        # Crear/escalar imagen de linterna en suelo
+        if linterna_surf is None:
+            linterna_surf = pygame.Surface(linterna_size, pygame.SRCALPHA)
+            linterna_surf.fill((200, 200, 100))  # Color amarillento para la linterna
+            pygame.draw.rect(linterna_surf, (150, 150, 50), linterna_surf.get_rect(), 1)
+        else:
+            try:
+                linterna_surf = pygame.transform.smoothscale(linterna_surf, linterna_size)
+            except Exception:
+                linterna_surf = pygame.transform.scale(linterna_surf, linterna_size)
+
+        # Crear/escalar imagen de linterna en inventario
+        if linterna_inv_surf is None:
+            linterna_inv_surf = linterna_surf.copy()
+        else:
+            try:
+                linterna_inv_surf = pygame.transform.smoothscale(linterna_inv_surf, linterna_inv_size)
+            except Exception:
+                linterna_inv_surf = pygame.transform.scale(linterna_inv_surf, linterna_inv_size)
+
+        linterna_rect = linterna_surf.get_rect(topleft=(600, 500))  # Posición opuesta al papel
+        linterna_visible = True
 
     # -------------------------------------------------------
 
@@ -139,7 +179,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
                             for i in range(len(inv.inventory_slots)):
                                 if inv.inventory_slots[i] is None:
                                     # Usar papel_inv_surf en lugar de papel_surf
-                                    inv.inventory_slots[i] = Item(type="papel", count=1, max_stack=1, 
+                                    inv.inventory_slots[i] = Item(type="objetos", count=1, max_stack=1, 
                                                                color=(255,255,255), image=papel_inv_surf)
                                     placed = True
                                     break
@@ -157,6 +197,21 @@ def cargar_sala(nombre_sala, maniquies=[]):
                     except Exception:
                         # en caso de error no romper el bucle; solo no recoger
                         papel_visible = papel_visible
+                # Interacción: recoger linterna
+                if linterna_visible and linterna_rect and pies_personaje.colliderect(linterna_rect):
+                    try:
+                        placed = False
+                        if hasattr(inv, "inventory_slots"):
+                            for i in range(len(inv.inventory_slots)):
+                                if inv.inventory_slots[i] is None:
+                                    inv.inventory_slots[i] = Item(type="linterna", count=1, max_stack=1, 
+                                                               color=(255,255,0), image=linterna_inv_surf)
+                                    placed = True
+                                    break
+                        if placed:
+                            linterna_visible = False
+                    except Exception:
+                        linterna_visible = linterna_visible
 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
@@ -179,6 +234,10 @@ def cargar_sala(nombre_sala, maniquies=[]):
         if papel_visible and papel_surf and papel_rect:
             screen.blit(papel_surf, papel_rect)
 
+        # Dibujar la linterna en el suelo si está visible
+        if linterna_visible and linterna_surf and linterna_rect:
+            screen.blit(linterna_surf, linterna_rect)
+
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
         sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
 
@@ -193,6 +252,10 @@ def cargar_sala(nombre_sala, maniquies=[]):
         if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
             texto = fuente.render("Presiona E para recoger el papel", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 70))
+        # Mensaje para recoger linterna
+        if linterna_visible and linterna_rect and pies_personaje.colliderect(linterna_rect):
+            texto = fuente.render("Presiona E para recoger la linterna", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 100))
 
         inv.draw(screen)
         pygame.display.flip()
