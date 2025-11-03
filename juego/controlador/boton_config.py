@@ -35,7 +35,7 @@ class Button:
         # Cargar la imagen del botón
         image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'logos', 'boton-config.png')
         self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (50,50))
+        self.image = pygame.transform.scale(self.image, (75,75))
 
     def draw(self, surface):
         # Dibujar la imagen del botón
@@ -90,8 +90,8 @@ def abrir_menu_config(screen):
     # Configuración del menú
     menu_w, menu_h = 400, 300
     # Calculamos el centro exacto de la pantalla
-    menu_x = ancho // 2 - menu_w // 2
-    menu_y = alto // 2 - menu_h // 2 - 100  # Desplazamiento hacia arriba para mejor equilibrio visual
+    menu_x = (ancho-menu_w) // 2
+    menu_y = (alto-menu_h) // 2  # Desplazamiento hacia arriba para mejor equilibrio visual
     
     # Configuración de la barra de volumen
     barra_ancho = 200
@@ -165,6 +165,7 @@ def abrir_menu_config(screen):
         panel = pygame.Surface((menu_w, menu_h))
         panel.fill((30, 30, 30))
         pygame.draw.rect(panel, (200,200,200), panel.get_rect(), 2)
+        print(f"[DEBUG] Dibujando panel en ({menu_x},{menu_y}) tamaño ({menu_w}x{menu_h})")
         
         # Añadir un margen superior
         margen_superior = 30
@@ -197,16 +198,10 @@ def abrir_menu_config(screen):
         pygame.draw.rect(panel, (0, 255, 0), volumen_rect)  # Barra de progreso
         pygame.draw.rect(panel, (255, 255, 255), panel_barra_rect, 2)  # Borde
 
-        # Slider
+        # Slider (se dibuja en coordenadas relativas al panel)
         slider_x = barra_x + (barra_ancho * volumen) - (slider_ancho // 2)
         slider_y = barra_y - (slider_alto - barra_alto) // 2
-        slider_rect = pygame.Rect(slider_x, slider_y, slider_ancho, slider_alto)
-        pygame.draw.rect(panel, (200, 200, 200), slider_rect)
-        pygame.draw.rect(panel, (100, 100, 100), slider_rect, 2)
-
-        # Slider
-        slider_x = barra_x + (barra_ancho * volumen) - (slider_ancho // 2)
-        slider_y = barra_y - (slider_alto - barra_alto) // 2
+        # Convertir a coordenadas relativas al panel antes de dibujar
         slider_rect = pygame.Rect(slider_x - menu_x, slider_y - menu_y, slider_ancho, slider_alto)
         pygame.draw.rect(panel, (200, 200, 200), slider_rect)
         pygame.draw.rect(panel, (100, 100, 100), slider_rect, 2)
@@ -221,9 +216,10 @@ def abrir_menu_config(screen):
         pygame.draw.rect(panel, (50, 50, 50), menu_rect)
         pygame.draw.rect(panel, (200, 200, 200), menu_rect, 2)
         menu_text = fuente.render("Volver al menú", True, (255, 255, 255))
-        menu_x = menu_rect.x + (menu_rect.width - menu_text.get_width()) // 2
-        menu_y = menu_rect.y + (menu_rect.height - menu_text.get_height()) // 2
-        panel.blit(menu_text, (menu_x, menu_y))
+        boton_menu_x = menu_rect.x + (menu_rect.width - menu_text.get_width()) // 2
+        boton_menu_y = menu_rect.y + (menu_rect.height - menu_text.get_height()) // 2
+        # Usar coordenadas locales del panel (boton_menu_x, boton_menu_y)
+        panel.blit(menu_text, (boton_menu_x, boton_menu_y))
 
         # Botón Volver al juego (derecha)
         juego_rect = pygame.Rect(3*menu_w//4 - boton_ancho//2, boton_y, boton_ancho, boton_alto)
