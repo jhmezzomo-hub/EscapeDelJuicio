@@ -12,7 +12,7 @@ Provee:
 - Button: clase ligera para dibujar y detectar clicks
 - crear_boton_config(x,y,w,h,text): helper para crear el botón
 - abrir_menu_config(screen): abre un menú modal con opciones:
-  "Subir Volumen", "Bajar Volumen", "Volver al menú"
+"Subir Volumen", "Bajar Volumen", "Volver al menú"
 
 Nota: la opción de volumen actualiza una variable de módulo `volumen` y
 intenta aplicar `pygame.mixer.music.set_volume(volumen)` si el mixer está
@@ -35,7 +35,7 @@ class Button:
         # Cargar la imagen del botón
         image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'logos', 'boton-config.png')
         self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (50,50)))
+        self.image = pygame.transform.scale(self.image, (50,50))
 
     def draw(self, surface):
         # Dibujar la imagen del botón
