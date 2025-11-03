@@ -133,6 +133,14 @@ class Inventory:
             is_q, idx = self.slot_at_pos(pos)
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
 
+            # Agregar manejo de clic derecho para visualización ampliada
+            if right and is_q is not None:
+                # Obtener el item del slot clickeado
+                item = self.quickbar[idx] if is_q else self.inventory_slots[idx]
+                if item and hasattr(item, 'image') and item.image:
+                    mostrar_item_ampliado(pygame.display.get_surface(), item)
+                    return True
+
             if left and is_q is not None:
                 source = self.quickbar if is_q else self.inventory_slots
                 if source[idx] is not None:

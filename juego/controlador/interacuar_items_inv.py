@@ -20,8 +20,13 @@ class ItemViewer:
 
     def handle_event(self, event):
         """Maneja eventos para cerrar la vista ampliada."""
-        if self.viewing_item and event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
-            self.viewing_item = None
+        if self.viewing_item:
+            # Si ya estamos viendo un item, cualquier clic o tecla lo cierra
+            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+                self.viewing_item = None
+                return True
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:  # 3 es clic derecho
+            # Aquí deberías implementar la lógica para detectar si el clic fue sobre un item
             return True
         return False
 
