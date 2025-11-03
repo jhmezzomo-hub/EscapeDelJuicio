@@ -83,9 +83,7 @@ def abrir_menu_config(screen):
     opciones = ["Volver al menú"]
     seleccion = 0
 
-    # Overlay semitransparente
-    overlay = pygame.Surface((ancho, alto), pygame.SRCALPHA)
-    overlay.fill((0,0,0,150))
+    # (overlay eliminado) usamos sólo el panel semitransparente
 
     # Configuración del menú
     menu_w, menu_h = 400, 300
@@ -158,12 +156,13 @@ def abrir_menu_config(screen):
                     volumen = (nuevo_x - barra_x) / barra_ancho
                     aplicar_volumen()
 
-        # Dibujado del menú
-        screen.blit(overlay, (0, 0))
+    # Dibujado del menú (sin overlay; el panel es semitransparente)
 
-        # Panel
-        panel = pygame.Surface((menu_w, menu_h))
-        panel.fill((30, 30, 30))
+        # Panel (usar superficie con canal alfa para permitir transparencia)
+        panel = pygame.Surface((menu_w, menu_h), pygame.SRCALPHA)
+        # Relleno semitransparente (RGBA) — ajusta el último valor (0-255) para más/menos transparencia
+        panel.fill((30, 30, 30, 180))
+        # Borde opaco
         pygame.draw.rect(panel, (200,200,200), panel.get_rect(), 2)
         print(f"[DEBUG] Dibujando panel en ({menu_x},{menu_y}) tamaño ({menu_w}x{menu_h})")
         
@@ -180,16 +179,16 @@ def abrir_menu_config(screen):
         menu_barra_x = (menu_w - barra_ancho) // 2
         menu_barra_y = 100
         panel.blit(vol_label, ((menu_w - vol_label.get_width()) // 2, menu_barra_y - 40))
-        
+
         # Porcentaje de volumen
         vol_percent = fuente.render(f"{int(volumen * 100)}%", True, (255, 255, 255))
         panel.blit(vol_percent, ((menu_w - vol_percent.get_width()) // 2, menu_barra_y - 20))
-        
+
         # Actualizar las coordenadas absolutas de la barra para la detección de clicks
         barra_x = menu_x + menu_barra_x
         barra_y = menu_y + menu_barra_y
         barra_rect = pygame.Rect(barra_x, barra_y, barra_ancho, barra_alto)
-        
+
         # Dibujar la barra en el panel usando coordenadas relativas al panel
         panel_barra_rect = pygame.Rect(menu_barra_x, menu_barra_y, barra_ancho, barra_alto)
         pygame.draw.rect(panel, (100, 100, 100), panel_barra_rect)  # Barra base
