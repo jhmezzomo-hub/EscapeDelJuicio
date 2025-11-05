@@ -66,8 +66,8 @@ def cargar_sala(nombre_sala, maniquies=[]):
             papel_inv_surf = pygame.image.load(os.path.join(img_dir, "papel_inv.png")).convert_alpha()
             papel_surf = pygame.image.load(os.path.join(img_dir, "papel_piso.png")).convert_alpha()
             # Para la linterna, usar la misma imagen
-            linterna_surf = pygame.image.load(os.path.join(img_dir, "linterna.png")).convert_alpha()
-            linterna_inv_surf = linterna_surf  # Usar la misma imagen
+            linterna_surf = pygame.image.load(os.path.join(img_dir, "linterna_piso.png")).convert_alpha()
+            linterna_inv_surf = pygame.image.load(os.path.join(img_dir, "linterna_inv.png")).convert_alpha()
             
             print(f"Imágenes cargadas exitosamente desde: {img_dir}")  # Para debug
             
@@ -106,7 +106,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
         papel_visible = True
 
         # Configurar linterna
-        linterna_size = (40, 30)  # tamaño en suelo
+        linterna_size = (70, 60)  # tamaño en suelo
         linterna_inv_size = (32, 32)  # tamaño en inventario
 
         # Crear/escalar imagen de linterna en suelo
