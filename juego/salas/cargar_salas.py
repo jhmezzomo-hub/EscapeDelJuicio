@@ -6,7 +6,6 @@ from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos
 from juego.controlador.sprites_caminar import sprites_caminar
 from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
-from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
 from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
