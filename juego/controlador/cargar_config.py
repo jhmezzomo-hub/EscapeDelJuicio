@@ -46,7 +46,7 @@ def get_config_sala(nombre_sala):
             "siguiente_sala": "sala3"
         },
         "sala3": {
-            "fondo": "Fondo_sala1.png",
+            "fondo": "fondo_puertas3.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (100, 400),
@@ -61,7 +61,7 @@ def get_config_sala(nombre_sala):
             "siguiente_sala": "sala4"
         },
         "sala4": {
-            "fondo": "Fondo_sala1.png",
+            "fondo": "fondo_puertaD.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (400, 400),

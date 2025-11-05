@@ -12,17 +12,18 @@ from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
 from juego.controlador.controles import teclas_movimiento
 from juego.controlador.sprites_caminar import sprites_caminar
-from juego.limite_colisiones.colision_piso import colision_piso
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.cargar_config import get_config_sala
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 from juego.ui.inventory import Item
+from juego.limite_colisiones.colision_piso import colision_piso
+from juego.controlador.cargar_imagen import cargar_img
 
 
 # ------------------- SALA 4 -------------------
 def iniciar_sala4(inv=None):
-    """Sala 4: usa sprites_caminar, sin linterna ni oscuridad."""
+    """Sala 4: con colisiones, personaje animado y puerta de salida."""
     random.seed()
 
     # Inventario
@@ -45,7 +46,7 @@ def iniciar_sala4(inv=None):
     fondo = cargar_fondo(config["fondo"], "Fondos")
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
 
-    # Colisiones del piso
+    # Colisiones del piso + paredes
     mask = colision_piso(size)
 
     # Botón de configuración
@@ -56,60 +57,40 @@ def iniciar_sala4(inv=None):
     clock = pygame.time.Clock()
     velocidad = 5
 
-    # Puerta de volver
-    puerta_volver = config["puertas"].get("volver", None)
-    if puerta_volver:
-        try:
-            if isinstance(puerta_volver, pygame.Rect):
-                puerta_volver.y = personaje_rect.bottom - puerta_volver.height
-            else:
-                x, y, w, h = puerta_volver
-                new_y = personaje_rect.bottom - h
-                puerta_volver = pygame.Rect(x, new_y, w, h)
-        except Exception as e:
-            print("[WARN] No se pudo reposicionar puerta_volver:", e)
+    # -------- Puerta de salida (derecha) --------
+    puerta_volver = pygame.Rect(size[0] - 100, 320, 80, 120)
 
-    # Guardar posición del rectángulo de la puerta en un diccionario
-    posiciones_puertas = {}
-    if puerta_volver:
-        posiciones_puertas["puerta_volver"] = {
-            "x": puerta_volver.x,
-            "y": puerta_volver.y,
-            "w": puerta_volver.width,
-            "h": puerta_volver.height
-        }
-
-    print("[DEBUG] posiciones_puertas:", posiciones_puertas)
-
-    # -------- Cargar personaje (Caperucita) con mismo tamaño que el personaje principal --------
+    # -------- Cargar personaje (Caperucita) --------
     caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
     caperucita_rect.midbottom = (180, personaje_rect.bottom)
 
-    maniquies = []  # (sala sin enemigos)
-    print("[DEBUG] Sala 4 cargada correctamente.")
+    # -------- Cargar balde y posicionarlo sobre la cabeza de Caperucita --------
+    balde_img, balde_rect = cargar_img("balde.png", "balde", size)
+    balde_rect.midbottom = (caperucita_rect.centerx, caperucita_rect.top - 40)
+
+    maniquies = []
+    print("[DEBUG] Sala 4 cargada correctamente con colisiones y objetos visuales.")
 
     # Bucle principal
     while True:
         dt = clock.tick(60) / 1000.0
 
+        # Eventos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            try:
+                btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            except Exception:
+                pass
+
             inv.handle_event(event)
 
-        # Rect pequeño que representa los "pies" del personaje
-        pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
-
-        # Movimiento y controles
+        # Movimiento del personaje
         if not inv.is_open:
-            moving, direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies)
+            teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies)
 
             teclas = pygame.key.get_pressed()
             if teclas[pygame.K_ESCAPE]:
@@ -118,10 +99,12 @@ def iniciar_sala4(inv=None):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
-                if puerta_volver and pies_personaje.colliderect(puerta_volver):
+                # Interacción con la puerta de volver
+                if personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
                     return config.get("sala_anterior")
 
+        # Actualizar inventario
         inv.update(dt)
 
         # Dibujar fondo
@@ -130,31 +113,40 @@ def iniciar_sala4(inv=None):
         # Dibujar contornos si están activados
         if mostrar_contorno:
             pygame.draw.rect(screen, (0, 255, 255), personaje_rect, 1)
-            if puerta_volver:
-                pygame.draw.rect(screen, (255, 0, 0), puerta_volver, 2)
+            pygame.draw.rect(screen, (255, 0, 0), puerta_volver, 2)
             pygame.draw.rect(screen, (255, 255, 0), caperucita_rect, 1)
 
-        # Dibujar personajes
+        # Dibujar personaje principal (animado)
         current_player_surf = sprites_caminar(
             size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect
         )
 
-        objetos = [
-            (caperucita_img, caperucita_rect),
-            (current_player_surf, personaje_rect),
-        ]
-        objetos.sort(key=lambda x: x[1].bottom)
-        for img, rect in objetos:
-            screen.blit(img, rect)
+        # Dibujar objetos (balde, Caperucita y jugador)
+        if personaje_rect.bottom > caperucita_rect.bottom:
+            screen.blit(balde_img, balde_rect)
+            screen.blit(current_player_surf, personaje_rect)
+            screen.blit(caperucita_img, caperucita_rect)
+        else:
+            screen.blit(balde_img, balde_rect)
+            screen.blit(caperucita_img, caperucita_rect)
+            screen.blit(current_player_surf, personaje_rect)
 
-        # Texto de interacción con puerta
-        if puerta_volver and pies_personaje.colliderect(puerta_volver):
+        # Mostrar texto de interacción con la puerta
+        if personaje_rect.colliderect(puerta_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
-        # Dibujar botón e inventario
-        btn_config.draw(screen)
-        inv.draw(screen)
+        # Dibujar botón de configuración
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
+
+        # Dibujar inventario
+        try:
+            inv.draw(screen)
+        except Exception as e:
+            print("ERROR al dibujar inventario:", e)
 
         pygame.display.flip()
 
