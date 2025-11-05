@@ -1,27 +1,26 @@
 import pygame, sys
 
 from juego.controlador.cargar_fondos import cargar_fondo
-from juego.controlador.cargar_personaje import cargar_personaje
 from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.sprites_caminar import sprites_caminar
 from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.cargar_config import get_config_sala
 from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
+from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
-def cargar_sala(nombre_sala, maniquies=[], inv=None):
+# Añadido: Item para guardar el papel en el inventario
+from juego.ui.inventory import Item
+
+def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
     """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
-    print(f"[DEBUG] entrar a cargar_sala('{nombre_sala}')")
     general = get_config_sala("general")
     size = tamaño_pantallas()
     screen = info_pantalla()
     fuente = general["fuente"]
     config = get_config_sala(nombre_sala)
-    if config is None:
-        print(f"[ERROR] No existe la config para la sala '{nombre_sala}'")
-        return None
 
     pos_inicial = config["personaje"]["pos_inicial"],
     tamaño = config["personaje"]["tamaño"]
@@ -44,12 +43,20 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
 
     mostrar_contorno = False
     inv = inv
+    
+    # Variables para el mensaje de error
+    mensaje_error_timer = 0
+    mensaje_error_duracion = 2  # duración en segundos
+    mensaje_error_activo = False
+    mensaje_error_texto = ""
+
+    # -------------------------------------------------------
 
     clock = pygame.time.Clock()
-    velocidad = 5
+    velocidad = 2
     print(f"[DEBUG] sala config cargada: siguiente={config.get('siguiente_sala')}, puertas={config.get('puertas')}")
     while True:
-        dt = clock.tick(60) / 1000.0
+        dt = clock.tick(35) / 1000.0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -91,15 +98,39 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif teclas[pygame.K_e]:
+                # Comprobar interacción con objetos
+                for objeto in objetos_sala:
+                    if objeto['visible'] and pies_personaje.colliderect(objeto['rect']):
+                        from juego.controlador.agregar_inv import agregar_a_inventario
+                        agregar_a_inventario(objeto, inv)
+                
+                # Interacción: puerta salida / volver
                 if puerta_interaccion_salida:
                     if pies_personaje.colliderect(puerta_interaccion_salida):
-                        print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
-                        return config["siguiente_sala"]
+                        # Verificar si el jugador tiene la linterna y el papel
+                        tiene_linterna = False
+                        tiene_papel = False
+                        if hasattr(inv, "inventory_slots"):
+                            for slot in inv.inventory_slots:
+                                if slot is not None:
+                                    if slot.type == "linterna":
+                                        tiene_linterna = True
+                                    elif slot.type == "objetos":  # El papel
+                                        tiene_papel = True
+
+                        if tiene_linterna and tiene_papel:
+                            print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
+                            return config["siguiente_sala"]
+                        else:
+                            mensaje_error_activo = True
+                            mensaje_error_timer = mensaje_error_duracion
+                            mensaje_error_texto = "Necesitas encontrar todos los objetos antes de continuar"
+                            
                 if puerta_interaccion_volver:
                     if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
                         print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
                         return config["sala_anterior"]
-
+                
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
 
@@ -110,8 +141,30 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             print("ERROR en inv.update:")
             traceback.print_exc()
 
+        # Crear superficie para el overlay de texto
+        overlay = pygame.Surface(size, pygame.SRCALPHA)
+        mensaje_mostrado = False
+
         # Dibujar fondo primero
         screen.blit(fondo, (0, 0))
+        
+        # Dibujar objetos de la sala
+        for objeto in objetos_sala:
+            if objeto['visible']:
+                if objeto['surf_suelo'] and objeto['rect']:
+                    screen.blit(objeto['surf_suelo'], objeto['rect'])
+                    if pies_personaje.colliderect(objeto['rect']):
+                        mensaje = f"Presiona E para recoger {objeto['nombre']}"
+                        texto = fuente.render(mensaje, True, (255, 255, 255))
+                        y_pos = size[1] - 70 if objeto['nombre'] == "papel" else size[1] - 100
+                        # Agregar fondo semi-transparente al texto
+                        texto_rect = texto.get_rect(center=(size[0] // 2, y_pos))
+                        padding = 10
+                        fondo_texto = pygame.Surface((texto_rect.width + padding*2, texto_rect.height + padding*2), pygame.SRCALPHA)
+                        fondo_texto.fill((0, 0, 0, 128))  # Negro semi-transparente
+                        overlay.blit(fondo_texto, (texto_rect.centerx - fondo_texto.get_width()//2, texto_rect.y - padding))
+                        overlay.blit(texto, texto_rect)
+                        mensaje_mostrado = True
 
         # Mostrar contornos de debug si corresponde
         if mostrar_contorno:
@@ -121,7 +174,7 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
             if puerta_interaccion_volver:
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
-        print(f"[DEBUG] MUESTRO CONTRONO')")
+
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
         # sprites_caminar ahora devuelve la superficie del jugador para permitir ordenar
         # por profundidad con otros objetos. Aquí la usamos y la añadimos a la lista
@@ -139,6 +192,7 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        inv.draw(screen)
 
         # dibujar botón de configuración encima de la escena
         try:
@@ -152,8 +206,15 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             import traceback
             print("ERROR en inv.draw:")
             traceback.print_exc()
+        # Mostrar mensaje de error si está activo
+        if mensaje_error_activo:
+            mensaje_error_timer -= dt
+            texto_error = fuente.render(mensaje_error_texto, True, (255, 100, 100))
+            screen.blit(texto_error, (size[0] // 2 - texto_error.get_width() // 2, size[1] - 140))
+            if mensaje_error_timer <= 0:
+                mensaje_error_activo = False
+
         pygame.display.flip()
-        print(f"[DEBUG] finalizo cargar_sala('{nombre_sala}') ciclo principal")
         continue
 
         #return info_personaje, fuente, inv, pies_personaje, teclas, puerta_interaccion_salida
