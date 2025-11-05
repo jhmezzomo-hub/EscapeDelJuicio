@@ -1,7 +1,8 @@
 # juego/ui/inventory.py
-import pygame
 from dataclasses import dataclass
 from typing import Optional, List, Tuple
+import pygame
+from juego.controlador.interacuar_items_inv import mostrar_item_ampliado  # Agregar este import
 
 SLOT_SIZE = 64
 SLOT_PADDING = 8
@@ -24,7 +25,7 @@ class Inventory:
     """
     Clase modular de inventario.
     Uso:
-      inv = Inventory(rows=5, cols=6, quickbar_slots=8, pos=(40,40))
+      inv = Inventory(rows=2, cols=4, quickbar_slots=8, pos=(40,40))
       inv.handle_event(event)
       inv.update(dt)
       inv.draw(surface)
@@ -114,6 +115,7 @@ class Inventory:
 
     # --- events ---
     def handle_event(self, event):
+        """Procesa eventos; permite abrir/cerrar inventario y seleccionar slots."""
         # tecla I abre/cierra inventario (si querés otra tecla cambialo)
         if event.type == pygame.KEYDOWN and event.key == pygame.K_i:
             self.is_open = not self.is_open
@@ -130,6 +132,14 @@ class Inventory:
             pos = event.pos
             is_q, idx = self.slot_at_pos(pos)
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
+
+            # Agregar manejo de clic derecho para visualización ampliada
+            if right and is_q is not None:
+                # Obtener el item del slot clickeado
+                item = self.quickbar[idx] if is_q else self.inventory_slots[idx]
+                if item and hasattr(item, 'image') and item.image:
+                    mostrar_item_ampliado(pygame.display.get_surface(), item)
+                    return True
 
             if left and is_q is not None:
                 source = self.quickbar if is_q else self.inventory_slots
@@ -187,6 +197,15 @@ class Inventory:
                                 break
                 self.held_item = None
                 self.held_from = None
+
+        # Manejo de interacción con items (como el papel que muestra información ampliada)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            is_q, idx = self.slot_at_pos(event.pos)
+            if is_q is not None:
+                item = self.quickbar[idx] if is_q else self.inventory_slots[idx]
+                if item and item.type == "papel":
+                    mostrar_item_ampliado(pygame.display.get_surface(), item)
+                    return
 
     def update(self, dt):
         # placeholder para animaciones/timers si los necesitás

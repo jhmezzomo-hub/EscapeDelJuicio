@@ -24,6 +24,9 @@ def get_config_sala(nombre_sala):
             "puertas": {
                 "salida": pygame.Rect(770, 400, 70, 40)
             },
+            "items": {
+                "papel": pygame.Rect(300, 450, 30, 30)
+            },
             "sala_anterior": None,
             "siguiente_sala": "sala2"
         },

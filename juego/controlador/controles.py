@@ -8,7 +8,7 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
     Cuando no hay tecla de movimiento, devuelve la `last_direction` sin
     cambiarla, de modo que el render pueda mantener la orientación.
     """
-    # valores por defecto (aseguran que las variables existan aunque el inventario esté abierto)
+    # Inicializar para asegurar valores incluso si inv.is_open es True
     moving = False
     direction = last_direction
 
@@ -40,4 +40,3 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
 
     return moving, direction
 
-        
