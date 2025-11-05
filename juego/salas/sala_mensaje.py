@@ -13,7 +13,7 @@ def sala_mensaje_bienvenida():
 	fondo_negro.fill((0, 0, 0))
 	"""
 
-	fondo = cargar_fondo("pantalla_saw_2.png", "saw", size)
+	fondo = cargar_fondo("pantalla_saw_2.png", "saw")
 
 	fuente = pygame.font.SysFont("Arial", 26)
 	tiempo_inicio = pygame.time.get_ticks()

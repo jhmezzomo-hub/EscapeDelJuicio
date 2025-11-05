@@ -1,74 +1,71 @@
 import pygame, sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
 from juego.controlador.cargar_personaje import cargar_personaje
-from juego.controlador.controles import teclas_movimiento  
+from juego.controlador.controles import teclas_movimiento
 
-# Inicializar pygame
-pygame.init()
+def init_sprites(size, tamaño):
+    """Inicializa y cachea las imágenes de sprites una sola vez"""
+    if not hasattr(sprites_caminar, "sprites_cache"):
+        idle_left = cargar_personaje("mc_0.png", "mc", size, tamaño)[0]
+        idle_right = pygame.transform.flip(idle_left, True, False)
 
-# Pantalla
-WIDTH, HEIGHT = tamaño_pantallas()
-screen = info_pantalla()
+        walk_left = [
+            cargar_personaje("mc_1.png", "mc", size, tamaño)[0],
+            cargar_personaje("mc_2.png", "mc", size, tamaño)[0],
+        ]
+        walk_right = [pygame.transform.flip(img, True, False) for img in walk_left]
 
-# Reloj
-clock = pygame.time.Clock()
+        sprites_caminar.sprites_cache = {
+            "idle_left": idle_left,
+            "idle_right": idle_right,
+            "walk_left": walk_left,
+            "walk_right": walk_right
+        }
 
-# ===== Cargar imágenes =====
-# Cambiá estas rutas por las de tus imágenes
-personaje_rect = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)[1]
-idle_left = cargar_personaje("mc_0.png", "mc", WIDTH, HEIGHT)[0]
-idle_right = pygame.transform.flip(idle_left, True, False)
+def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect):
+    """Actualiza animación/movimiento del personaje y devuelve la superficie
+    que debe pintarse para este frame (no dibuja directamente).
 
-walk_left = [
-    cargar_personaje("mc_1.png", "mc", WIDTH, HEIGHT)[0],
-    cargar_personaje("mc_2.png", "mc", WIDTH, HEIGHT)[0],
-]
-walk_right = [pygame.transform.flip(img, True, False) for img in walk_left]
+    Esto permite al llamador (p. ej. una sala) mezclar la superficie
+    del personaje con otros objetos y ordenar por profundidad.
+    """
+    # Inicializar caché de sprites si no existe
+    init_sprites(size, tamaño)
+    
+    # Usar sprites cacheados
+    sprites = sprites_caminar.sprites_cache
 
-# ===== Variables del jugador =====
-velocidad = 5
-walk_count = 0
-direction = "left"  # lado al que mira por defecto
+    # ===== Variables del jugador =====
+    velocidad = 5
+    # Guardamos estado entre frames en atributos de la función
+    walk_count = getattr(sprites_caminar, "walk_count", 0)
+    direction = getattr(sprites_caminar, "direction", "left")
 
-# ===== Loop principal =====
-running = True
-while running:
-    clock.tick(30)
-    screen.fill((200, 200, 200))  # fondo gris
+    # ===== Actualización por frame =====
+    # `teclas_movimiento` modifica `personaje_rect` directamente y devuelve
+    # si está moviendo y la nueva dirección sugerida.
+    moving, new_direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, direction)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    keys = pygame.key.get_pressed()
-
-    # Pasamos la dirección actual para que teclas_movimiento no la sobreescriba
-    moving, new_direction = teclas_movimiento(personaje_rect, velocidad, direction)
-    # Solo actualizamos `direction` si hubo movimiento horizontal (left/right)
-    # si moving es True y new_direction difiere, lo adoptamos. Si no, mantenemos
-    # la dirección previa para que el personaje siga mirando hacia el último lado.
-    if moving:
+    # Actualizamos la dirección solo cuando hay movimiento horizontal
+    if moving and new_direction in ("left", "right"):
         direction = new_direction
 
-    # Animación (usamos personaje_rect como posición fuente)
+    # Selección de la superficie del personaje para este frame (no la dibujamos aquí)
     if moving:
-        if direction == "right":
-            screen.blit(walk_right[walk_count // 7 % len(walk_right)], personaje_rect)
-        else:
-            screen.blit(walk_left[walk_count // 7 % len(walk_left)], personaje_rect)
+        # ciclo de caminata
+        frame = walk_count // 7 % len(sprites["walk_left"])
+        current_surf = sprites["walk_right"][frame] if direction == "right" else sprites["walk_left"][frame]
         walk_count += 1
-        if walk_count >= 14:  # 2 frames * 7 ticks
+        if walk_count >= 14:  # reiniciar ciclo
             walk_count = 0
     else:
+        # idle
         walk_count = 0
-        if direction == "right":
-            screen.blit(idle_right, personaje_rect)
-        else:
-            screen.blit(idle_left, personaje_rect)
+        current_surf = sprites["idle_right"] if direction == "right" else sprites["idle_left"]
 
-    pygame.display.update()
+    # Guardamos el estado para el siguiente frame
+    sprites_caminar.walk_count = walk_count
+    sprites_caminar.direction = direction
 
-pygame.quit()
-sys.exit()
+    return current_surf

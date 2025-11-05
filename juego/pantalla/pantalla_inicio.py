@@ -1,14 +1,14 @@
 import pygame.freetype, sys
+from juego.pantalla.tutorial import tutorial
 
 from juego.controlador.cargar_fondos import cargar_fondo
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 
 def pantalla_de_inicio():
-    pygame.init()
     size = tamaño_pantallas()
     screen = info_pantalla()
 
-    bg = cargar_fondo("pantallainicial.png", "Fondos", size)
+    bg = cargar_fondo("pantallainicial.png", "Fondos")
 
     # Usamos freetype para fuente con contorno
     fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
@@ -76,14 +76,19 @@ def pantalla_de_inicio():
         nonlocal running
         running = False
 
+    def tuto():
+        # Abrir la pantalla de tutorial y volver al menú al cerrarla
+        tutorial()
+
     def exit_game():
         pygame.quit()
         sys.exit()
 
     btn_w, btn_h = 250, 70
-    btn_play = Button((850, int(size[1]*0.65), btn_w, btn_h), "JUGAR", start_game)
-    btn_exit = Button((850, int(size[1]*0.65)+90, btn_w, btn_h), "SALIR", exit_game)
-    buttons = [btn_play, btn_exit]
+    btn_play = Button((850, int(size[1]*0.65)-20, btn_w, btn_h), "JUGAR", start_game)
+    btn_tuto = Button((850, int(size[1]*0.65)+45, btn_w, btn_h), "TUTORIAL", tuto)
+    btn_exit = Button((850, int(size[1]*0.65)+110, btn_w, btn_h), "SALIR", exit_game)
+    buttons = [btn_play, btn_tuto, btn_exit]
 
     clock = pygame.time.Clock()
     while running:

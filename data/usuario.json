@@ -1,5 +1,5 @@
 {
-    "nombre": "& C:/Users/Estudiante/AppData/Local/Programs/Python/Python313/python.exe c:/Users/Estudiante/Documents/GitHub/EscapeDelJuicio/juego/sala_inicio.py",
-    "edad": 16,
-    "ciudad": "Buenos Aires"
+    "usuario":"Admin",
+    "contraseña":"JJC09",
+    "volumen":100
 }
