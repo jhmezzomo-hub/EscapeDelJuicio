@@ -8,6 +8,7 @@ from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.inventario import crear_inventario
 from juego.controlador.cargar_config import get_config_sala
+from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
 # Añadido: Item para guardar el papel en el inventario
 from juego.ui.inventory import Item
@@ -16,15 +17,11 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
     """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
-    print(f"[DEBUG] entrar a cargar_sala('{nombre_sala}')")
     general = get_config_sala("general")
     size = tamaño_pantallas()
     screen = info_pantalla()
     fuente = general["fuente"]
     config = get_config_sala(nombre_sala)
-    if config is None:
-        print(f"[ERROR] No existe la config para la sala '{nombre_sala}'")
-        return None
 
     pos_inicial = config["personaje"]["pos_inicial"],
     tamaño = config["personaje"]["tamaño"]
@@ -136,10 +133,10 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
     # -------------------------------------------------------
 
     clock = pygame.time.Clock()
-    velocidad = 5
+    velocidad = 2
     print(f"[DEBUG] sala config cargada: siguiente={config.get('siguiente_sala')}, puertas={config.get('puertas')}")
     while True:
-        dt = clock.tick(60) / 1000.0
+        dt = clock.tick(35) / 1000.0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -251,7 +248,6 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
             if puerta_interaccion_volver:
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
-        print(f"[DEBUG] MUESTRO CONTRONO')")
         # Dibujar el papel en el piso si está visible
         if papel_visible and papel_surf and papel_rect:
             screen.blit(papel_surf, papel_rect)
@@ -277,6 +273,15 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
+            texto = fuente.render("Presiona E para recoger el papel", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 70))
+        # Mensaje para recoger linterna
+        if linterna_visible and linterna_rect and pies_personaje.colliderect(linterna_rect):
+            texto = fuente.render("Presiona E para recoger la linterna", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 100))
+
+        inv.draw(screen)
 
         # dibujar botón de configuración encima de la escena
         try:
@@ -291,7 +296,6 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             print("ERROR en inv.draw:")
             traceback.print_exc()
         pygame.display.flip()
-        print(f"[DEBUG] finalizo cargar_sala('{nombre_sala}') ciclo principal")
         continue
 
         #return info_personaje, fuente, inv, pies_personaje, teclas, puerta_interaccion_salida
