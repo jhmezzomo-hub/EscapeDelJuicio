@@ -2,7 +2,7 @@ import pygame, sys, os
 
 from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
-from limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
+from juego.limite_colisiones.colision_piso import colision_piso, devolver_puntos_hexagono
 from juego.controlador.sprites_caminar import sprites_caminar
 from juego.controlador.controles import teclas_movimiento
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
@@ -12,20 +12,28 @@ from juego.controlador.cargar_config import get_config_sala
 # Añadido: Item para guardar el papel en el inventario
 from juego.ui.inventory import Item
 
-def cargar_sala(nombre_sala, maniquies=[]):
+def cargar_sala(nombre_sala, maniquies=[], inv=None):
     """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
+    print(f"[DEBUG] entrar a cargar_sala('{nombre_sala}')")
+    general = get_config_sala("general")
     size = tamaño_pantallas()
     screen = info_pantalla()
-    fuente = pygame.font.SysFont("Arial", 26)
+    fuente = general["fuente"]
     config = get_config_sala(nombre_sala)
+    if config is None:
+        print(f"[ERROR] No existe la config para la sala '{nombre_sala}'")
+        return None
 
     pos_inicial = config["personaje"]["pos_inicial"],
     tamaño = config["personaje"]["tamaño"]
 
     fondo = cargar_fondo(config["fondo"], "Fondos")
-    personaje, personaje_rect = cargar_personaje("mc_0.png", "mc", size, tamaño)
+    personaje, personaje_rect = general["personaje"], general["personaje_rect"]
+
+    # Botón de configuración (es creado por sala para que funcione en todas las salas)
+    btn_config = crear_boton_config(size[0] - 140, 20)
 
     # Puerta
     puerta_interaccion_salida = config["puertas"]["salida"]
@@ -34,18 +42,11 @@ def cargar_sala(nombre_sala, maniquies=[]):
     except KeyError:
         puerta_interaccion_volver = None
 
-    #pies_personjae
-    pies_personaje = pygame.Rect(
-            personaje_rect.centerx - 10,
-            personaje_rect.bottom - 5,
-            20, 5
-        )
-
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
 
     mostrar_contorno = False
-    inv = crear_inventario()
+    inv = inv
 
     # --- Nuevo: crear un papel en sala "inicio" (sala 1) ---
     papel_visible = False
@@ -136,6 +137,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
 
     clock = pygame.time.Clock()
     velocidad = 5
+    print(f"[DEBUG] sala config cargada: siguiente={config.get('siguiente_sala')}, puertas={config.get('puertas')}")
     while True:
         dt = clock.tick(60) / 1000.0
 
@@ -143,7 +145,20 @@ def cargar_sala(nombre_sala, maniquies=[]):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            inv.handle_event(event)
+            # manejador del botón de configuración
+            try:
+                btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            except Exception:
+                pass
+
+            # Llamada al manejador del inventario con protección para evitar crash
+            try:
+                inv.handle_event(event)
+            except Exception as e:
+                import traceback
+                print("ERROR en inv.handle_event:")
+                traceback.print_exc()
+                continue
 
         if not inv.is_open:
             # Actualizar posición del personaje según teclas antes de comprobar interacciones
@@ -164,9 +179,11 @@ def cargar_sala(nombre_sala, maniquies=[]):
                 # Interacción: puerta salida / volver
                 if puerta_interaccion_salida:
                     if pies_personaje.colliderect(puerta_interaccion_salida):
+                        print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
                         return config["siguiente_sala"]
                 if puerta_interaccion_volver:
                     if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
+                        print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
                         return config["sala_anterior"]
                 # Interacción: recoger papel si está visible y el jugador está encima
                 if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
@@ -216,7 +233,12 @@ def cargar_sala(nombre_sala, maniquies=[]):
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
 
-        inv.update(dt)
+        try:
+            inv.update(dt)
+        except Exception:
+            import traceback
+            print("ERROR en inv.update:")
+            traceback.print_exc()
 
         # Dibujar fondo primero
         screen.blit(fondo, (0, 0))
@@ -229,7 +251,7 @@ def cargar_sala(nombre_sala, maniquies=[]):
             pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
             if puerta_interaccion_volver:
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
-
+        print(f"[DEBUG] MUESTRO CONTRONO')")
         # Dibujar el papel en el piso si está visible
         if papel_visible and papel_surf and papel_rect:
             screen.blit(papel_surf, papel_rect)
@@ -239,7 +261,14 @@ def cargar_sala(nombre_sala, maniquies=[]):
             screen.blit(linterna_surf, linterna_rect)
 
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
-        sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
+        # sprites_caminar ahora devuelve la superficie del jugador para permitir ordenar
+        # por profundidad con otros objetos. Aquí la usamos y la añadimos a la lista
+        # de objetos a dibujar (esta sala no tiene maniquíes normalmente).
+        current_player_surf = sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, personaje_rect)
+        objetos = ([(m["img"], m["rect"]) for m in maniquies] if maniquies else []) + [(current_player_surf, personaje_rect)]
+        objetos.sort(key=lambda x: x[1].bottom)
+        for img, rect in objetos:
+            screen.blit(img, rect)
 
         # Mensajes de interacción con puertas
         if pies_personaje.colliderect(puerta_interaccion_salida):
@@ -248,14 +277,21 @@ def cargar_sala(nombre_sala, maniquies=[]):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-        # Mensaje para recoger papel
-        if papel_visible and papel_rect and pies_personaje.colliderect(papel_rect):
-            texto = fuente.render("Presiona E para recoger el papel", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 70))
-        # Mensaje para recoger linterna
-        if linterna_visible and linterna_rect and pies_personaje.colliderect(linterna_rect):
-            texto = fuente.render("Presiona E para recoger la linterna", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 100))
 
-        inv.draw(screen)
+        # dibujar botón de configuración encima de la escena
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
+
+        try:
+            inv.draw(screen)
+        except Exception:
+            import traceback
+            print("ERROR en inv.draw:")
+            traceback.print_exc()
         pygame.display.flip()
+        print(f"[DEBUG] finalizo cargar_sala('{nombre_sala}') ciclo principal")
+        continue
+
+        #return info_personaje, fuente, inv, pies_personaje, teclas, puerta_interaccion_salida
