@@ -44,6 +44,12 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
 
     mostrar_contorno = False
     inv = inv
+    
+    # Variables para el mensaje de error
+    mensaje_error_timer = 0
+    mensaje_error_duracion = 2  # duración en segundos
+    mensaje_error_activo = False
+    mensaje_error_texto = ""
 
     # --- Nuevo: crear un papel en sala "inicio" (sala 1) ---
     papel_visible = False
@@ -176,8 +182,25 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
                 # Interacción: puerta salida / volver
                 if puerta_interaccion_salida:
                     if pies_personaje.colliderect(puerta_interaccion_salida):
-                        print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
-                        return config["siguiente_sala"]
+                        # Verificar si el jugador tiene la linterna y el papel
+                        tiene_linterna = False
+                        tiene_papel = False
+                        if hasattr(inv, "inventory_slots"):
+                            for slot in inv.inventory_slots:
+                                if slot is not None:
+                                    if slot.type == "linterna":
+                                        tiene_linterna = True
+                                    elif slot.type == "objetos":  # El papel
+                                        tiene_papel = True
+
+                        if tiene_linterna and tiene_papel:
+                            print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
+                            return config["siguiente_sala"]
+                        else:
+                            mensaje_error_activo = True
+                            mensaje_error_timer = mensaje_error_duracion
+                            mensaje_error_texto = "Necesitas encontrar todos los objetos antes de continuar"
+                            
                 if puerta_interaccion_volver:
                     if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
                         print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
@@ -295,6 +318,14 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None):
             import traceback
             print("ERROR en inv.draw:")
             traceback.print_exc()
+        # Mostrar mensaje de error si está activo
+        if mensaje_error_activo:
+            mensaje_error_timer -= dt
+            texto_error = fuente.render(mensaje_error_texto, True, (255, 100, 100))
+            screen.blit(texto_error, (size[0] // 2 - texto_error.get_width() // 2, size[1] - 140))
+            if mensaje_error_timer <= 0:
+                mensaje_error_activo = False
+
         pygame.display.flip()
         continue
 
