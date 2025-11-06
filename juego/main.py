@@ -11,6 +11,9 @@ from juego.controlador.inventario import crear_inventario
 def main():
     print("Iniciando juego desde main.py...")    
     pygame.init()
+    # Inicializar el display antes de cualquier carga de imágenes
+    from info_pantalla.info_pantalla import info_pantalla
+    screen = info_pantalla()
     inv = crear_inventario()
     pantalla_de_inicio()  # Mostrar menú principal
     sala_actual = "inicio"
@@ -35,3 +38,4 @@ def main():
         # Iniciar el juego si se ejecuta directamente
 if __name__ == "__main__":
     main()
+    

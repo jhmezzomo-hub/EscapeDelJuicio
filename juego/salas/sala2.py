@@ -77,8 +77,10 @@ def iniciar_sala2(inv=None):
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
     fuente = general["fuente"]
 
-    linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=None)
-    inv.inventory_slots[0] = linterna_item
+    # Cargar imagen de la linterna
+    linterna_img, _ = cargar_personaje("linterna.png", "inventario_obj", size, (64, 64))
+    linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=linterna_img)
+    inv.inventory_slots[1] = linterna_item
 
     mostrar_hitboxes = False
     mostrar_malo = False
@@ -89,7 +91,19 @@ def iniciar_sala2(inv=None):
     mostrar_mensaje_linterna = True
     timer_mensaje_linterna = 1.0
 
+    # Crear superficies una sola vez
     oscuridad = pygame.Surface(size, pygame.SRCALPHA)
+    
+    # Pre-calcular el gradiente de la linterna
+    gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
+    for r in range(200, 0, -1):
+        alpha = int(255 * (r / 200))
+        pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
+    
+    # Crear superficie para overlay de maniquí malo
+    overlay_malo = pygame.Surface((200, 200), pygame.SRCALPHA)
+    overlay_malo.fill((255, 0, 0, 100))
+    
     # máscara para colisiones y contraste de piso
     mask = colision_piso(size)
 
@@ -118,9 +132,12 @@ def iniciar_sala2(inv=None):
         if mostrar_malo:
             for m in maniquies:
                 if m["es_maniqui_malo"]:
-                    overlay = pygame.Surface(m["rect"].size, pygame.SRCALPHA)
-                    overlay.fill((255, 0, 0, 100))
-                    screen.blit(overlay, m["rect"].topleft)
+                    # Usar el overlay pre-creado, escalándolo si es necesario
+                    if m["rect"].size != overlay_malo.get_size():
+                        overlay_escalado = pygame.transform.scale(overlay_malo, m["rect"].size)
+                    else:
+                        overlay_escalado = overlay_malo
+                    screen.blit(overlay_escalado, m["rect"].topleft)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -212,10 +229,6 @@ def iniciar_sala2(inv=None):
         # Actualizar efecto de linterna (se aplica sobre lo ya dibujado)
         oscuridad.fill((0, 0, 0, 240))
         if linterna_encendida:
-            gradiente = pygame.Surface((400, 400), pygame.SRCALPHA)
-            for r in range(200, 0, -1):
-                alpha = int(255 * (r / 200))
-                pygame.draw.circle(gradiente, (0, 0, 0, alpha), (200, 200), r)
             pos = (personaje_rect.centerx - 200, personaje_rect.centery - 200)
             oscuridad.blit(gradiente, pos, special_flags=pygame.BLEND_RGBA_SUB)
 
