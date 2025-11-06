@@ -86,10 +86,11 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
             if moving:
                 print(f"DEBUG movimiento: new topleft={personaje_rect.topleft} moving={moving} direction={direction}")
             # Recalcular pies del personaje con la nueva posición
+            # Aumentamos el área de detección de los pies para facilitar la interacción
             pies_personaje = pygame.Rect(
-                personaje_rect.centerx - 10,
-                personaje_rect.bottom - 5,
-                20, 5
+                personaje_rect.centerx - 20,
+                personaje_rect.bottom - 10,
+                40, 10
             )
             teclas = pygame.key.get_pressed()
             if teclas[pygame.K_ESCAPE]:
@@ -100,9 +101,28 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
             elif teclas[pygame.K_e]:
                 # Comprobar interacción con objetos
                 for objeto in objetos_sala:
-                    if objeto['visible'] and pies_personaje.colliderect(objeto['rect']):
+                    # Seguridad: si no existe rect, ignorar y loguear
+                    if objeto.get('rect') is None:
+                        print(f"[DEBUG] objeto {objeto.get('nombre')} sin rect, pos={objeto.get('pos')}")
+                        continue
+
+                    collided = pies_personaje.colliderect(objeto['rect'])
+                    # Comprobación adicional por distancia: más tolerante si el jugador está cerca
+                    obj_center = objeto['rect'].center
+                    player_point = (personaje_rect.centerx, personaje_rect.bottom)
+                    dx = obj_center[0] - player_point[0]
+                    dy = obj_center[1] - player_point[1]
+                    dist = (dx*dx + dy*dy) ** 0.5
+                    # Umbral en píxeles para permitir recoger objetos cercanos aunque no colisionen exactamente
+                    DIST_THRESHOLD = 100
+                    close_enough = dist <= DIST_THRESHOLD
+
+                    print(f"[DEBUG] Comprobando objeto '{objeto.get('nombre')}' visible={objeto.get('visible')} obj_rect={objeto['rect']} pies={pies_personaje} collide={collided} dist={int(dist)} close_enough={close_enough}")
+
+                    if objeto['visible'] and (collided or close_enough):
                         from juego.controlador.agregar_inv import agregar_a_inventario
-                        agregar_a_inventario(objeto, inv)
+                        added = agregar_a_inventario(objeto, inv)
+                        print(f"[DEBUG] Intento agregar '{objeto.get('nombre')}' al inventario -> {'OK' if added else 'FALLÓ'} dist={int(dist)}")
                 
                 # Interacción: puerta salida / volver
                 if puerta_interaccion_salida:
@@ -159,10 +179,7 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
                         y_pos = size[1] - 70 if objeto['nombre'] == "papel" else size[1] - 100
                         # Agregar fondo semi-transparente al texto
                         texto_rect = texto.get_rect(center=(size[0] // 2, y_pos))
-                        padding = 10
-                        fondo_texto = pygame.Surface((texto_rect.width + padding*2, texto_rect.height + padding*2), pygame.SRCALPHA)
-                        fondo_texto.fill((0, 0, 0, 128))  # Negro semi-transparente
-                        overlay.blit(fondo_texto, (texto_rect.centerx - fondo_texto.get_width()//2, texto_rect.y - padding))
+                        # Dibujar el texto directamente sobre el overlay SIN fondo
                         overlay.blit(texto, texto_rect)
                         mensaje_mostrado = True
 
@@ -192,6 +209,14 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
         elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
             texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        # Si durante el bucle se construyó un overlay con mensajes, blitearlo encima
+        if mensaje_mostrado:
+            try:
+                screen.blit(overlay, (0, 0))
+            except Exception:
+                # En caso de que algo vaya mal con el overlay, no romper el loop
+                pass
+
         inv.draw(screen)
 
         # dibujar botón de configuración encima de la escena
