@@ -35,7 +35,7 @@ class Button:
         # Cargar la imagen del botón
         image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'img', 'logos', 'boton-config.png')
         self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (50,50)))
+        self.image = pygame.transform.scale(self.image, (50,50))
 
     def draw(self, surface):
         # Dibujar la imagen del botón
