@@ -57,15 +57,17 @@ def get_config_sala(nombre_sala):
                 "tamaño": (125, 200),
             },
             "puertas": {
-                "volver": pygame.Rect(100, 400, 70, 40),
-                "salida": pygame.Rect(400, 400, 70, 40)
+                "derecha": pygame.Rect(916, 248, 70, 40),
+                "izquierda": pygame.Rect(68, 248, 70, 40),
+                "salida": pygame.Rect(496, 216, 70, 40)
             },
             
             "sala_anterior": "sala2",
-            "siguiente_sala": "sala4"
+            "sala_izquierda": "sala4",
+            "sala_derecha": "sala5"
         },
         "sala4": {
-            "fondo": "Fondo_sala1.png",
+            "fondo": "Fondo_salaD.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (400, 400),
@@ -75,9 +77,20 @@ def get_config_sala(nombre_sala):
                 "volver": pygame.Rect(400, 400, 70, 40),
                 "salida": pygame.Rect(770, 400, 70, 40)
             },
-            
-            "sala_anterior": "sala3",
-            "siguiente_sala": "sala5"
-        }
+            "siguiente_sala": "sala3"
+        },
+        "sala5": {
+            "fondo": "Fondo_salaI.png",
+            "nombre_carpeta": "Fondos",
+            "personaje": {
+                "pos_inicial": (100, 400),
+                "tamaño": (125, 200),
+            },
+            "puertas": {
+                "volver": pygame.Rect(100, 400, 70, 40),
+                "salida": pygame.Rect(500, 400, 70, 40)
+            },
+            "siguiente_sala": "sala3"
+        },
     }
     return configs.get(nombre_sala, None)
