@@ -5,6 +5,7 @@ from juego.pantalla.pantalla_inicio import pantalla_de_inicio
 from juego.salas.cargar_salas import cargar_sala
 from juego.salas.salas_inicio import iniciar_sala_inicio
 from juego.salas.sala2 import iniciar_sala2
+from juego.salas.sala3 import iniciar_sala_3
 from juego.salas.sala_mensaje import sala_mensaje_bienvenida
 from juego.controlador.inventario import crear_inventario
 
@@ -24,7 +25,7 @@ def main():
         elif sala_actual == "sala2":
             siguiente = iniciar_sala2(inv)
         elif sala_actual == "sala3":
-            siguiente = cargar_sala("sala3")
+            siguiente = iniciar_sala_3(inv)
         elif sala_actual == "sala4":
             siguiente = cargar_sala("sala4")
         else:
