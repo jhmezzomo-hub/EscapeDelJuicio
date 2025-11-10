@@ -29,6 +29,8 @@ def iniciar_sala2(inv=None):
     screen = info_pantalla()
     general = get_config_sala("general")
 
+    
+
     linterna_encendida = False
     mostrar_mensaje_linterna = True
     timer_mensaje_linterna = 1.0
@@ -105,6 +107,7 @@ def iniciar_sala2(inv=None):
 
     # Cargar el fondo (una vez)
     fondo = cargar_fondo("fondo_sala1.png", "Fondos")
+    
 
     # Botón de configuración
     btn_config = crear_boton_config(size[0] - 140, 20)
@@ -163,30 +166,6 @@ def iniciar_sala2(inv=None):
         mensaje_texto = ""
         mensaje_color = (255, 255, 255)
 
-        pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
-
-        # --- Colisión con Caperucita: evitar que el jugador se superponga a ella ---
-        try:
-            if personaje_rect.colliderect(caperucita_rect):
-                inter = personaje_rect.clip(caperucita_rect)
-                # Resolver por el eje menor (mover fuera en horizontal o vertical)
-                if inter.width < inter.height:
-                    # Separación horizontal
-                    if personaje_rect.centerx < caperucita_rect.centerx:
-                        personaje_rect.right = caperucita_rect.left
-                    else:
-                        personaje_rect.left = caperucita_rect.right
-                else:
-                    # Separación vertical
-                    if personaje_rect.centery < caperucita_rect.centery:
-                        personaje_rect.bottom = caperucita_rect.top
-                    else:
-                        personaje_rect.top = caperucita_rect.bottom
-        except Exception:
-            # En caso de que caperucita_rect no exista o esté mal, no romper el bucle
-            pass
-
-        # Recalcular pies después de ajustar la posición por colisión
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
 
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
