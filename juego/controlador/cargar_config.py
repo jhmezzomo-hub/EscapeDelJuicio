@@ -50,11 +50,11 @@ def get_config_sala(nombre_sala):
             "siguiente_sala": "sala3"
         },
         "sala3": {
-            "fondo": "Fondo_sala1.png",
+            "fondo": "fondo_puertas3.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (100, 400),
-                "tamaño": (125, 150),
+                "tamaño": (125, 200),
             },
             "puertas": {
                 "volver": pygame.Rect(100, 400, 70, 40),
