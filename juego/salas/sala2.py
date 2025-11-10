@@ -1,35 +1,30 @@
 import pygame
 import sys
-import random
 import os
+import random
+import math
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Añadir el directorio raíz del proyecto al path de Python
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(os.path.dirname(current_dir))
-sys.path.insert(0, parent_dir)
-
+from juego.salas.cargar_salas import cargar_sala
 from juego.controlador.cargar_fondos import cargar_fondo
 from juego.controlador.cargar_personaje import cargar_personaje
-from juego.controlador.controles import teclas_movimiento
-from juego.controlador.sprites_caminar import sprites_caminar
-from juego.limite_colisiones.colision_piso import colision_piso
-from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
-from juego.controlador.cargar_config import get_config_sala
+from juego.pantalla.pantalla_muerte import pantalla_fin
+from juego.ui.inventory import Inventory, Item
 from juego.controlador.inventario import crear_inventario
+from info_pantalla.info_pantalla import info_pantalla, tamaño_pantallas
+from juego.controlador.cargar_config import get_config_sala
+from juego.controlador.sprites_caminar import sprites_caminar
+from limite_colisiones.colision_piso import colision_piso
 from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
-from juego.ui.inventory import Item
 
-
-# ------------------- SALA 4 -------------------
-def iniciar_sala4(inv=None):
-    """Sala 4: usa sprites_caminar, sin linterna ni oscuridad."""
+# ------------------- SALA 2 -------------------
+def iniciar_sala2(inv=None):
     random.seed()
 
-    # Inventario
+    # Si no se pasa un inventario, crear uno nuevo (evita AttributeError)
     if inv is None:
         inv = crear_inventario()
 
-    # Configuración general
     size = tamaño_pantallas()
     screen = info_pantalla()
     general = get_config_sala("general")
@@ -108,56 +103,46 @@ def iniciar_sala4(inv=None):
     # máscara para colisiones y contraste de piso
     mask = colision_piso(size)
 
+    # Cargar el fondo (una vez)
+    fondo = cargar_fondo("fondo_sala1.png", "Fondos")
+
     # Botón de configuración
     btn_config = crear_boton_config(size[0] - 140, 20)
 
-    # Variables básicas
-    mostrar_contorno = False
     clock = pygame.time.Clock()
-    velocidad = 5
 
-    # Puerta de volver
-    puerta_volver = config["puertas"].get("volver", None)
-    if puerta_volver:
-        try:
-            if isinstance(puerta_volver, pygame.Rect):
-                puerta_volver.y = personaje_rect.bottom - puerta_volver.height
-            else:
-                x, y, w, h = puerta_volver
-                new_y = personaje_rect.bottom - h
-                puerta_volver = pygame.Rect(x, new_y, w, h)
-        except Exception as e:
-            print("[WARN] No se pudo reposicionar puerta_volver:", e)
-
-    # Guardar posición del rectángulo de la puerta en un diccionario
-    posiciones_puertas = {}
-    if puerta_volver:
-        posiciones_puertas["puerta_volver"] = {
-            "x": puerta_volver.x,
-            "y": puerta_volver.y,
-            "w": puerta_volver.width,
-            "h": puerta_volver.height
-        }
-
-    print("[DEBUG] posiciones_puertas:", posiciones_puertas)
-
-    # -------- Cargar personaje (Caperucita) con mismo tamaño que el personaje principal --------
-    caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
-    caperucita_rect.midbottom = (180, personaje_rect.bottom)
-
-    maniquies = []  # (sala sin enemigos)
-    print("[DEBUG] Sala 4 cargada correctamente.")
-
-    # Bucle principal
     while True:
         dt = clock.tick(60) / 1000.0
+        teclas = pygame.key.get_pressed()
+        # Dibujar el fondo (ya cargado)
+        screen.blit(fondo, (0, 0))
 
+        # Actualizar movimiento y animación del personaje y obtener la superficie a dibujar
+        current_player_surf = sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
+
+        # Dibujar maniquíes y personaje según profundidad (bottom)
+        objetos = [(m["img"], m["rect"]) for m in maniquies] + [(current_player_surf, personaje_rect)]
+        objetos.sort(key=lambda x: x[1].bottom)
+        for img, rect in objetos:
+            screen.blit(img, rect)
+        if mostrar_malo:
+            for m in maniquies:
+                if m["es_maniqui_malo"]:
+                    # Usar el overlay pre-creado, escalándolo si es necesario
+                    if m["rect"].size != overlay_malo.get_size():
+                        overlay_escalado = pygame.transform.scale(overlay_malo, m["rect"].size)
+                    else:
+                        overlay_escalado = overlay_malo
+                    screen.blit(overlay_escalado, m["rect"].topleft)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            # manejador del botón de configuración
+            try:
+                btn_config.handle_event(event, lambda: abrir_menu_config(screen))
+            except Exception:
+                pass
             inv.handle_event(event)
             # teclas de depuración: F2 = mostrar hitboxes, F3 = resaltar maniquí malo
             if event.type == pygame.KEYDOWN:
@@ -179,6 +164,31 @@ def iniciar_sala4(inv=None):
         mensaje_color = (255, 255, 255)
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
+
+        # --- Colisión con Caperucita: evitar que el jugador se superponga a ella ---
+        try:
+            if personaje_rect.colliderect(caperucita_rect):
+                inter = personaje_rect.clip(caperucita_rect)
+                # Resolver por el eje menor (mover fuera en horizontal o vertical)
+                if inter.width < inter.height:
+                    # Separación horizontal
+                    if personaje_rect.centerx < caperucita_rect.centerx:
+                        personaje_rect.right = caperucita_rect.left
+                    else:
+                        personaje_rect.left = caperucita_rect.right
+                else:
+                    # Separación vertical
+                    if personaje_rect.centery < caperucita_rect.centery:
+                        personaje_rect.bottom = caperucita_rect.top
+                    else:
+                        personaje_rect.top = caperucita_rect.bottom
+        except Exception:
+            # En caso de que caperucita_rect no exista o esté mal, no romper el bucle
+            pass
+
+        # Recalcular pies después de ajustar la posición por colisión
+        pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
+
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
             mensaje_maniqui = True
             mensaje_texto = "Usar llave presionando F"
@@ -261,12 +271,17 @@ def iniciar_sala4(inv=None):
             texto = fuente.render(mensaje_texto, True, mensaje_color)
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
-        # Dibujar botón e inventario
-        btn_config.draw(screen)
-        inv.draw(screen)
+        # dibujar botón de configuración encima de la escena
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
 
+        inv.update(dt)
+        inv.draw(screen)
         pygame.display.flip()
 
 
 if __name__ == "__main__":
-    iniciar_sala4(crear_inventario())
+    # Al ejecutar directamente, pasar un inventario creado para evitar errores
+    iniciar_sala2(crear_inventario())
