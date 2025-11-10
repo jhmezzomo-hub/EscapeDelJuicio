@@ -49,6 +49,10 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
     mensaje_error_duracion = 2  # duración en segundos
     mensaje_error_activo = False
     mensaje_error_texto = ""
+    # Variables para interacción/recogida de objetos
+    interaccion_texto = ""
+    interaccion_timer = 0.0
+    interaccion_target = None
 
     # -------------------------------------------------------
 
@@ -98,58 +102,62 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
                 sys.exit()
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
-            elif teclas[pygame.K_e]:
-                # Comprobar interacción con objetos
-                for objeto in objetos_sala:
-                    # Seguridad: si no existe rect, ignorar y loguear
-                    if objeto.get('rect') is None:
-                        print(f"[DEBUG] objeto {objeto.get('nombre')} sin rect, pos={objeto.get('pos')}")
-                        continue
 
-                    collided = pies_personaje.colliderect(objeto['rect'])
-                    # Comprobación adicional por distancia: más tolerante si el jugador está cerca
-                    obj_center = objeto['rect'].center
-                    player_point = (personaje_rect.centerx, personaje_rect.bottom)
-                    dx = obj_center[0] - player_point[0]
-                    dy = obj_center[1] - player_point[1]
-                    dist = (dx*dx + dy*dy) ** 0.5
-                    # Umbral en píxeles para permitir recoger objetos cercanos aunque no colisionen exactamente
-                    DIST_THRESHOLD = 100
-                    close_enough = dist <= DIST_THRESHOLD
+            # Detectar objeto cercano para mostrar prompt (rango reducido a 25px)
+            interaccion_target = None
+            DIST_THRESHOLD = 25  # rango en pixeles para mostrar prompt
+            for objeto in objetos_sala:
+                if objeto.get('rect') is None:
+                    # rect no creado: ignorar
+                    continue
+                collided = pies_personaje.colliderect(objeto['rect'])
+                obj_center = objeto['rect'].center
+                player_point = (personaje_rect.centerx, personaje_rect.bottom)
+                dx = obj_center[0] - player_point[0]
+                dy = obj_center[1] - player_point[1]
+                dist = (dx*dx + dy*dy) ** 0.5
+                close_enough = dist <= DIST_THRESHOLD
+                if objeto.get('visible') and (collided or close_enough):
+                    interaccion_target = objeto
+                    break
 
-                    print(f"[DEBUG] Comprobando objeto '{objeto.get('nombre')}' visible={objeto.get('visible')} obj_rect={objeto['rect']} pies={pies_personaje} collide={collided} dist={int(dist)} close_enough={close_enough}")
+            # Si se pulsa E, intentar recoger el objeto (si hay uno) o interactuar con puertas
+            if teclas[pygame.K_e]:
+                if interaccion_target:
+                    from juego.controlador.agregar_inv import agregar_a_inventario
+                    added = agregar_a_inventario(interaccion_target, inv)
+                    if added:
+                        interaccion_texto = f"Recogiste {interaccion_target.get('nombre')}"
+                        interaccion_timer = 1.5
+                    else:
+                        interaccion_texto = f"No se pudo recoger {interaccion_target.get('nombre')}"
+                        interaccion_timer = 1.5
 
-                    if objeto['visible'] and (collided or close_enough):
-                        from juego.controlador.agregar_inv import agregar_a_inventario
-                        added = agregar_a_inventario(objeto, inv)
-                        print(f"[DEBUG] Intento agregar '{objeto.get('nombre')}' al inventario -> {'OK' if added else 'FALLÓ'} dist={int(dist)}")
-                
-                # Interacción: puerta salida / volver
-                if puerta_interaccion_salida:
-                    if pies_personaje.colliderect(puerta_interaccion_salida):
-                        # Verificar si el jugador tiene la linterna y el papel
-                        tiene_linterna = False
-                        tiene_papel = False
-                        if hasattr(inv, "inventory_slots"):
-                            for slot in inv.inventory_slots:
-                                if slot is not None:
-                                    if slot.type == "linterna":
-                                        tiene_linterna = True
-                                    elif slot.type == "objetos":  # El papel
-                                        tiene_papel = True
+                # Interacción puerta salida (E)
+                if puerta_interaccion_salida and pies_personaje.colliderect(puerta_interaccion_salida):
+                    missing = any(obj.get('visible', True) for obj in objetos_sala)
+                    if missing:
+                        mensaje_error_activo = True
+                        mensaje_error_timer = mensaje_error_duracion
+                        mensaje_error_texto = "se necesitan todos los objetos antes de pasar de sala"
+                    else:
+                        siguiente = config.get('siguiente_sala')
+                        if siguiente:
+                            return siguiente
 
-                        if tiene_linterna and tiene_papel:
-                            print(f"[DEBUG] paso a siguiente sala: {config.get('siguiente_sala')}")
-                            return config["siguiente_sala"]
-                        else:
-                            mensaje_error_activo = True
-                            mensaje_error_timer = mensaje_error_duracion
-                            mensaje_error_texto = "Necesitas encontrar todos los objetos antes de continuar"
-                            
-                if puerta_interaccion_volver:
-                    if pies_personaje.colliderect(puerta_interaccion_volver) and puerta_interaccion_volver:
-                        print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
-                        return config["sala_anterior"]
+                # Interacción puerta volver (E)
+                if puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
+                    print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
+                    return config["sala_anterior"]
+
+            # Si hay un objeto cercano y no se ha pulsado E, mostrar el prompt
+            if interaccion_target and not teclas[pygame.K_e]:
+                # Mostrar prompt mientras el jugador esté en el rango
+                interaccion_texto = f"Presiona E para recoger {interaccion_target.get('nombre')}"
+            else:
+                # Si el jugador se aleja y no hay mensaje de recogida en curso, limpiar prompt
+                if interaccion_timer <= 0:
+                    interaccion_texto = ""
                 
         # Empty list for maniquies since this room has none
         maniquies = maniquies if maniquies else []
@@ -167,21 +175,14 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
 
         # Dibujar fondo primero
         screen.blit(fondo, (0, 0))
-        
-        # Dibujar objetos de la sala
+
+        # Dibujar objetos del suelo
         for objeto in objetos_sala:
-            if objeto['visible']:
-                if objeto['surf_suelo'] and objeto['rect']:
-                    screen.blit(objeto['surf_suelo'], objeto['rect'])
-                    if pies_personaje.colliderect(objeto['rect']):
-                        mensaje = f"Presiona E para recoger {objeto['nombre']}"
-                        texto = fuente.render(mensaje, True, (255, 255, 255))
-                        y_pos = size[1] - 70 if objeto['nombre'] == "papel" else size[1] - 100
-                        # Agregar fondo semi-transparente al texto
-                        texto_rect = texto.get_rect(center=(size[0] // 2, y_pos))
-                        # Dibujar el texto directamente sobre el overlay SIN fondo
-                        overlay.blit(texto, texto_rect)
-                        mensaje_mostrado = True
+            try:
+                if objeto.get('visible') and objeto.get('surf_suelo') and objeto.get('rect'):
+                    screen.blit(objeto['surf_suelo'], objeto['rect'].topleft)
+            except Exception as e:
+                print(f"ERROR dibujando objeto {objeto.get('nombre')}: {e}")
 
         # Mostrar contornos de debug si corresponde
         if mostrar_contorno:
@@ -202,12 +203,22 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
         for img, rect in objetos:
             screen.blit(img, rect)
 
+        # Mostrar texto de interacción/recogida si aplica
+        if interaccion_texto:
+            try:
+                texto_inter = fuente.render(interaccion_texto, True, (255, 255, 255))
+                screen.blit(texto_inter, (size[0] // 2 - texto_inter.get_width() // 2, size[1] - 70))
+            except Exception:
+                pass
+        # decrementar timer si se usó uno (mensaje de recogida)
+        if interaccion_timer > 0:
+            interaccion_timer -= dt
+            if interaccion_timer <= 0:
+                interaccion_texto = ""
+                interaccion_timer = 0.0
         # Mensajes de interacción con puertas
         if pies_personaje.colliderect(puerta_interaccion_salida):
             texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
-        elif puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
-            texto = fuente.render("Presiona E para volver a la sala anterior", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
         # Si durante el bucle se construyó un overlay con mensajes, blitearlo encima
         if mensaje_mostrado:
