@@ -77,11 +77,6 @@ def iniciar_sala2(inv=None):
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
     fuente = general["fuente"]
 
-    # Cargar imagen de la linterna
-    linterna_img, _ = cargar_personaje("linterna.png", "inventario_obj", size, (64, 64))
-    linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=linterna_img)
-    inv.inventory_slots[1] = linterna_item
-
     mostrar_hitboxes = False
     mostrar_malo = False
     mensaje_texto = ""
