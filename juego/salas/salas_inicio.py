@@ -1,9 +1,7 @@
-import sys, os, pygame
+import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from juego.salas.cargar_salas import cargar_sala
-from juego.controlador.cargar_config import get_config_sala
-from juego.controlador.agregar_inv import agregar_a_inventario
 from juego.controlador.cargar_obj import cargar_objeto
 from juego.controlador.inventario import crear_inventario
 
