@@ -58,18 +58,28 @@ def iniciar_sala4(inv=None):
     velocidad = 5
 
     # -------- Puerta de salida (derecha) --------
-    puerta_volver = pygame.Rect(size[0] - 100, 320, 80, 120)
+    puerta_volver = config["puertas"]["salida"]
 
     # -------- Cargar personaje (Caperucita) --------
     caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
     caperucita_rect.midbottom = (180, personaje_rect.bottom)
 
     # -------- Cargar balde y posicionarlo sobre la cabeza de Caperucita --------
-    balde_img, balde_rect = cargar_img("balde.png", "balde", size)
+    balde_img, balde_rect = cargar_img("balde.png", "balde", (200, 150))
     balde_rect.midbottom = (caperucita_rect.centerx, caperucita_rect.top - 40)
 
     maniquies = []
     print("[DEBUG] Sala 4 cargada correctamente con colisiones y objetos visuales.")
+
+    # --- Línea límite situada a la izquierda de Caperucita ---
+    limite_x = caperucita_rect.right + 30
+    punto_inicio = (limite_x + 130, 385)
+    punto_fin = (limite_x, size[1])
+
+    # Mensajes temporales
+    mensaje_texto = ""
+    mensaje_timer = 0.0
+    mensaje_duracion = 1.0
 
     # Bucle principal
     while True:
@@ -102,7 +112,14 @@ def iniciar_sala4(inv=None):
                 # Interacción con la puerta de volver
                 if personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
-                    return config.get("sala_anterior")
+                    return "siguiente_sala"
+
+            # Si el jugador intenta cruzar la línea límite (lado izquierdo de Caperucita), impedir el paso
+            # Forzamos la posición para que nunca quede a la izquierda del límite
+            if personaje_rect.left == punto_inicio and personaje_rect.left == punto_fin:
+                personaje_rect.left = (punto_inicio, punto_fin)
+                mensaje_texto = "No puedes pasar por aquí"
+                mensaje_timer = mensaje_duracion
 
         # Actualizar inventario
         inv.update(dt)
@@ -110,11 +127,25 @@ def iniciar_sala4(inv=None):
         # Dibujar fondo
         screen.blit(fondo, (0, 0))
 
+        # Dibujar línea límite (a la izquierda de Caperucita)
+        try:
+            pygame.draw.line(screen, (255, 0, 0), punto_inicio, punto_fin, 2)
+        except Exception:
+            pass
+
         # Dibujar contornos si están activados
         if mostrar_contorno:
             pygame.draw.rect(screen, (0, 255, 255), personaje_rect, 1)
             pygame.draw.rect(screen, (255, 0, 0), puerta_volver, 2)
             pygame.draw.rect(screen, (255, 255, 0), caperucita_rect, 1)
+
+        # Mostrar mensaje temporal si corresponde
+        if mensaje_timer > 0:
+            mensaje_timer -= dt
+            texto_msg = fuente.render(mensaje_texto, True, (255, 255, 255))
+            screen.blit(texto_msg, (size[0] // 2 - texto_msg.get_width() // 2, size[1] - 40))
+        else:
+            mensaje_texto = ""
 
         # Dibujar personaje principal (animado)
         current_player_surf = sprites_caminar(
