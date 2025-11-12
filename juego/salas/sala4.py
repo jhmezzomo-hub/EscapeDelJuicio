@@ -21,6 +21,7 @@ from juego.ui.inventory import Item
 from juego.limite_colisiones.colision_piso import colision_piso
 from juego.controlador.cargar_imagen import cargar_img
 from juego.pantalla.pantalla_muerte import pantalla_fin
+from juego.controlador.mensaje_paso_sala import devolver_pies_personaje
 
 
 # ------------------- SALA 4 -------------------
@@ -68,12 +69,12 @@ def iniciar_sala4(inv=None):
 
     # -------- Cargar balde y posicionarlo sobre la cabeza de Caperucita --------
     balde_img, balde_rect = cargar_img("balde.png", "balde", (200, 150))
-    balde_rect.midbottom = (caperucita_rect.centerx, caperucita_rect.top - 40)
+    balde_rect.midbottom = (caperucita_rect.centerx - 50, caperucita_rect.top - 40)  # -20 para moverlo a la izquierda
     
     # Cargar sprites del balde para la animación
     balde_normal, _ = cargar_img("Balde.png", "balde", (200, 150))
     balde_semiderramado, _ = cargar_img("Balde_semiderramado.png", "balde", (275, 200))
-    balde_derramado, _ = cargar_img("Balde_derramado.png", "balde", (275, 200))
+    balde_derramado, _ = cargar_img("Balde_derramado.png", "balde", (285, 200))
     balde_sprites = [balde_normal, balde_semiderramado, balde_derramado]
     balde_img_actual = balde_normal  # Imagen actual del balde
     
@@ -84,6 +85,9 @@ def iniciar_sala4(inv=None):
         caperucita_rect.width - 40,
         30
     )
+    
+    # Crear hitbox para los pies de Messi usando la función estándar
+    pies_personaje = devolver_pies_personaje(personaje_rect)
 
     maniquies = []
     obstaculos = [{"hitbox": hitbox_caperucita}]
@@ -182,10 +186,19 @@ def iniciar_sala4(inv=None):
                         mensaje_resultado = ""  # Limpiar mensaje de resultado
                         desvaneciendo = True  # Iniciar animación de desvanecimiento
                     else:
-                        mensaje_resultado = "Incorrecto, intenta de nuevo"
+                        # Respuesta incorrecta: activar secuencia de muerte
+                        mensaje_resultado = "Incorrecto..."
                         color_resultado = (255, 0, 0)  # Rojo
                         print(f"[DEBUG] Respuesta incorrecta: {respuesta_usuario}")
+                        # Cerrar mensaje y activar animación de muerte
+                        mensaje_pared_mostrado = False
                         respuesta_usuario = ""  # Limpiar input
+                        mensaje_resultado = ""  # Limpiar mensaje de resultado
+                        # Activar secuencia de muerte
+                        personaje_bloqueado = True
+                        temporizador_muerte = 1.5  # 1.5 segundos para la animación
+                        balde_cayendo = True
+                        print("[DEBUG] ¡Respuesta incorrecta! El balde va a caer...")
                 elif event.key == pygame.K_BACKSPACE:
                     # Borrar último carácter
                     respuesta_usuario = respuesta_usuario[:-1]
@@ -197,6 +210,9 @@ def iniciar_sala4(inv=None):
 
         # Movimiento del personaje
         if not inv.is_open and not mensaje_pared_mostrado:  # No permitir movimiento si el mensaje está mostrado
+            # Actualizar hitbox de los pies de Messi antes del movimiento
+            pies_personaje = devolver_pies_personaje(personaje_rect)
+            
             # Actualizar movimiento usando sprites_caminar (bloqueado si personaje_bloqueado)
             current_player_surf = sprites_caminar(
                 size, screen, inv, mask, obstaculos, personaje_rect.size, personaje, personaje_rect,
@@ -220,8 +236,8 @@ def iniciar_sala4(inv=None):
                 if personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
                     return "siguiente_sala"
-                # Interacción con el mensaje de la pared
-                elif personaje_rect.colliderect(mensaje_pared_rect) and not personaje_bloqueado:
+                # Interacción con el mensaje de la pared (solo si no ha adivinado)
+                elif personaje_rect.colliderect(mensaje_pared_rect) and not personaje_bloqueado and not respuesta_correcta:
                     mensaje_pared_mostrado = True
                     print("[DEBUG] Leyendo mensaje de la pared...")
         
@@ -273,9 +289,17 @@ def iniciar_sala4(inv=None):
                     indice_sprite_balde += 1
                     if indice_sprite_balde < len(balde_sprites):
                         balde_img_actual = balde_sprites[indice_sprite_balde]
+                        # Ajustar posición del balde según el sprite actual
+                        if indice_sprite_balde == 0:  # Balde normal (200x150)
+                            balde_rect.midbottom = (caperucita_rect.centerx - 60, caperucita_rect.top - 40)
+                        elif indice_sprite_balde == 1:  # Balde semiderramado (275x200)
+                            balde_rect.midbottom = (caperucita_rect.centerx - 70, caperucita_rect.top - 40)
+                        elif indice_sprite_balde == 2:  # Balde derramado (275x200)
+                            balde_rect.midbottom = (caperucita_rect.centerx - 50, caperucita_rect.top - 40)
                     else:
                         # Mantener en el último sprite (derramado)
                         balde_img_actual = balde_sprites[-1]
+                        balde_rect.midbottom = (caperucita_rect.centerx - 50, caperucita_rect.top - 40)
             
             # Cuando se cumple el tiempo, mueres
             if temporizador_muerte <= 0:
@@ -306,6 +330,7 @@ def iniciar_sala4(inv=None):
             pygame.draw.rect(screen, (255, 255, 0), caperucita_rect, 1)
             pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)  # Hitbox de Caperucita
             pygame.draw.rect(screen, (255, 165, 0), mensaje_pared_rect, 2)  # Área del mensaje en la pared
+            pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)  # Hitbox de Messi (pies)
 
         # Mostrar mensaje temporal si corresponde
         if mensaje_timer > 0:
@@ -369,8 +394,8 @@ def iniciar_sala4(inv=None):
         # Crear overlay para textos con fondo
         overlay = pygame.Surface(size, pygame.SRCALPHA)
         
-        # Mostrar indicador de interacción
-        if en_mensaje_pared and not personaje_bloqueado and not mensaje_pared_mostrado:
+        # Mostrar indicador de interacción (solo si no ha adivinado)
+        if en_mensaje_pared and not personaje_bloqueado and not mensaje_pared_mostrado and not respuesta_correcta:
             texto_interaccion = fuente.render("Presiona E para leer", True, (255, 255, 255))
             texto_rect = texto_interaccion.get_rect(center=(size[0] // 2, size[1] - 80))
             overlay.blit(texto_interaccion, texto_rect)
