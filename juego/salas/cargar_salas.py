@@ -11,7 +11,7 @@ from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 # Añadido: Item para guardar el papel en el inventario
 from juego.ui.inventory import Item
 
-def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
+def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_bloqueada=False, mensaje_bloqueo=None):
     """Carga una sala con un fondo dado.
     Más adelante podés expandirla con enemigos, puertas, etc."""
 
@@ -145,15 +145,21 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
 
                 # Interacción puerta salida (E)
                 if puerta_interaccion_salida and pies_personaje.colliderect(puerta_interaccion_salida):
-                    missing = any(obj.get('visible', True) for obj in objetos_sala)
-                    if missing:
+                    # Si la puerta está bloqueada, mostrar mensaje
+                    if puerta_bloqueada:
                         mensaje_error_activo = True
                         mensaje_error_timer = mensaje_error_duracion
-                        mensaje_error_texto = "se necesitan todos los objetos antes de pasar de sala"
+                        mensaje_error_texto = mensaje_bloqueo if mensaje_bloqueo else "La puerta está bloqueada"
                     else:
-                        siguiente = config.get('siguiente_sala')
-                        if siguiente:
-                            return siguiente
+                        missing = any(obj.get('visible', True) for obj in objetos_sala)
+                        if missing:
+                            mensaje_error_activo = True
+                            mensaje_error_timer = mensaje_error_duracion
+                            mensaje_error_texto = "se necesitan todos los objetos antes de pasar de sala"
+                        else:
+                            siguiente = config.get('siguiente_sala')
+                            if siguiente:
+                                return siguiente
 
                 # Interacción puerta volver (E)
                 if puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
