@@ -37,7 +37,7 @@ def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, pers
     sprites = sprites_caminar.sprites_cache
 
     # ===== Variables del jugador =====
-    velocidad = 10
+    velocidad = 8
     # Guardamos estado entre frames en atributos de la función
     walk_count = getattr(sprites_caminar, "walk_count", 0)
     direction = getattr(sprites_caminar, "direction", "left")

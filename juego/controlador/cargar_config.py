@@ -65,7 +65,7 @@ def get_config_sala(nombre_sala):
             "siguiente_sala": "sala4"
         },
         "sala4": {
-            "fondo": "Fondo_sala1.png",
+            "fondo": "fondo_puertaI.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
                 "pos_inicial": (100, 300),
