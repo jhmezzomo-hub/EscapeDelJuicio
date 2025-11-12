@@ -141,6 +141,13 @@ def iniciar_sala4(inv=None):
     opacidad_caperucita = 255  # Opacidad de Caperucita
     velocidad_desvanecimiento_caperucita = 100  # Velocidad de desvanecimiento
 
+    # --- AJO (se crea cuando Caperucita desaparece) ---
+    ajo_img = None
+    ajo_rect = None
+    ajo_obj = None
+    ajo_visible = False
+    ajo_spawned = False
+
     # --- Línea límite situada a la izquierda de Caperucita ---
     limite_x = caperucita_rect.right + 30
     punto_inicio = (limite_x + 130, 385)
@@ -247,8 +254,20 @@ def iniciar_sala4(inv=None):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif e_accion:  # Solo actúa cuando E es PRESIONADA (no mantenida)
+                # Interacción con ajo (si spawned y visible) - NO afecta colisiones de movimiento
+                if ajo_visible and ajo_rect and pies_personaje.colliderect(ajo_rect):
+                    try:
+                        from juego.controlador.agregar_inv import agregar_a_inventario
+                        try:
+                            agregar_a_inventario(ajo_obj, inv)
+                        except Exception:
+                            agregar_a_inventario(inv, ajo_obj)
+                    except Exception:
+                        pass
+                    ajo_obj["visible"] = False
+                    ajo_visible = False
                 # Interacción con la puerta de volver
-                if personaje_rect.colliderect(puerta_volver):
+                elif personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
                     return "siguiente_sala"
                 # Interacción con Caperucita para liberarla (solo después de resolver el acertijo)
@@ -310,7 +329,63 @@ def iniciar_sala4(inv=None):
                 opacidad_caperucita = 0
                 caperucita_desapareciendo = False
                 print("[DEBUG] Caperucita ha desaparecido")
-        
+                # --- Spawn del ajo en la posición de Caperucita sin colisionar con el jugador ---
+                ajo_img_tmp, ajo_rect_tmp = cargar_img("ajo.png", "objetos", (40, 40))
+                ajo_img = ajo_img_tmp
+                ajo_rect = ajo_rect_tmp
+                # Intentar varias posiciones alrededor de Caperucita hasta que no colisione con el jugador ni con su hitbox
+                candidato_base = caperucita_rect.midbottom
+                offsets = [(0,0), (0,-50), (0,50), (50,0), (-50,0), (30,-30), (-30,-30), (60,-20), (-60,-20)]
+                screen_rect = pygame.Rect(0, 0, size[0], size[1])
+
+                def _no_colision_con_jugador_o_caperucita(r):
+                    if r.colliderect(personaje_rect):
+                        return False
+                    if hitbox_caperucita and r.colliderect(hitbox_caperucita):
+                        return False
+                    return True
+
+                placed = False
+                for dx, dy in offsets:
+                    ajo_rect.midbottom = (candidato_base[0] + dx, candidato_base[1] + dy)
+                    # ajustar dentro de pantalla
+                    ajo_rect.clamp_ip(screen_rect)
+                    if _no_colision_con_jugador_o_caperucita(ajo_rect):
+                        placed = True
+                        break
+                if not placed:
+                    # fallback: colocarlo encima de Caperucita sin bloquear (intentar arriba)
+                    ajo_rect.midbottom = (candidato_base[0], candidato_base[1] - 60)
+                    ajo_rect.clamp_ip(screen_rect)
+
+                # Crear también la superficie para el inventario que requiere la clave 'surf_inv'
+                try:
+                    surf_inv = pygame.transform.scale(ajo_img.copy(), (40, 40))
+                except Exception:
+                    # fallback: usar la imagen tal cual si no se puede escalar
+                    surf_inv = ajo_img
+
+                ajo_obj = {
+                    "surf_suelo": ajo_img,
+                    "surf_inv": surf_inv,
+                    "rect": ajo_rect,
+                    "visible": True,
+                    "nombre": "ajo",
+                    "type": "objetos"
+                }
+                ajo_visible = True
+                ajo_spawned = True
+                print("[DEBUG] Ajo creado en la posición de Caperucita (no colisionante)")
+
+                # --- Quitar la hitbox de Caperucita para que desaparezca también (sin colisionar) ---
+                try:
+                    # filtrar la lista de obstaculos para eliminar la entrada asociada
+                    obstaculos = [o for o in obstaculos if o.get("hitbox") is not hitbox_caperucita]
+                except Exception:
+                    pass
+                # anular la referencia para evitar usos futuros
+                hitbox_caperucita = None
+
         # Detectar si está cerca de Caperucita para mostrar mensaje de liberar
         # Crear un área de detección más grande alrededor de Caperucita
         area_deteccion_caperucita = pygame.Rect(
@@ -392,7 +467,12 @@ def iniciar_sala4(inv=None):
             pygame.draw.rect(screen, (0, 255, 255), personaje_rect, 1)
             pygame.draw.rect(screen, (255, 0, 0), puerta_volver, 2)
             pygame.draw.rect(screen, (255, 255, 0), caperucita_rect, 1)
-            pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)  # Hitbox de Caperucita
+            # Hitbox de Caperucita (si todavía existe)
+            if hitbox_caperucita:
+                try:
+                    pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)
+                except Exception:
+                    pass
             pygame.draw.rect(screen, (255, 165, 0), mensaje_pared_rect, 2)  # Área del mensaje en la pared
             pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)  # Hitbox de Messi (pies)
             # Mostrar área de detección de Caperucita si el acertijo está resuelto
@@ -435,6 +515,10 @@ def iniciar_sala4(inv=None):
             caperucita_con_alpha = caperucita_img_actual.copy()
             caperucita_con_alpha.set_alpha(int(opacidad_caperucita))
             objetos_a_dibujar.append(('caperucita', caperucita_con_alpha, caperucita_rect, caperucita_rect.bottom))
+        
+        # Agregar ajo si existe y es visible
+        if ajo_visible and ajo_img and ajo_rect:
+            objetos_a_dibujar.append(('ajo', ajo_img, ajo_rect, ajo_rect.bottom))
         
         # Agregar jugador
         objetos_a_dibujar.append(('jugador', current_player_surf, personaje_rect, personaje_rect.bottom))
@@ -532,6 +616,14 @@ def iniciar_sala4(inv=None):
                 texto_cerrar_rect = texto_cerrar.get_rect(center=(size[0] // 2, size[1] // 2 + 100))
                 overlay.blit(texto_cerrar, texto_cerrar_rect)
         
+        # Indicador para ajo (si está cerca)
+        # Asegurarse de tener pies_personaje actualizado
+        pies_personaje = devolver_pies_personaje(personaje_rect)
+        if ajo_visible and ajo_rect and pies_personaje.colliderect(ajo_rect):
+            texto_ajo = fuente.render("Presiona E para recoger ajo", True, (255, 255, 255))
+            texto_rect_ajo = texto_ajo.get_rect(center=(size[0] // 2, size[1] - 120))
+            overlay.blit(texto_ajo, texto_rect_ajo)
+
         # Aplicar el overlay a la pantalla (DESPUÉS de dibujar todo)
         screen.blit(overlay, (0, 0))
         
