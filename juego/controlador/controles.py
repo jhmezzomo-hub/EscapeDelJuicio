@@ -2,7 +2,7 @@ import pygame
 from juego.controlador.verificar_colisiones import verificar_colision, verificar_colision_maniquies
 from juego.controlador.inventario import crear_inventario
 
-def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_direction="left"):
+def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_direction="left", disable_movement=False):
     """Mueve el rect del personaje y devuelve (moving, direction).
 
     Cuando no hay tecla de movimiento, devuelve la `last_direction` sin
@@ -12,7 +12,7 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
     moving = False
     direction = last_direction
 
-    if not inv.is_open:
+    if not inv.is_open and not disable_movement:
         old_pos = personaje_rect.topleft
         keys = pygame.key.get_pressed()
 
