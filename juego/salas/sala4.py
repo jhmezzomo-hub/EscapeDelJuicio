@@ -72,6 +72,12 @@ def iniciar_sala4(inv=None):
     # Cargar imagen de Caperucita libre (sin cuerdas)
     caperucita_libre_img, _ = cargar_personaje("caperucita_libre.png", "caperucita", size, personaje_rect.size)
     caperucita_img_actual = caperucita_img  # Imagen actual de Caperucita
+    
+    # Cargar objeto ajo (aparecerá cuando Caperucita desaparezca)
+    ajo_img, ajo_rect = cargar_img("ajo.png", "objetos", (50, 50))  # Tamaño reducido a 50x50
+    ajo_rect.center = caperucita_rect.center  # Posicionar donde está Caperucita
+    ajo_visible = False  # El ajo no es visible inicialmente
+    ajo_recogido = False  # Si el ajo fue recogido
 
     # -------- Cargar balde y posicionarlo sobre la cabeza de Caperucita --------
     balde_img, balde_rect = cargar_img("balde.png", "balde", (200, 150))
@@ -96,7 +102,9 @@ def iniciar_sala4(inv=None):
     pies_personaje = devolver_pies_personaje(personaje_rect)
 
     maniquies = []
-    obstaculos = [{"hitbox": hitbox_caperucita}]
+    # Crear diccionario de obstáculo de Caperucita que se podrá modificar
+    obstaculo_caperucita = {"hitbox": hitbox_caperucita}
+    obstaculos = [obstaculo_caperucita]
     print("[DEBUG] Sala 4 cargada correctamente con colisiones y objetos visuales.")
 
     # -------- Mensaje en la pared del fondo --------
@@ -266,6 +274,18 @@ def iniciar_sala4(inv=None):
                         mensaje_agradecimiento_mostrado = True
                         mensaje_agradecimiento_timer = 3.0  # Mostrar mensaje por 3 segundos
                         print("[DEBUG] Caperucita liberada!")
+                # Interacción con el ajo para recogerlo
+                elif ajo_visible and not ajo_recogido and personaje_rect.colliderect(ajo_rect):
+                    from juego.ui.inventory import Item
+                    ajo_item = Item(type="Ajo", count=1, max_stack=1, image=ajo_img)
+                    # Buscar primer slot vacío en el inventario
+                    for i in range(len(inv.inventory_slots)):
+                        if inv.inventory_slots[i] is None:
+                            inv.inventory_slots[i] = ajo_item
+                            break
+                    ajo_recogido = True
+                    ajo_visible = False
+                    print("[DEBUG] Ajo recogido!")
                 # Interacción con el mensaje de la pared (solo si no ha adivinado)
                 elif personaje_rect.colliderect(mensaje_pared_rect) and not personaje_bloqueado and not respuesta_correcta:
                     mensaje_pared_mostrado = True
@@ -309,18 +329,21 @@ def iniciar_sala4(inv=None):
             if opacidad_caperucita <= 0:
                 opacidad_caperucita = 0
                 caperucita_desapareciendo = False
-                print("[DEBUG] Caperucita ha desaparecido")
+                ajo_visible = True  # Hacer visible el ajo cuando Caperucita desaparece
+                # Eliminar la hitbox de Caperucita de los obstáculos
+                if obstaculo_caperucita in obstaculos:
+                    obstaculos.remove(obstaculo_caperucita)
+                print("[DEBUG] Caperucita ha desaparecido - Ajo aparece - Hitbox eliminada")
         
-        # Detectar si está cerca de Caperucita para mostrar mensaje de liberar
-        # Crear un área de detección más grande alrededor de Caperucita
-        area_deteccion_caperucita = pygame.Rect(
-            caperucita_rect.left - 50,
-            caperucita_rect.top - 50,
-            caperucita_rect.width + 100,
-            caperucita_rect.height + 100
-        )
-        
-        if respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0:
+        # Detectar si está cerca de Caperucita para mostrar mensaje de liberar (solo si aún está visible)
+        if respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0 and opacidad_caperucita > 0:
+            # Crear un área de detección más grande alrededor de Caperucita
+            area_deteccion_caperucita = pygame.Rect(
+                caperucita_rect.left - 50,
+                caperucita_rect.top - 50,
+                caperucita_rect.width + 100,
+                caperucita_rect.height + 100
+            )
             mostrar_mensaje_liberar = personaje_rect.colliderect(area_deteccion_caperucita)
             if mostrar_mensaje_liberar:
                 print("[DEBUG] Cerca de Caperucita - mostrando mensaje liberar")
@@ -436,6 +459,10 @@ def iniciar_sala4(inv=None):
             caperucita_con_alpha.set_alpha(int(opacidad_caperucita))
             objetos_a_dibujar.append(('caperucita', caperucita_con_alpha, caperucita_rect, caperucita_rect.bottom))
         
+        # Agregar ajo si está visible y no ha sido recogido
+        if ajo_visible and not ajo_recogido:
+            objetos_a_dibujar.append(('ajo', ajo_img, ajo_rect, ajo_rect.bottom))
+        
         # Agregar jugador
         objetos_a_dibujar.append(('jugador', current_player_surf, personaje_rect, personaje_rect.bottom))
         
@@ -481,6 +508,12 @@ def iniciar_sala4(inv=None):
             texto_liberar = fuente.render("Presiona E para quitar cuerdas", True, (255, 255, 255))
             texto_rect_liberar = texto_liberar.get_rect(center=(size[0] // 2, size[1] - 80))
             overlay.blit(texto_liberar, texto_rect_liberar)
+        
+        # Mostrar mensaje para recoger el ajo
+        if ajo_visible and not ajo_recogido and personaje_rect.colliderect(ajo_rect):
+            texto_ajo = fuente.render("Presiona E para recoger ajo", True, (255, 255, 255))
+            texto_rect_ajo = texto_ajo.get_rect(center=(size[0] // 2, size[1] - 80))
+            overlay.blit(texto_ajo, texto_rect_ajo)
         
         # Mostrar mensaje de agradecimiento de Caperucita
         if mensaje_agradecimiento_mostrado:
