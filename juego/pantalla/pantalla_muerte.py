@@ -92,13 +92,24 @@ def pantalla_fin():
         pygame.quit()
         sys.exit()
 
+    def go_menu():
+        # Cerrar esta pantalla y abrir el menú principal.
+        nonlocal running
+        running = False
+        # Abrir pantalla de inicio inmediatamente
+        try:
+            pantalla_de_inicio()
+        except Exception:
+            # Si hay un error abriendo el menú, simplemente continue y salga
+            pass
+
     btn_w, btn_h = 300, 70
     gap = btn_h + 20
     x = int(size[0] * 0.75)
     y0 = int(size[1] * 0.50)
 
     btn_play = Button((x - btn_w//2, y0, btn_w, btn_h), "VOLVER A JUGAR", start_game)
-    btn_menu = Button((x - btn_w//2, y0 + gap, btn_w, btn_h), "VOLVER AL MENU", pantalla_de_inicio)
+    btn_menu = Button((x - btn_w//2, y0 + gap, btn_w, btn_h), "VOLVER AL MENU", go_menu)
     btn_exit = Button((x - btn_w//2, y0 + 2*gap, btn_w, btn_h), "SALIR", exit_game)
     buttons = [btn_play, btn_menu, btn_exit]
 

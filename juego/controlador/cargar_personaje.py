@@ -9,7 +9,16 @@ from juego.controlador.rutas import rutas_img
 
 def cargar_personaje(nombre_img, personaje, size, tamaño):
     path = rutas_img(nombre_img, personaje)
-    personaje = pygame.image.load(path).convert_alpha()
-    personaje = pygame.transform.scale(personaje, tamaño)
+    imagen = pygame.image.load(path)
+    try:
+        if pygame.display.get_surface() is not None:
+            # Preferimos mantener el canal alpha si existe
+            try:
+                imagen = imagen.convert_alpha()
+            except Exception:
+                imagen = imagen.convert()
+    except Exception:
+        pass
+    personaje = pygame.transform.scale(imagen, tamaño)
     personaje_rect = personaje.get_rect(center=(size[0]//2, size[1] - 150))
     return personaje, personaje_rect

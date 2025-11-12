@@ -29,6 +29,8 @@ def iniciar_sala2(inv=None):
     screen = info_pantalla()
     general = get_config_sala("general")
 
+    
+
     linterna_encendida = False
     mostrar_mensaje_linterna = True
     timer_mensaje_linterna = 1.0
@@ -55,12 +57,13 @@ def iniciar_sala2(inv=None):
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
 
-        hitbox_rect = pygame.Rect(
-            maniquie_rect.left + 20,
-            maniquie_rect.bottom - 30 if pos[1] > 250 else maniquie_rect.top - 3,
-            maniquie_rect.width - 40,
-            30
-        )
+        # Calcular hitbox relativa al maniquí de forma más robusta
+        hb_width = max(24, maniquie_rect.width - 40)
+        hb_height = 30
+        hb_x = maniquie_rect.left + (maniquie_rect.width - hb_width) // 2
+        # colocar la hitbox cerca de los pies del maniquí
+        hb_y = maniquie_rect.bottom - int(hb_height * 1.2)
+        hitbox_rect = pygame.Rect(hb_x, hb_y, hb_width, hb_height)
 
         profundidad = (maniquie_rect.top, maniquie_rect.bottom)
 
@@ -76,11 +79,6 @@ def iniciar_sala2(inv=None):
 
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
     fuente = general["fuente"]
-
-    # Cargar imagen de la linterna
-    linterna_img, _ = cargar_personaje("linterna.png", "inventario_obj", size, (64, 64))
-    linterna_item = Item(type="linterna", count=1, max_stack=1, color=(255, 255, 150), image=linterna_img)
-    inv.inventory_slots[1] = linterna_item
 
     mostrar_hitboxes = False
     mostrar_malo = False
@@ -109,6 +107,7 @@ def iniciar_sala2(inv=None):
 
     # Cargar el fondo (una vez)
     fondo = cargar_fondo("fondo_sala1.png", "Fondos")
+    
 
     # Botón de configuración
     btn_config = crear_boton_config(size[0] - 140, 20)
@@ -148,6 +147,12 @@ def iniciar_sala2(inv=None):
             except Exception:
                 pass
             inv.handle_event(event)
+            # teclas de depuración: F2 = mostrar hitboxes, F3 = resaltar maniquí malo
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F2:
+                    mostrar_hitboxes = not mostrar_hitboxes
+                if event.key == pygame.K_F3:
+                    mostrar_malo = not mostrar_malo
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_g:
                     linterna_encendida = not linterna_encendida
@@ -162,6 +167,7 @@ def iniciar_sala2(inv=None):
         mensaje_color = (255, 255, 255)
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
+
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
             mensaje_maniqui = True
             mensaje_texto = "Usar llave presionando F"
@@ -170,8 +176,9 @@ def iniciar_sala2(inv=None):
                 if llave_existente:
                     llave_correcta = any(m["es_llave_correcta"] and m["llave_agarrada"] for m in maniquies)
                     if llave_correcta:
-                        pygame.quit()
-                        sys.exit()
+                        # Pasar a la siguiente sala en lugar de cerrar el juego
+                        siguiente = get_config_sala("sala2").get("siguiente_sala")
+                        return siguiente
                     else:
                         mensaje_texto = "Llave incorrecta"
                         mensaje_color = (255, 0, 0)

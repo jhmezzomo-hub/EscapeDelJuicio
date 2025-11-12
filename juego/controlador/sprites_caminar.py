@@ -43,9 +43,14 @@ def sprites_caminar(size, screen, inv, mask, maniquies, tamaño, personaje, pers
     direction = getattr(sprites_caminar, "direction", "left")
 
     # ===== Actualización por frame =====
-    # `teclas_movimiento` modifica `personaje_rect` directamente y devuelve
-    # si está moviendo y la nueva dirección sugerida.
-    moving, new_direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, direction, disable_movement)
+    # Si el movimiento está deshabilitado, no llamar a teclas_movimiento
+    if disable_movement:
+        moving = False
+        new_direction = direction
+    else:
+        # `teclas_movimiento` modifica `personaje_rect` directamente y devuelve
+        # si está moviendo y la nueva dirección sugerida.
+        moving, new_direction = teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, direction)
 
     # Actualizamos la dirección solo cuando hay movimiento horizontal
     if moving and new_direction in ("left", "right"):
