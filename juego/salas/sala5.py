@@ -86,6 +86,20 @@ def iniciar_sala4(inv):
                                               personaje_rect.size, personaje, personaje_rect,
                                               disable_movement=personaje_bloqueado)
 
+        # Si está bloqueado, contar tiempo y morir al cumplirse
+        if personaje_bloqueado:
+            dracula_img, dracula_rect = cargar_personaje("dracula asustando.png", "dracula", size, tamaño=(180, 200))
+            dracula_rect.topleft = (850, 340)
+            
+            personaje_asustado, _ = cargar_personaje("mc_asustado.png", "mc", size, personaje_rect.size)
+            personaje_asustado = pygame.transform.flip(personaje_asustado, personaje_rect.centerx < dracula_rect.centerx, False)
+            current_player_surf = personaje_asustado
+            personaje_rect.topleft = personaje_rect.topleft
+            temporizador_muerte -= dt
+            if temporizador_muerte <= 0:
+                pantalla_fin()
+                return
+
         # Dibujar objetos, Drácula y personaje
         objetos_para_dibujar = []
         for obj in objetos_sala:
@@ -154,17 +168,9 @@ def iniciar_sala4(inv):
         # Si toca la línea, bloquear y activar temporizador
         if not personaje_bloqueado and dist < 10:
             personaje_bloqueado = True
-            temporizador_muerte = 1.0  # 1 segundo
+            temporizador_muerte = 1.5  # 1.5 segundos
 
-        # Si está bloqueado, contar tiempo y morir al cumplirse
-        if personaje_bloqueado:
-            dracula_img, dracula_rect = cargar_personaje("dracula asustando.png", "dracula", size, tamaño=(180, 200))
-            dracula_rect.topleft = (850, 340)
-            temporizador_muerte -= dt
-            if temporizador_muerte <= 0:
-                pantalla_fin()
-                return
-
+        
         # --- INTERACCIÓN CON DRÁCULA ---
         en_dracula = personaje_rect.colliderect(hitbox_dracula)
         if en_dracula and not prev_en_dracula:
