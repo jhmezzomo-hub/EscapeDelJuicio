@@ -36,6 +36,17 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
         puerta_interaccion_volver = config["puertas"]["volver"]
     except KeyError:
         puerta_interaccion_volver = None
+    
+    # Puertas adicionales (derecha e izquierda) - opcionales
+    try:
+        puerta_derecha = config["puertas"]["derecha"]
+    except KeyError:
+        puerta_derecha = None
+    
+    try:
+        puerta_izquierda = config["puertas"]["izquierda"]
+    except KeyError:
+        puerta_izquierda = None
 
     puntos_hexagono = devolver_puntos_hexagono()
     mask = colision_piso(size)
@@ -148,6 +159,20 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
                 if puerta_interaccion_volver and pies_personaje.colliderect(puerta_interaccion_volver):
                     print(f"[DEBUG] volver a sala anterior: {config.get('sala_anterior')}")
                     return config["sala_anterior"]
+                
+                # Interacción puerta derecha (E)
+                if puerta_derecha and pies_personaje.colliderect(puerta_derecha):
+                    sala_derecha = config.get('sala_derecha')
+                    if sala_derecha:
+                        print(f"[DEBUG] ir a sala derecha: {sala_derecha}")
+                        return sala_derecha
+                
+                # Interacción puerta izquierda (E)
+                if puerta_izquierda and pies_personaje.colliderect(puerta_izquierda):
+                    sala_izquierda = config.get('sala_izquierda')
+                    if sala_izquierda:
+                        print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
+                        return sala_izquierda
 
             # Si hay un objeto cercano y no se ha pulsado E, mostrar el prompt
             if interaccion_target and not teclas[pygame.K_e]:
@@ -191,6 +216,10 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
             pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_salida, 2)
             if puerta_interaccion_volver:
                 pygame.draw.rect(screen, (255, 0, 0), puerta_interaccion_volver, 2)
+            if puerta_derecha:
+                pygame.draw.rect(screen, (0, 255, 0), puerta_derecha, 2)
+            if puerta_izquierda:
+                pygame.draw.rect(screen, (0, 255, 0), puerta_izquierda, 2)
 
         # Renderizar sprites (animación) después del fondo para que no sean sobreescritos
         # sprites_caminar ahora devuelve la superficie del jugador para permitir ordenar
@@ -218,6 +247,12 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[]):
         # Mensajes de interacción con puertas
         if pies_personaje.colliderect(puerta_interaccion_salida):
             texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        elif puerta_derecha and pies_personaje.colliderect(puerta_derecha):
+            texto = fuente.render("Presiona E para ir a la sala derecha", True, (255, 255, 255))
+            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+        elif puerta_izquierda and pies_personaje.colliderect(puerta_izquierda):
+            texto = fuente.render("Presiona E para ir a la sala izquierda", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
         # Si durante el bucle se construyó un overlay con mensajes, blitearlo encima
         if mensaje_mostrado:
