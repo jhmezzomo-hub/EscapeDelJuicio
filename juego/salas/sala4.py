@@ -66,6 +66,12 @@ def iniciar_sala4(inv=None):
     # -------- Cargar personaje (Caperucita) --------
     caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
     caperucita_rect.midbottom = (180, personaje_rect.bottom)
+    
+    # Cargar imagen de Caperucita feliz para cuando se resuelva el acertijo
+    caperucita_feliz_img, _ = cargar_personaje("caperucita_feliz.png", "caperucita", size, personaje_rect.size)
+    # Cargar imagen de Caperucita libre (sin cuerdas)
+    caperucita_libre_img, _ = cargar_personaje("caperucita_libre.png", "caperucita", size, personaje_rect.size)
+    caperucita_img_actual = caperucita_img  # Imagen actual de Caperucita
 
     # -------- Cargar balde y posicionarlo sobre la cabeza de Caperucita --------
     balde_img, balde_rect = cargar_img("balde.png", "balde", (200, 150))
@@ -125,6 +131,15 @@ def iniciar_sala4(inv=None):
     opacidad_objetos = 255  # Opacidad inicial (0-255)
     desvaneciendo = False  # Si está en proceso de desvanecimiento
     velocidad_desvanecimiento = 200  # Opacidad por segundo que se reduce
+    
+    # Variables para liberación de Caperucita
+    caperucita_liberada = False  # Si Caperucita fue liberada
+    mostrar_mensaje_liberar = False  # Si está cerca para liberar
+    mensaje_agradecimiento_mostrado = False  # Si se mostró el mensaje de agradecimiento
+    mensaje_agradecimiento_timer = 0.0  # Temporizador para el mensaje de agradecimiento
+    caperucita_desapareciendo = False  # Si Caperucita está desapareciendo
+    opacidad_caperucita = 255  # Opacidad de Caperucita
+    velocidad_desvanecimiento_caperucita = 100  # Velocidad de desvanecimiento
 
     # --- Línea límite situada a la izquierda de Caperucita ---
     limite_x = caperucita_rect.right + 30
@@ -236,6 +251,21 @@ def iniciar_sala4(inv=None):
                 if personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
                     return "siguiente_sala"
+                # Interacción con Caperucita para liberarla (solo después de resolver el acertijo)
+                elif respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0:
+                    # Crear área de detección temporal para la interacción
+                    area_interaccion = pygame.Rect(
+                        caperucita_rect.left - 50,
+                        caperucita_rect.top - 50,
+                        caperucita_rect.width + 100,
+                        caperucita_rect.height + 100
+                    )
+                    if personaje_rect.colliderect(area_interaccion):
+                        caperucita_liberada = True
+                        caperucita_img_actual = caperucita_libre_img
+                        mensaje_agradecimiento_mostrado = True
+                        mensaje_agradecimiento_timer = 3.0  # Mostrar mensaje por 3 segundos
+                        print("[DEBUG] Caperucita liberada!")
                 # Interacción con el mensaje de la pared (solo si no ha adivinado)
                 elif personaje_rect.colliderect(mensaje_pared_rect) and not personaje_bloqueado and not respuesta_correcta:
                     mensaje_pared_mostrado = True
@@ -261,7 +291,41 @@ def iniciar_sala4(inv=None):
             if opacidad_objetos <= 0:
                 opacidad_objetos = 0
                 desvaneciendo = False
-                print("[DEBUG] Objetos completamente desvanecidos")
+                # Cambiar a Caperucita feliz cuando el balde desaparece
+                caperucita_img_actual = caperucita_feliz_img
+                print("[DEBUG] Objetos completamente desvanecidos - Caperucita feliz")
+        
+        # Manejar mensaje de agradecimiento y desvanecimiento de Caperucita
+        if mensaje_agradecimiento_mostrado:
+            mensaje_agradecimiento_timer -= dt
+            if mensaje_agradecimiento_timer <= 0:
+                mensaje_agradecimiento_mostrado = False
+                caperucita_desapareciendo = True
+                print("[DEBUG] Iniciando desvanecimiento de Caperucita")
+        
+        # Animar desvanecimiento de Caperucita
+        if caperucita_desapareciendo:
+            opacidad_caperucita -= velocidad_desvanecimiento_caperucita * dt
+            if opacidad_caperucita <= 0:
+                opacidad_caperucita = 0
+                caperucita_desapareciendo = False
+                print("[DEBUG] Caperucita ha desaparecido")
+        
+        # Detectar si está cerca de Caperucita para mostrar mensaje de liberar
+        # Crear un área de detección más grande alrededor de Caperucita
+        area_deteccion_caperucita = pygame.Rect(
+            caperucita_rect.left - 50,
+            caperucita_rect.top - 50,
+            caperucita_rect.width + 100,
+            caperucita_rect.height + 100
+        )
+        
+        if respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0:
+            mostrar_mensaje_liberar = personaje_rect.colliderect(area_deteccion_caperucita)
+            if mostrar_mensaje_liberar:
+                print("[DEBUG] Cerca de Caperucita - mostrando mensaje liberar")
+        else:
+            mostrar_mensaje_liberar = False
         
         # --- VERIFICAR COLISIÓN CON LA LÍNEA (solo si no ha adivinado el acertijo) ---
         if not personaje_bloqueado and not respuesta_correcta:
@@ -331,6 +395,15 @@ def iniciar_sala4(inv=None):
             pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)  # Hitbox de Caperucita
             pygame.draw.rect(screen, (255, 165, 0), mensaje_pared_rect, 2)  # Área del mensaje en la pared
             pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)  # Hitbox de Messi (pies)
+            # Mostrar área de detección de Caperucita si el acertijo está resuelto
+            if respuesta_correcta and opacidad_objetos == 0 and not caperucita_liberada:
+                area_deteccion_debug = pygame.Rect(
+                    caperucita_rect.left - 50,
+                    caperucita_rect.top - 50,
+                    caperucita_rect.width + 100,
+                    caperucita_rect.height + 100
+                )
+                pygame.draw.rect(screen, (255, 0, 255), area_deteccion_debug, 2)  # Magenta para área de detección
 
         # Mostrar mensaje temporal si corresponde
         if mensaje_timer > 0:
@@ -357,8 +430,11 @@ def iniciar_sala4(inv=None):
             balde_con_alpha.set_alpha(int(opacidad_objetos))
             objetos_a_dibujar.append(('balde', balde_con_alpha, balde_rect, caperucita_rect.bottom))
         
-        # Agregar Caperucita
-        objetos_a_dibujar.append(('caperucita', caperucita_img, caperucita_rect, caperucita_rect.bottom))
+        # Agregar Caperucita (usar la imagen actual con opacidad)
+        if opacidad_caperucita > 0:
+            caperucita_con_alpha = caperucita_img_actual.copy()
+            caperucita_con_alpha.set_alpha(int(opacidad_caperucita))
+            objetos_a_dibujar.append(('caperucita', caperucita_con_alpha, caperucita_rect, caperucita_rect.bottom))
         
         # Agregar jugador
         objetos_a_dibujar.append(('jugador', current_player_surf, personaje_rect, personaje_rect.bottom))
@@ -399,6 +475,23 @@ def iniciar_sala4(inv=None):
             texto_interaccion = fuente.render("Presiona E para leer", True, (255, 255, 255))
             texto_rect = texto_interaccion.get_rect(center=(size[0] // 2, size[1] - 80))
             overlay.blit(texto_interaccion, texto_rect)
+        
+        # Mostrar mensaje para liberar a Caperucita
+        if mostrar_mensaje_liberar:
+            texto_liberar = fuente.render("Presiona E para quitar cuerdas", True, (255, 255, 255))
+            texto_rect_liberar = texto_liberar.get_rect(center=(size[0] // 2, size[1] - 80))
+            overlay.blit(texto_liberar, texto_rect_liberar)
+        
+        # Mostrar mensaje de agradecimiento de Caperucita
+        if mensaje_agradecimiento_mostrado:
+            # Fondo semi-transparente
+            fondo_agradecimiento = pygame.Rect(size[0] // 2 - 250, size[1] // 2 - 50, 500, 100)
+            pygame.draw.rect(overlay, (0, 0, 0, 200), fondo_agradecimiento)
+            
+            # Texto de agradecimiento
+            texto_agradecimiento = fuente.render("Caperucita: ¡Gracias por liberarme!", True, (255, 255, 255))
+            texto_agr_rect = texto_agradecimiento.get_rect(center=(size[0] // 2, size[1] // 2))
+            overlay.blit(texto_agradecimiento, texto_agr_rect)
         
         # Mostrar mensaje de la pared si fue activado (se mantiene hasta presionar E de nuevo)
         if mensaje_pared_mostrado:
