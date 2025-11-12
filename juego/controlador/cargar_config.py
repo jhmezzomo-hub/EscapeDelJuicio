@@ -57,9 +57,9 @@ def get_config_sala(nombre_sala):
                 "tamaño": (125, 200),
             },
             "puertas": {
-                "derecha": pygame.Rect(985, 248, 70, 40),
-                "izquierda": pygame.Rect(68, 248, 70, 40),
-                "salida": pygame.Rect(515, 380, 200, 40)
+                "izquierda": pygame.Rect(70, 410, 90, 50),      # Puerta izquierda (arco)
+                "salida": pygame.Rect(500, 400, 90, 50),       # Puerta central (arco grande)
+                "derecha": pygame.Rect(980, 410, 90, 50)       # Puerta derecha (arco)
             },
             "sala_izquierda": "sala4",
             "sala_derecha": "sala5",
