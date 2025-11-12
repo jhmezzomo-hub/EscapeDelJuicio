@@ -61,7 +61,7 @@ def iniciar_sala4(inv):
     prev_en_dracula = False
 
     mask = colision_piso(size)
-    fondo = cargar_fondo("Fondo_sala1.png", "Fondos")
+    fondo = cargar_fondo("fondo_puertaI.png", "Fondos")
     btn_config = crear_boton_config(size[0] - 140, 20)
     clock = pygame.time.Clock()
     obstaculos = [{"hitbox": hitbox_dracula}]
