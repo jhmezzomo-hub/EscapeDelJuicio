@@ -30,7 +30,6 @@ corazon_img = pygame.image.load(os.path.join(ruta_img, "mc", "corazones.png")).c
 corazon_img = pygame.transform.scale(corazon_img, (40, 40))
 
 laser_grande_img = pygame.image.load(os.path.join(ruta_img, "lasers", "laser_grande.png")).convert_alpha()
-laser_direcciones_img = pygame.image.load(os.path.join(ruta_img, "lasers", "laser_direcciones.png")).convert_alpha()
 laser_chiquito_img = pygame.image.load(os.path.join(ruta_img, "lasers", "laser_chiquito.png")).convert_alpha()
 alerta_img = pygame.image.load(os.path.join(ruta_img, "lasers", "alerta.png")).convert_alpha()
 
@@ -57,11 +56,11 @@ class Nave(pygame.sprite.Sprite):
         self.power_tiempo = 0
         self.laser_auto_timer = 0
         self.laser_grande = None
-        self.tiempo_ultimo_dano = 0  # cooldown de daño
+        self.tiempo_ultimo_dano = 0
 
     def recibir_dano(self):
         ahora = pygame.time.get_ticks()
-        if ahora - self.tiempo_ultimo_dano > 1000:  # 1 segundo invulnerable
+        if ahora - self.tiempo_ultimo_dano > 1000:
             self.vidas -= 1
             self.tiempo_ultimo_dano = ahora
 
@@ -75,7 +74,6 @@ class Nave(pygame.sprite.Sprite):
         if teclas[pygame.K_DOWN] and self.rect.bottom < ALTO:
             self.rect.y += self.velocidad
 
-        # Control del poder de tiempo
         if self.power:
             if pygame.time.get_ticks() - self.power_tiempo > self.power["duracion"]:
                 self.power = None
@@ -83,7 +81,6 @@ class Nave(pygame.sprite.Sprite):
                     self.laser_grande.kill()
                     self.laser_grande = None
 
-        # Disparo automático
         if self.power and self.power["tipo"] == "auto":
             ahora = pygame.time.get_ticks()
             if ahora - self.laser_auto_timer > 200:
@@ -91,7 +88,6 @@ class Nave(pygame.sprite.Sprite):
                 bala = Bala(self.rect.centerx, self.rect.top, direccion=-1)
                 grupo_balas.add(bala)
 
-        # Actualizar posición del láser grande si está activo
         if self.laser_grande:
             self.laser_grande.rect.midbottom = self.rect.midtop
 
@@ -119,7 +115,7 @@ class LaserGrandeJugador(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=jugador.rect.midtop)
         self.jugador = jugador
         self.tiempo_inicio = pygame.time.get_ticks()
-        self.duracion = 2000  # 2 segundos
+        self.duracion = 2000
 
     def update(self):
         self.rect.midbottom = self.jugador.rect.midtop
@@ -159,26 +155,6 @@ class LaserGrandeBoss(pygame.sprite.Sprite):
         return self.estado == "disparando"
 
 
-class LaserDireccionalBoss(pygame.sprite.Sprite):
-    def __init__(self, x, y, direccion):
-        super().__init__()
-        self.image = pygame.transform.scale(laser_direcciones_img, (100, 400))
-        self.image = pygame.transform.rotate(self.image, direccion)
-        self.rect = self.image.get_rect(center=(x, y))
-        self.velocidad = 7
-        self.direccion = direccion
-        self.tiempo_inicio = pygame.time.get_ticks()
-        self.duracion = 3000
-
-    def update(self):
-        if self.direccion == 90:
-            self.rect.x += self.velocidad
-        elif self.direccion == -90:
-            self.rect.x -= self.velocidad
-        if pygame.time.get_ticks() - self.tiempo_inicio > self.duracion:
-            self.kill()
-
-
 class CirculoPoder(pygame.sprite.Sprite):
     def __init__(self, tipo, imagen):
         super().__init__()
@@ -205,7 +181,7 @@ class Boss(pygame.sprite.Sprite):
         self.tiempo_disparo = 0
         self.tiempo_ataque = 0
         self.estado = "normal"
-        self.ultimo_poder = "laser_direccional"
+        self.ultimo_poder = "laser_grande"
         self.atacando = False
 
     def update(self):
@@ -221,18 +197,9 @@ class Boss(pygame.sprite.Sprite):
         self.velocidad = 0
 
     def ejecutar_ataque(self, grupo_lasers):
-        if self.ultimo_poder == "laser_grande":
-            # alterna a direccional
-            laser_izq = LaserDireccionalBoss(self.rect.centerx, self.rect.bottom, -90)
-            laser_der = LaserDireccionalBoss(self.rect.centerx, self.rect.bottom, 90)
-            grupo_lasers.add(laser_izq, laser_der)
-            self.ultimo_poder = "laser_direccional"
-        else:
-            # alterna a grande
-            laser = LaserGrandeBoss(self.rect.centerx, self.rect.bottom - 100)
-            grupo_lasers.add(laser)
-            self.ultimo_poder = "laser_grande"
-
+        laser = LaserGrandeBoss(self.rect.centerx, self.rect.bottom - 100)
+        grupo_lasers.add(laser)
+        self.ultimo_poder = "laser_grande"
         self.estado = "quieto"
         self.tiempo_ataque = 120
 
@@ -307,7 +274,6 @@ def iniciar_galaxy_attack():
         grupo_poderes.update()
         grupo_laser_jugador.update()
 
-        # === Spawnear poderes ===
         ahora = pygame.time.get_ticks()
         if ahora - ultimo_poder_spawn > 5000:
             ultimo_poder_spawn = ahora
@@ -320,7 +286,6 @@ def iniciar_galaxy_attack():
                 poder = CirculoPoder("doble", circulo_doble_img)
             grupo_poderes.add(poder)
 
-        # === IA del Boss ===
         if boss.estado == "normal":
             boss.tiempo_disparo += 1
             if boss.tiempo_disparo % 42 == 0:
@@ -339,17 +304,11 @@ def iniciar_galaxy_attack():
             if boss.tiempo_ataque <= 0:
                 boss.continuar()
 
-        # === Colisiones ===
         if pygame.sprite.spritecollide(jugador, grupo_balas_boss, True):
             jugador.recibir_dano()
 
         for laser in grupo_lasers_boss:
-            # Láser grande
             if hasattr(laser, "hace_dano") and laser.hace_dano() and jugador.rect.colliderect(laser.rect):
-                jugador.recibir_dano()
-                break
-            # Láser direccional
-            elif isinstance(laser, LaserDireccionalBoss) and jugador.rect.colliderect(laser.rect):
                 jugador.recibir_dano()
                 break
 
@@ -376,13 +335,11 @@ def iniciar_galaxy_attack():
                 jugador.power = {"tipo": "doble", "duracion": 3000}
             jugador.power_tiempo = pygame.time.get_ticks()
 
-        # === Derrota o victoria ===
         if jugador.vidas <= 0:
             en_juego = False
         if boss.vida <= 0:
             en_juego = False
 
-        # === Dibujar ===
         pantalla.blit(fondo, (0, 0))
         grupo_balas.draw(pantalla)
         grupo_balas_boss.draw(pantalla)
@@ -395,7 +352,6 @@ def iniciar_galaxy_attack():
         dibujar_barra_boss(boss.vida, boss.vida_max)
         pygame.display.flip()
 
-    # Pantalla final
     pantalla.fill((0, 0, 0))
     fuente = pygame.font.Font(None, 80)
     texto = "¡VICTORIA!" if boss.vida <= 0 else "GAME OVER"
