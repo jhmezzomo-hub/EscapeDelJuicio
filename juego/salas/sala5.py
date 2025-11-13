@@ -69,8 +69,6 @@ def iniciar_sala4(inv):
     # --- NUEVAS VARIABLES ---
     personaje_bloqueado = False
     temporizador_muerte = 0  # segundos restantes para morir
-    dracula_persiguiendo = False  # Drácula se mueve hacia el personaje
-    velocidad_dracula = 150  # píxeles por segundo
 
     while True:
         dt = clock.tick(60) / 1000.0
@@ -98,37 +96,9 @@ def iniciar_sala4(inv):
             current_player_surf = personaje_asustado
             personaje_rect.topleft = personaje_rect.topleft
             temporizador_muerte -= dt
-            
-            # Cuando el temporizador termina, Drácula comienza a perseguir
-            if temporizador_muerte <= 0 and not dracula_persiguiendo:
-                dracula_persiguiendo = True
-            
-            # Si Drácula está persiguiendo, moverse hacia el personaje
-            if dracula_persiguiendo:
-                dx = personaje_rect.centerx - dracula_rect.centerx
-                dy = personaje_rect.centery - dracula_rect.centery
-                distancia = (dx**2 + dy**2) ** 0.5
-                
-                if distancia > 0:
-                    # Normalizar dirección y aplicar velocidad
-                    dx_norm = dx / distancia
-                    dy_norm = dy / distancia
-                    dracula_rect.x += dx_norm * velocidad_dracula * dt
-                    dracula_rect.y += dy_norm * velocidad_dracula * dt
-                
-                # Actualizar hitbox de Drácula
-                hitbox_dracula = pygame.Rect(
-                    dracula_rect.left + 20,
-                    dracula_rect.bottom - 30,
-                    dracula_rect.width - 40,
-                    30
-                )
-                obstaculos = [{"hitbox": hitbox_dracula}]
-                
-                # Verificar colisión con Drácula
-                if personaje_rect.colliderect(dracula_rect):
-                    pantalla_fin()
-                    return
+            if temporizador_muerte <= 0:
+                pantalla_fin()
+                return
 
         # Dibujar objetos, Drácula y personaje
         objetos_para_dibujar = []
@@ -223,7 +193,7 @@ def iniciar_sala4(inv):
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
 
         # Mostrar temporizador grande y visible cuando el personaje está bloqueado
-        if personaje_bloqueado and not dracula_persiguiendo:
+        if personaje_bloqueado:
             tiempo_mostrar = max(0.0, temporizador_muerte)
             texto_temp = fuente.render(f"{tiempo_mostrar:.1f}s", True, (255, 50, 50))
             rect_temp = texto_temp.get_rect(center=(size[0] // 2, size[1] // 2 - 40))
@@ -232,4 +202,15 @@ def iniciar_sala4(inv):
             screen.blit(fondo_temp, (rect_temp.x - 10, rect_temp.y - 10))
             screen.blit(texto_temp, rect_temp)
 
-        try
+        try:
+            btn_config.draw(screen)
+        except Exception:
+            pass
+
+        inv.update(dt)
+        inv.draw(screen)
+        pygame.display.flip()
+
+
+if __name__ == "__main__":
+    iniciar_sala4(crear_inventario())
