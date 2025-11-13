@@ -6,7 +6,7 @@ import os
 # === INICIALIZACIÓN ===
 pygame.init()
 
-ANCHO, ALTO = 1280, 720
+ANCHO, ALTO = 1100, 600
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Galaxy Attack - Sala Final")
 
@@ -31,7 +31,9 @@ corazon_img = pygame.transform.scale(corazon_img, (40, 40))
 
 laser_grande_img = pygame.image.load(os.path.join(ruta_img, "lasers", "laser_grande.png")).convert_alpha()
 laser_chiquito_img = pygame.image.load(os.path.join(ruta_img, "lasers", "laser_chiquito.png")).convert_alpha()
-alerta_img = pygame.image.load(os.path.join(ruta_img, "lasers", "alerta.png")).convert_alpha()
+
+alerta_img = pygame.image.load(os.path.join(ruta_img,  "lasers", "alerta.png")).convert_alpha()
+alerta_img = pygame.transform.scale(alerta_img, (80, 80))
 
 # === CÍRCULOS DE PODER ===
 ruta_poderes = os.path.join(ruta_img, "poderes")
@@ -95,7 +97,7 @@ class Nave(pygame.sprite.Sprite):
 class Bala(pygame.sprite.Sprite):
     def __init__(self, x, y, direccion=-1):
         super().__init__()
-        self.image = pygame.transform.scale(laser_chiquito_img, (60, 90))
+        self.image = pygame.transform.scale(laser_chiquito_img, (30, 50))
         self.image = pygame.transform.rotate(self.image, 0 if direccion == -1 else 180)
         self.rect = self.image.get_rect(midbottom=(x, y))
         self.velocidad = 8 * direccion
@@ -109,7 +111,7 @@ class Bala(pygame.sprite.Sprite):
 class LaserGrandeJugador(pygame.sprite.Sprite):
     def __init__(self, jugador):
         super().__init__()
-        self.image_original = pygame.transform.scale(laser_grande_img, (180, ALTO))
+        self.image_original = pygame.transform.scale(laser_grande_img, (120, ALTO))
         self.image = self.image_original.copy()
         self.image.set_alpha(200)
         self.rect = self.image.get_rect(midbottom=jugador.rect.midtop)
@@ -127,9 +129,9 @@ class LaserGrandeJugador(pygame.sprite.Sprite):
 class LaserGrandeBoss(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image_original = pygame.transform.scale(laser_grande_img, (180, ALTO))
+        self.image_original = pygame.transform.scale(laser_grande_img, (120, ALTO))
         self.image = self.image_original.copy()
-        self.rect = self.image.get_rect(midtop=(x, y - 20))
+        self.rect = self.image.get_rect(midtop=(x, y - 10))
         self.image.set_alpha(50)
         self.estado = "cargando"
         self.tiempo_inicio = pygame.time.get_ticks()
@@ -166,6 +168,19 @@ class CirculoPoder(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += self.velocidad
         if self.rect.top > ALTO:
+            self.kill()
+
+
+class AlertaLaser(pygame.sprite.Sprite):
+    def __init__(self, x, y, duracion=1000):
+        super().__init__()
+        self.image = alerta_img
+        self.rect = self.image.get_rect(midtop=(x, y))
+        self.tiempo_inicio = pygame.time.get_ticks()
+        self.duracion = duracion
+
+    def update(self):
+        if pygame.time.get_ticks() - self.tiempo_inicio > self.duracion:
             self.kill()
 
 
@@ -242,6 +257,7 @@ grupo_balas_boss = pygame.sprite.Group()
 grupo_lasers_boss = pygame.sprite.Group()
 grupo_poderes = pygame.sprite.Group()
 grupo_laser_jugador = pygame.sprite.Group()
+grupo_alertas = pygame.sprite.Group()
 
 
 # === BUCLE PRINCIPAL ===
@@ -273,6 +289,7 @@ def iniciar_galaxy_attack():
         grupo_lasers_boss.update()
         grupo_poderes.update()
         grupo_laser_jugador.update()
+        grupo_alertas.update()
 
         ahora = pygame.time.get_ticks()
         if ahora - ultimo_poder_spawn > 5000:
@@ -296,9 +313,13 @@ def iniciar_galaxy_attack():
 
         elif "alerta" in boss.estado:
             boss.tiempo_ataque -= 1
+            if boss.tiempo_ataque == 59:
+                alerta = AlertaLaser(boss.rect.centerx, boss.rect.bottom + 10)
+                grupo_alertas.add(alerta)
             if boss.tiempo_ataque <= 0:
                 boss.estado = "laser"
                 boss.ejecutar_ataque(grupo_lasers_boss)
+
         elif boss.estado == "quieto":
             boss.tiempo_ataque -= 1
             if boss.tiempo_ataque <= 0:
@@ -346,6 +367,7 @@ def iniciar_galaxy_attack():
         grupo_lasers_boss.draw(pantalla)
         grupo_poderes.draw(pantalla)
         grupo_laser_jugador.draw(pantalla)
+        grupo_alertas.draw(pantalla)
         grupo_jugador.draw(pantalla)
         grupo_boss.draw(pantalla)
         dibujar_vidas(jugador.vidas)
