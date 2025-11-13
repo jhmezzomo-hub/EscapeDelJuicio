@@ -168,7 +168,7 @@ def iniciar_sala4(inv):
         # Si toca la línea, bloquear y activar temporizador
         if not personaje_bloqueado and dist < 10:
             personaje_bloqueado = True
-            temporizador_muerte = 1.5  # 1.5 segundos
+            temporizador_muerte = 5.0  # 5 segundos
 
         
         # --- INTERACCIÓN CON DRÁCULA ---
@@ -191,6 +191,16 @@ def iniciar_sala4(inv):
         if mensaje_texto:
             texto = fuente.render(mensaje_texto, True, mensaje_color)
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+
+        # Mostrar temporizador grande y visible cuando el personaje está bloqueado
+        if personaje_bloqueado:
+            tiempo_mostrar = max(0.0, temporizador_muerte)
+            texto_temp = fuente.render(f"{tiempo_mostrar:.1f}s", True, (255, 50, 50))
+            rect_temp = texto_temp.get_rect(center=(size[0] // 2, size[1] // 2 - 40))
+            fondo_temp = pygame.Surface((rect_temp.width + 20, rect_temp.height + 20), pygame.SRCALPHA)
+            fondo_temp.fill((0, 0, 0, 160))
+            screen.blit(fondo_temp, (rect_temp.x - 10, rect_temp.y - 10))
+            screen.blit(texto_temp, rect_temp)
 
         try:
             btn_config.draw(screen)
