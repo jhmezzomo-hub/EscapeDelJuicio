@@ -1,10 +1,10 @@
 import pygame, sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from juego.pantalla.pantalla_inicio import pantalla_de_inicio
-from juego.salas.cargar_salas import cargar_sala
-from juego.salas.sala_mensaje import sala_mensaje_bienvenida
-from juego.controlador.inventario import crear_inventario
+from ..pantalla.pantalla_inicio import pantalla_de_inicio
+from ..salas.cargar_salas import cargar_sala
+from ..salas.sala_mensaje import sala_mensaje_bienvenida
+from ..controlador.inventario import crear_inventario
 
 def main():
     print("Iniciando juego desde main.py...")    
