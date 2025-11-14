@@ -60,9 +60,10 @@ def iniciar_sala2(inv=None):
         # HITBOX DE COLISIÓN (PIES)
         feet_width = max(24, maniquie_rect.width // 2)
         feet_height = max(20, maniquie_rect.height // 6)
+        # La hitbox cubre toda la zona de los pies, desde 30px arriba de la base hasta la base
         feet_x = maniquie_rect.left + (maniquie_rect.width - feet_width) // 2
         feet_y = maniquie_rect.bottom - feet_height
-        hitbox_pies = pygame.Rect(feet_x, feet_y, feet_width, feet_height)
+        hitbox_pies = pygame.Rect(feet_x, feet_y, feet_width, feet_height + 15)
 
         # HITBOX DE INTERACCIÓN (CABEZA)
         head_width = max(24, maniquie_rect.width // 2)
@@ -124,10 +125,13 @@ def iniciar_sala2(inv=None):
     while True:
         dt = clock.tick(60) / 1000.0
         teclas = pygame.key.get_pressed()
+        # Hitbox de pies de Messi más alta para colisión
+        pies_personaje = pygame.Rect(personaje_rect.centerx - 16, personaje_rect.bottom - 52, 32, 32)
         # Dibujar el fondo (ya cargado)
         screen.blit(fondo, (0, 0))
 
         # Actualizar movimiento y animación del personaje y obtener la superficie a dibujar
+        # El movimiento y colisión física se resuelven en sprites_caminar y teclas_movimiento
         current_player_surf = sprites_caminar(size, screen, inv, mask, maniquies, personaje_rect.size, personaje, personaje_rect)
 
         # Dibujar maniquíes y personaje según profundidad (bottom)
@@ -221,9 +225,8 @@ def iniciar_sala2(inv=None):
         for m in maniquies:
             # Colisión física: pies
             if pies_personaje.colliderect(m["hitbox_pies"]):
-                # Bloquear solo el avance, no teletransportar
-                if personaje_rect.bottom > m["hitbox_pies"].top and personaje_rect.top < m["hitbox_pies"].top:
-                    personaje_rect.bottom = m["hitbox_pies"].top
+                # Solo bloquear el avance, no mover al personaje hacia atrás
+                movimiento_bloqueado = True
             # Interacción de llave: cabeza
             if personaje_rect.colliderect(m["hitbox_cabeza"]):
                 mensaje_maniqui = True
@@ -237,7 +240,6 @@ def iniciar_sala2(inv=None):
                                 pantalla_fin()
                                 iniciar_sala2()
                                 return
-
                             nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
                             for i in range(len(inv.inventory_slots)):
                                 if inv.inventory_slots[i] is None:
