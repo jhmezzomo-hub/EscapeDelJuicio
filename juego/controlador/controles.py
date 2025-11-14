@@ -36,7 +36,14 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
             moving = True
 
         # Comprobar colisiones: si hay colisión, revertimos al old_pos
-        if verificar_colision(mask, devolver_pies_personaje(personaje_rect)) or verificar_colision_maniquies(maniquies, personaje_rect):
+        colision_piso = verificar_colision(mask, devolver_pies_personaje(personaje_rect))
+        # Colisión física: solo revertir si la hitbox de los pies de Messi colisiona con la hitbox de los pies del maniquí
+        pies_messi = devolver_pies_personaje(personaje_rect)
+        colision_maniqui = any(
+            m.get("hitbox_pies") and pies_messi.colliderect(m["hitbox_pies"])
+            for m in maniquies if isinstance(m, dict)
+        )
+        if colision_piso or colision_maniqui:
             personaje_rect.topleft = old_pos
 
     return moving, direction
