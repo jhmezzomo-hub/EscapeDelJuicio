@@ -1,6 +1,7 @@
 import pygame
 from juego.controlador.verificar_colisiones import verificar_colision, verificar_colision_maniquies
 from juego.controlador.inventario import crear_inventario
+from juego.controlador.mensaje_paso_sala import devolver_pies_personaje
 
 def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_direction="left", disable_movement=False):
     """Mueve el rect del personaje y devuelve (moving, direction).
@@ -35,7 +36,7 @@ def teclas_movimiento(personaje_rect, velocidad, inv, mask, maniquies, last_dire
             moving = True
 
         # Comprobar colisiones: si hay colisión, revertimos al old_pos
-        if verificar_colision(mask, personaje_rect) or verificar_colision_maniquies(maniquies, personaje_rect):
+        if verificar_colision(mask, devolver_pies_personaje(personaje_rect)) or verificar_colision_maniquies(maniquies, personaje_rect):
             personaje_rect.topleft = old_pos
 
     return moving, direction
