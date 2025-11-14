@@ -3,7 +3,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from juego.controlador.cargar_config import get_config_sala
 config = get_config_sala("general")
-ANCHO, ALTO = config.get("tamaño_pantalla", (800, 600))
+ANCHO, ALTO = 1100,600
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Escape Del Juicio")
 

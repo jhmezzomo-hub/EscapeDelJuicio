@@ -14,7 +14,7 @@ def main():
     screen = info_pantalla()
     inv = crear_inventario()
     pantalla_de_inicio()  # Mostrar menú principal
-    sala_actual = "inicio"
+    sala_actual = "sala3"
     #sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
     while True:
         siguiente = None
@@ -29,6 +29,7 @@ def main():
         func_names = [f'iniciar_{sala_actual}', f'iniciar_sala_{sala_actual}']
 
         called = False
+        import inspect
         for mod_name in candidates:
             try:
                 mod = __import__(mod_name, fromlist=['*'])
@@ -37,16 +38,33 @@ def main():
             for fn in func_names:
                 func = getattr(mod, fn, None)
                 if callable(func):
+                    # Llamar según la firma de la función para evitar capturar
+                    # TypeError que ocurra dentro de la función.
                     try:
-                        # pasar inventario si la función lo acepta
-                        siguiente = func(inv)
+                        sig = inspect.signature(func)
+                        params = sig.parameters
+                        # Si acepta al menos un parámetro posicional o varargs, pasar inv
+                        accepts_inv = False
+                        for p in params.values():
+                            if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
+                                accepts_inv = True
+                                break
+                            if p.kind == inspect.Parameter.VAR_POSITIONAL:
+                                accepts_inv = True
+                                break
+
+                        if accepts_inv:
+                            print(f"[DEBUG main] Llamando {fn} en {mod_name} con inv")
+                            siguiente = func(inv)
+                        else:
+                            print(f"[DEBUG main] Llamando {fn} en {mod_name} sin inv")
+                            siguiente = func()
                         called = True
                         break
-                    except TypeError:
-                        # probar sin argumentos
-                        siguiente = func()
-                        called = True
-                        break
+                    except Exception as e:
+                        # Si algo falla al inspeccionar o llamar, mostrar debug y continuar
+                        print(f"[DEBUG] Error llamando {fn} en {mod_name}: {e}")
+                        continue
             if called:
                 break
 

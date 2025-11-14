@@ -1,6 +1,6 @@
 import pygame
 
-def bienvenida_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo):
+def enfrentamientos_textos(tiempo_actual, tiempo_inicio, fuente, screen, fondo):
     mensajes = [
         "Enserio creiste que eso era todo?",
         "JAJAJAJAJAJAJAJAJAJAJAJAJAJA",

@@ -69,6 +69,8 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
     clock = pygame.time.Clock()
     velocidad = 2
     print(f"[DEBUG] sala config cargada: siguiente={config.get('siguiente_sala')}, puertas={config.get('puertas')}")
+    # Compatibilidad: algunas salas usan 'salida' en lugar de 'siguiente_sala'
+    siguiente_sala_cfg = config.get('siguiente_sala') or config.get('salida')
     # Inicializar el estado previo de la tecla E con el estado actual para evitar
     # que una tecla mantenida al cambiar de sala se interprete como nueva pulsación.
     try:
@@ -165,7 +167,8 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                             mensaje_error_timer = mensaje_error_duracion
                             mensaje_error_texto = "se necesitan todos los objetos antes de pasar de sala"
                         else:
-                            siguiente = config.get('siguiente_sala')
+                            siguiente = siguiente_sala_cfg
+                            print(f"[DEBUG cargar_sala] retornando siguiente_sala_cfg (salida): {siguiente}")
                             if siguiente:
                                 return siguiente
 
@@ -389,7 +392,8 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                         except Exception:
                             pass
                         puerta_bloqueada = False
-                        siguiente = config.get('siguiente_sala')
+                        siguiente = siguiente_sala_cfg
+                        print(f"[DEBUG cargar_sala] hacha usada - siguiente: {siguiente}")
                         if siguiente:
                             return siguiente
             # actualizar estado de la tecla E para evitar rebotes

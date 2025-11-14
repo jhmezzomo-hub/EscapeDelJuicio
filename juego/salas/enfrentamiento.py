@@ -1,36 +1,34 @@
-import pygame.freetype, sys
-from juego.pantalla.tutorial import tutorial
+import pygame, sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
+from juego.pantalla.mensaje_enfrentamiento import enfrentamiento_textos
 from juego.controlador.cargar_fondos import cargar_fondo
-from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 
-def pantalla_de_enfrentamiento():
-    size = tamaño_pantallas()
-    screen = info_pantalla()
+def sala_mensaje_bienvenida():
+	pygame.init()
+	size = (1100, 600)
+	screen = pygame.display.set_mode(size)
+	"""
+	fondo_negro = pygame.Surface(size)
+	fondo_negro.fill((0, 0, 0))
+	"""
 
-    bg = cargar_fondo("pantallainicial.png", "Fondos")
+	fondo = cargar_fondo("pantalla_saw_2.png", "saw")
 
-    # Usamos freetype para fuente con contorno
-    fuente_agresiva = pygame.freetype.SysFont("impact", 72, bold=True)
+	fuente = pygame.font.SysFont("Arial", 26)
+	tiempo_inicio = pygame.time.get_ticks()
+	mostrar_bienvenida = True
+	clock = pygame.time.Clock()
+	while mostrar_bienvenida:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				sys.exit()
+		tiempo_actual = pygame.time.get_ticks()
+		mostrar_bienvenida = enfrentamiento_textos(
+			tiempo_actual, tiempo_inicio, fuente, screen, fondo 
+		)
+		clock.tick(60)
 
-    color_texto_normal = (110, 10, 10)   # rojo sangre oscura
-    color_texto_hover = (170, 20, 20)    # más brillante al pasar el mouse
-    outline_color = (0, 0, 0)            # negro para contorno
-    outline_size = 3                     # grosor del contorno
-
-    def render_texto(texto, color, center):
-        # Creamos superficie transparente para el texto
-        text_surf = pygame.Surface((500, 150), pygame.SRCALPHA)
-        text_surf.fill((0,0,0,0))
-
-        # Crear el efecto de contorno dibujando el texto en varias posiciones
-        offsets = [(x, y) for x in [-outline_size, 0, outline_size] for y in [-outline_size, 0, outline_size]]
-        for offset_x, offset_y in offsets:
-            if offset_x != 0 or offset_y != 0:  # Skip center position for outline
-                fuente_agresiva.render_to(text_surf, (outline_size + offset_x, outline_size + offset_y), texto, fgcolor=outline_color, bgcolor=None)
-
-        # Dibujamos el texto principal en el centro
-        fuente_agresiva.render_to(text_surf, (outline_size, outline_size), texto, fgcolor=color, bgcolor=None)
-
-        text_rect = text_surf.get_rect(center=center)
-        return text_surf, text_rect
+if __name__ == "__main__":
+	sala_mensaje_bienvenida()
