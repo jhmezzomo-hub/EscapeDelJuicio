@@ -409,9 +409,13 @@ def iniciar_sala4(inv=None):
             
             # Cuando se cumple el tiempo, mueres
             if temporizador_muerte <= 0:
-                pantalla_fin()
-                iniciar_sala4(inv)
-                return
+                res = pantalla_fin()
+                if res == 'replay':
+                    return 'sala4'
+                elif res == 'menu':
+                    return 'inicio'
+                else:
+                    return None
 
         # Actualizar inventario
         inv.update(dt)

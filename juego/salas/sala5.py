@@ -80,6 +80,13 @@ def iniciar_sala5(inv):
     clock = pygame.time.Clock()
     obstaculos = [{"hitbox": hitbox_dracula}]
 
+    # Variables para manejar cuando Drácula se mueve a la esquina
+    dracula_escondido_pos = None
+    dracula_resguard_img = None
+    # Guardar la imagen por defecto para poder restaurarla
+    dracula_default_img = dracula_img
+    dracula_is_resguard = False
+
     # --- NUEVAS VARIABLES ---
     personaje_bloqueado = False
     temporizador_muerte = 0  # segundos restantes para morir
@@ -111,7 +118,7 @@ def iniciar_sala5(inv):
 
         # Si está bloqueado, contar tiempo y morir al cumplirse
         if personaje_bloqueado:
-            dracula_img, dracula_rect = cargar_personaje("dracula asustando.png", "dracula", size, tamaño=(180, 200))
+            dracula_img, dracula_rect = cargar_personaje("dracula_asustando.png", "dracula", size, tamaño=(180, 200))
             dracula_rect.topleft = (850, 340)
             
             personaje_asustado, _ = cargar_personaje("mc_asustado.png", "mc", size, personaje_rect.size)
@@ -120,14 +127,36 @@ def iniciar_sala5(inv):
             personaje_rect.topleft = personaje_rect.topleft
             temporizador_muerte -= dt
             if temporizador_muerte <= 0:
-                pantalla_fin()
-                return
+                res = pantalla_fin()
+                if res == 'replay':
+                    return 'sala5'
+                elif res == 'menu':
+                    return 'inicio'
+                else:
+                    return None
 
         # Dibujar objetos, Drácula y personaje
         objetos_para_dibujar = []
         for obj in objetos_sala:
             if obj.get("visible") and obj.get("surf_suelo") and obj.get("rect"):
                 objetos_para_dibujar.append((obj["surf_suelo"], obj["rect"]))
+        # Si Drácula fue movido a la esquina y el jugador está en esa área,
+        # cambiar la imagen a la versión 'resguardandose'. Cargamos la imagen
+        # bajo demanda y la reutilizamos.
+        try:
+            if dracula_escondido_pos:
+                esquina_rect = pygame.Rect(dracula_escondido_pos, (dracula_rect.width, dracula_rect.height))
+                if personaje_rect.colliderect(esquina_rect):
+                    if dracula_resguard_img is None:
+                        try:
+                            dracula_resguard_img, _ = cargar_personaje("dracula_resguardandose.png", "dracula", size, tamaño=(180, 200))
+                        except Exception:
+                            dracula_resguard_img = None
+                    if dracula_resguard_img is not None:
+                        dracula_img = dracula_resguard_img
+        except Exception:
+            pass
+
         objetos_para_dibujar.extend([(dracula_img, dracula_rect), (current_player_surf, personaje_rect)])
         objetos_para_dibujar.sort(key=lambda x: x[1].bottom)
         for img, rect in objetos_para_dibujar:
@@ -190,6 +219,15 @@ def iniciar_sala5(inv):
 
         # Si toca la línea, comprobar si tiene ajo -> efectos especiales
         if line_active and not personaje_bloqueado and dist < 10:
+            # Cambiar la imagen de Drácula tan pronto como el jugador cruce la línea
+            if dracula_resguard_img is None:
+                try:
+                    dracula_resguard_img, _ = cargar_personaje("dracula_resguardandose.png", "dracula", size, tamaño=(180, 200))
+                except Exception:
+                    dracula_resguard_img = None
+            if dracula_resguard_img is not None:
+                dracula_img = dracula_resguard_img
+                dracula_is_resguard = True
             # detectar ajo en inventario o bandera
             has_ajo = False
             try:
@@ -214,6 +252,8 @@ def iniciar_sala5(inv):
                 br_x = max(20, size[0] - dracula_rect.width - 20)
                 br_y = max(20, size[1] - dracula_rect.height - 20)
                 dracula_rect.topleft = (br_x, br_y)
+                # Guardar la posición donde Drácula se escondió (esquina)
+                dracula_escondido_pos = (br_x, br_y)
                 # Eliminar la hitbox de drácula de los obstáculos para que ya no afecte
                 try:
                     obstaculos = [o for o in obstaculos if o.get('hitbox') != hitbox_dracula]
@@ -225,7 +265,14 @@ def iniciar_sala5(inv):
             else:
                 personaje_bloqueado = True
                 temporizador_muerte = 1.5  # 1.5 segundos
-
+        else:
+            # Si ya no está cruzando la línea, restaurar la imagen por defecto
+            if dracula_is_resguard and dracula_escondido_pos is None:
+                try:
+                    dracula_img = dracula_default_img
+                except Exception:
+                    pass
+                dracula_is_resguard = False
         
         # --- INTERACCIÓN CON DRÁCULA ---
         en_dracula = personaje_rect.colliderect(hitbox_dracula)
