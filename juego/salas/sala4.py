@@ -48,6 +48,7 @@ def iniciar_sala4(inv=None):
     # Cargar fondo y personaje principal
     fondo = cargar_fondo(config["fondo"], "Fondos")
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
+    personaje_rect.midbottom = config["personaje"]["pos_inicial"]
 
     # Colisiones del piso + paredes
     mask = colision_piso(size)
@@ -65,7 +66,7 @@ def iniciar_sala4(inv=None):
 
     # -------- Cargar personaje (Caperucita) --------
     caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
-    caperucita_rect.midbottom = (180, personaje_rect.bottom)
+    caperucita_rect.midbottom = (180, 510)
     
     # Cargar imagen de Caperucita feliz para cuando se resuelva el acertijo
     caperucita_feliz_img, _ = cargar_personaje("caperucita_feliz.png", "caperucita", size, personaje_rect.size)
@@ -128,6 +129,11 @@ def iniciar_sala4(inv=None):
     mensaje_pared_timer = 0.0  # Temporizador para mostrar el mensaje
     mensaje_pared_duracion = 3.0  # Tiempo que se muestra el mensaje (en segundos)
     prev_en_mensaje_pared = False  # Para detectar cuando entra/sale del área
+    # Variables para efecto discreto en la rect del mensaje en la pared
+    efecto_mensaje_pared_timer = 0.0  # Timer para animación de parpadeo
+    efecto_mensaje_pared_periodo = 2.0  # Periodo de parpadeo (segundos)
+    efecto_mensaje_pared_min_alpha = 1  # Opacidad mínima
+    efecto_mensaje_pared_max_alpha = 10  # Opacidad máxima
     
     # Variables para el input de respuesta
     respuesta_usuario = ""  # Texto que el usuario escribe
@@ -160,6 +166,9 @@ def iniciar_sala4(inv=None):
     mensaje_texto = ""
     mensaje_timer = 0.0
     mensaje_duracion = 1.0
+    mostrar_resultado_temporal = False
+    resultado_temporal_texto = ""
+    resultado_temporal_color = (255, 255, 255)
     
     # Variables para animación de muerte
     personaje_bloqueado = False
@@ -202,25 +211,30 @@ def iniciar_sala4(inv=None):
                         color_resultado = (0, 255, 0)  # Verde
                         respuesta_correcta = True
                         print(f"[DEBUG] ¡Respuesta correcta! ({respuesta_usuario})")
-                        # Cerrar automáticamente el mensaje e iniciar desvanecimiento
+                        # Mostrar resultado temporal
+                        mostrar_resultado_temporal = True
+                        resultado_temporal_texto = "¡Correcto!"
+                        resultado_temporal_color = (0, 255, 0)
                         mensaje_pared_mostrado = False
                         mensaje_pared_timer = 0.0
                         respuesta_usuario = ""  # Limpiar respuesta
                         mensaje_resultado = ""  # Limpiar mensaje de resultado
                         desvaneciendo = True  # Iniciar animación de desvanecimiento
+                        mensaje_timer = 2.0  # Mostrar por 2 segundos
                     else:
-                        # Respuesta incorrecta: activar secuencia de muerte
                         mensaje_resultado = "Incorrecto..."
                         color_resultado = (255, 0, 0)  # Rojo
                         print(f"[DEBUG] Respuesta incorrecta: {respuesta_usuario}")
-                        # Cerrar mensaje y activar animación de muerte
+                        mostrar_resultado_temporal = True
+                        resultado_temporal_texto = "Incorrecto..."
+                        resultado_temporal_color = (255, 0, 0)
                         mensaje_pared_mostrado = False
                         respuesta_usuario = ""  # Limpiar input
                         mensaje_resultado = ""  # Limpiar mensaje de resultado
-                        # Activar secuencia de muerte
                         personaje_bloqueado = True
                         temporizador_muerte = 1.5  # 1.5 segundos para la animación
                         balde_cayendo = True
+                        mensaje_timer = 2.0  # Mostrar por 2 segundos
                         print("[DEBUG] ¡Respuesta incorrecta! El balde va a caer...")
                 elif event.key == pygame.K_BACKSPACE:
                     # Borrar último carácter
@@ -257,8 +271,8 @@ def iniciar_sala4(inv=None):
             elif e_accion:  # Solo actúa cuando E es PRESIONADA (no mantenida)
                 # Interacción con la puerta de volver
                 if personaje_rect.colliderect(puerta_volver):
-                    print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
-                    return "siguiente_sala"
+                    print("[DEBUG] Volver a sala anterior:", config.get("siguiente_sala"))
+                    return config.get("siguiente_sala")
                 # Interacción con Caperucita para liberarla (solo después de resolver el acertijo)
                 elif respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0:
                     # Crear área de detección temporal para la interacción
@@ -429,7 +443,14 @@ def iniciar_sala4(inv=None):
                 pygame.draw.rect(screen, (255, 0, 255), area_deteccion_debug, 2)  # Magenta para área de detección
 
         # Mostrar mensaje temporal si corresponde
-        if mensaje_timer > 0:
+        if mostrar_resultado_temporal and mensaje_timer > 0:
+            mensaje_timer -= dt
+            texto_msg = fuente.render(resultado_temporal_texto, True, resultado_temporal_color)
+            screen.blit(texto_msg, (size[0] // 2 - texto_msg.get_width() // 2, size[1] - 80))
+            if mensaje_timer <= 0:
+                mostrar_resultado_temporal = False
+                resultado_temporal_texto = ""
+        elif mensaje_timer > 0:
             mensaje_timer -= dt
             texto_msg = fuente.render(mensaje_texto, True, (255, 255, 255))
             screen.blit(texto_msg, (size[0] // 2 - texto_msg.get_width() // 2, size[1] - 40))
@@ -496,6 +517,19 @@ def iniciar_sala4(inv=None):
         
         # Crear overlay para textos con fondo
         overlay = pygame.Surface(size, pygame.SRCALPHA)
+
+        # Efecto discreto en la rect del mensaje en la pared (parpadeo suave)
+        if not mensaje_pared_mostrado and not respuesta_correcta:
+            efecto_mensaje_pared_timer += dt
+            # Calcular opacidad usando una función seno para parpadeo suave
+            import math
+            alpha = efecto_mensaje_pared_min_alpha + (
+                (math.sin(efecto_mensaje_pared_timer * 2 * math.pi / efecto_mensaje_pared_periodo) + 1) / 2
+            ) * (efecto_mensaje_pared_max_alpha - efecto_mensaje_pared_min_alpha)
+            # Dibujar rect discreta sobre la pared
+            rect_surface = pygame.Surface((mensaje_pared_rect.width, mensaje_pared_rect.height), pygame.SRCALPHA)
+            rect_surface.fill((255, 255, 255, int(alpha)))
+            screen.blit(rect_surface, mensaje_pared_rect.topleft)
         
         # Mostrar indicador de interacción (solo si no ha adivinado)
         if en_mensaje_pared and not personaje_bloqueado and not mensaje_pared_mostrado and not respuesta_correcta:

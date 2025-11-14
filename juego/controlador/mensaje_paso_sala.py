@@ -1,10 +1,11 @@
 import pygame
 
 def devolver_pies_personaje(personaje_rect):
+    # Hitbox de pies de Messi aún más alta y más arriba (global)
     pies_personaje = pygame.Rect(
-        personaje_rect.centerx - 10,
-        personaje_rect.bottom - 5,
-        20, 5
+        personaje_rect.centerx - 40,
+        personaje_rect.bottom - 55,
+        80, 32
     )
     return pies_personaje
 

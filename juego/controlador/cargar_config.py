@@ -11,9 +11,9 @@ def get_config_sala(nombre_sala):
         "general": {
             "size": size,
             "screen": pygame.display.get_surface(),
-            "personaje":cargar_personaje("mc_0.png", "mc", size, (125, 200))[0],
-            "personaje_rect":cargar_personaje("mc_0.png", "mc", size, (125, 200))[1],
-            "pies_personaje":devolver_pies_personaje(cargar_personaje("mc_0.png", "mc", size, (125, 200))[1]),
+            "personaje":cargar_personaje("mc_0.png", "mc", size, (125, 220))[0],
+            "personaje_rect":cargar_personaje("mc_0.png", "mc", size, (125, 220))[1],
+            "pies_personaje":devolver_pies_personaje(cargar_personaje("mc_0.png", "mc", size, (125, 220))[1]),
             "fuente":pygame.font.SysFont("Arial", 26),
         },
         "inicio": {
@@ -58,7 +58,7 @@ def get_config_sala(nombre_sala):
             },
             "puertas": {
                 "izquierda": pygame.Rect(70, 410, 90, 50),      # Puerta izquierda (arco)
-                "salida": pygame.Rect(500, 400, 90, 50),       # Puerta central (arco grande)
+                "salida": pygame.Rect(500, 390, 90, 50),       # Puerta central (arco grande)
                 "derecha": pygame.Rect(980, 410, 90, 50)       # Puerta derecha (arco)
             },
             "sala_izquierda": "sala4",
@@ -69,7 +69,7 @@ def get_config_sala(nombre_sala):
             "fondo": "fondo_puertaD.png",
             "nombre_carpeta": "Fondos",
             "personaje": {
-                "pos_inicial": (400, 400),
+                "pos_inicial": (950, 430),
                 "tamaño": (125, 200),
             },
             "puertas": {
