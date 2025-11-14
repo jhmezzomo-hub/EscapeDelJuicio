@@ -156,8 +156,7 @@ def iniciar_sala4(inv=None):
     velocidad_desvanecimiento_caperucita = 100  # Velocidad de desvanecimiento
 
     # --- AJO (se crea cuando Caperucita desaparece) ---
-    ajo_img = None
-    ajo_rect = None
+    # No reinicializar `ajo_img`/`ajo_rect` para conservar la imagen cargada
     ajo_obj = None
     ajo_visible = False
     ajo_spawned = False
@@ -368,6 +367,22 @@ def iniciar_sala4(inv=None):
                 opacidad_caperucita = 0
                 caperucita_desapareciendo = False
                 ajo_visible = True  # Hacer visible el ajo cuando Caperucita desaparece
+                # Asegurar que el ajo tenga su rect centrado donde estaba Caperucita
+                try:
+                    if ajo_rect:
+                        ajo_rect.center = caperucita_rect.center
+                except Exception:
+                    pass
+                # Crear objeto estructurado que espera `agregar_a_inventario`
+                try:
+                    ajo_obj = {
+                        'nombre': 'Ajo',
+                        'visible': True,
+                        'surf_inv': ajo_img,
+                        'rect': ajo_rect
+                    }
+                except Exception:
+                    ajo_obj = None
                 # Eliminar la hitbox de Caperucita de los obstáculos
                 if obstaculo_caperucita in obstaculos:
                     obstaculos.remove(obstaculo_caperucita)
@@ -642,13 +657,8 @@ def iniciar_sala4(inv=None):
                 texto_cerrar_rect = texto_cerrar.get_rect(center=(size[0] // 2, size[1] // 2 + 100))
                 overlay.blit(texto_cerrar, texto_cerrar_rect)
         
-        # Indicador para ajo (si está cerca)
-        # Asegurarse de tener pies_personaje actualizado
-        pies_personaje = devolver_pies_personaje(personaje_rect)
-        if ajo_visible and ajo_rect and pies_personaje.colliderect(ajo_rect):
-            texto_ajo = fuente.render("Presiona E para recoger ajo", True, (255, 255, 255))
-            texto_rect_ajo = texto_ajo.get_rect(center=(size[0] // 2, size[1] - 120))
-            overlay.blit(texto_ajo, texto_rect_ajo)
+        # Nota: el indicador de recoger ajo ya se muestra arriba en el overlay.
+        # Evitamos duplicar el texto aquí.
 
         # Aplicar el overlay a la pantalla (DESPUÉS de dibujar todo)
         screen.blit(overlay, (0, 0))
