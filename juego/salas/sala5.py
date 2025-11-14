@@ -17,14 +17,14 @@ from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 from juego.pantalla.pantalla_muerte import pantalla_fin
 
 
-def iniciar_sala4(inv):
+def iniciar_sala5(inv):
     if inv is None:
         inv = crear_inventario()
         
     size = tamaño_pantallas()
     screen = info_pantalla()
     general = get_config_sala("general")
-    config = get_config_sala("sala4")
+    config = get_config_sala("sala5")
 
     # Cargar el hacha
     objeto_hacha = cargar_objeto("hacha", (800, 350), (60, 80), (40, 40))
@@ -48,7 +48,10 @@ def iniciar_sala4(inv):
     )
 
     personaje, personaje_rect = general["personaje"], general["personaje_rect"]
-    personaje_rect.topleft = config["personaje"]["pos_inicial"]
+    try:
+        personaje_rect.midbottom = config["personaje"]["pos_inicial"]
+    except Exception:
+        pass
     fuente = general["fuente"]
 
     mostrar_hitboxes = True
@@ -156,7 +159,7 @@ def iniciar_sala4(inv):
             mensaje_texto = "Presiona E para pasar a la siguiente sala"
             mensaje_timer = mensaje_duracion
         if en_puerta and teclas[pygame.K_e] and not personaje_bloqueado:
-            return "siguiente_sala"
+            return config.get('siguiente_sala')
         prev_en_puerta = en_puerta
 
         # --- LÍMITE CON DRÁCULA ---
@@ -203,4 +206,4 @@ def iniciar_sala4(inv):
 
 
 if __name__ == "__main__":
-    iniciar_sala4(crear_inventario())
+    iniciar_sala5(crear_inventario())
