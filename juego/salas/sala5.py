@@ -305,7 +305,8 @@ def iniciar_sala5(inv):
             mensaje_color = (255, 255, 255)
 
         if mostrar_hitboxes:
-            pygame.draw.rect(screen, (255, 0, 0), hitbox_dracula, 1)
+            # Hitbox de Drácula: no dibujar (oculto por diseño)
+            pass
 
         if mensaje_texto:
             texto = fuente.render(mensaje_texto, True, mensaje_color)
