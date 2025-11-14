@@ -233,9 +233,13 @@ def iniciar_sala2(inv=None):
                         mensaje_texto = "Presiona E para agarrar llave"
                         if teclas[pygame.K_e]:
                             if m["es_maniqui_malo"]:
-                                pantalla_fin()
-                                iniciar_sala2(inv)
-                                return
+                                res = pantalla_fin()
+                                if res == 'replay':
+                                    return 'sala2'
+                                elif res == 'menu':
+                                    return 'inicio'
+                                else:
+                                    return None
                             nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
                             for i in range(len(inv.inventory_slots)):
                                 if inv.inventory_slots[i] is None:

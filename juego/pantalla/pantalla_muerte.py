@@ -84,8 +84,11 @@ def pantalla_fin():
                 self.hover = False
 
     running = True
+    result = None
     def start_game():
         nonlocal running
+        nonlocal result
+        result = 'replay'
         running = False
 
     def exit_game():
@@ -94,14 +97,9 @@ def pantalla_fin():
 
     def go_menu():
         # Cerrar esta pantalla y abrir el menú principal.
-        nonlocal running
+        nonlocal running, result
+        result = 'menu'
         running = False
-        # Abrir pantalla de inicio inmediatamente
-        try:
-            pantalla_de_inicio()
-        except Exception:
-            # Si hay un error abriendo el menú, simplemente continue y salga
-            pass
 
     btn_w, btn_h = 300, 70
     gap = btn_h + 20
@@ -126,3 +124,4 @@ def pantalla_fin():
                 b.handle_event(event)
         pygame.display.flip()
         clock.tick(60)
+    return result
