@@ -65,13 +65,13 @@ def iniciar_sala4(inv=None):
     puerta_volver = config["puertas"]["salida"]
 
     # -------- Cargar personaje (Caperucita) --------
-    caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, personaje_rect.size)
+    caperucita_img, caperucita_rect = cargar_personaje("caperucita.png", "caperucita", size, (125,200))
     caperucita_rect.midbottom = (180, 510)
     
     # Cargar imagen de Caperucita feliz para cuando se resuelva el acertijo
-    caperucita_feliz_img, _ = cargar_personaje("caperucita_feliz.png", "caperucita", size, personaje_rect.size)
+    caperucita_feliz_img, _ = cargar_personaje("caperucita_feliz.png", "caperucita", size, (125,200))
     # Cargar imagen de Caperucita libre (sin cuerdas)
-    caperucita_libre_img, _ = cargar_personaje("caperucita_libre.png", "caperucita", size, personaje_rect.size)
+    caperucita_libre_img, _ = cargar_personaje("caperucita_libre.png", "caperucita", size, (125,200))
     caperucita_img_actual = caperucita_img  # Imagen actual de Caperucita
     
     # Cargar objeto ajo (aparecerá cuando Caperucita desaparezca)

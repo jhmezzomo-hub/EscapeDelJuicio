@@ -1,14 +1,11 @@
-import pygame
-import sys
-import random
-import os
+import pygame, sys, random, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# === INICIALIZACIÓN ===
-pygame.init()
-
-ANCHO, ALTO = 1100, 600
+from juego.controlador.cargar_config import get_config_sala
+config = get_config_sala("general")
+ANCHO, ALTO = config.get("tamaño_pantalla", (800, 600))
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Galaxy Attack - Sala Final")
+pygame.display.set_caption("Escape Del Juicio")
 
 clock = pygame.time.Clock()
 
@@ -261,7 +258,7 @@ grupo_alertas = pygame.sprite.Group()
 
 
 # === BUCLE PRINCIPAL ===
-def iniciar_galaxy_attack():
+def iniciar_sala7():
     en_juego = True
     ultimo_poder_spawn = pygame.time.get_ticks()
 
@@ -385,4 +382,4 @@ def iniciar_galaxy_attack():
 
 
 if __name__ == "__main__":
-    iniciar_galaxy_attack()
+    iniciar_sala7()
