@@ -21,10 +21,6 @@ from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 def iniciar_sala2(inv=None):
     random.seed()
 
-    # Si no se pasa un inventario, crear uno nuevo (evita AttributeError)
-    if inv is None:
-        inv = crear_inventario()
-
     size = tamaño_pantallas()
     screen = info_pantalla()
     general = get_config_sala("general")
@@ -238,7 +234,7 @@ def iniciar_sala2(inv=None):
                         if teclas[pygame.K_e]:
                             if m["es_maniqui_malo"]:
                                 pantalla_fin()
-                                iniciar_sala2()
+                                iniciar_sala2(inv)
                                 return
                             nueva_llave = Item(type="llave", count=1, max_stack=1, color=(255, 215, 0), image=None)
                             for i in range(len(inv.inventory_slots)):

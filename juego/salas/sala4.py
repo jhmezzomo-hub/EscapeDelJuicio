@@ -405,6 +405,7 @@ def iniciar_sala4(inv=None):
             # Cuando se cumple el tiempo, mueres
             if temporizador_muerte <= 0:
                 pantalla_fin()
+                iniciar_sala4(inv)
                 return
 
         # Actualizar inventario
