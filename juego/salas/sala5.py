@@ -28,6 +28,12 @@ def iniciar_sala5(inv):
 
     # Cargar el hacha
     objeto_hacha = cargar_objeto("hacha", (800, 350), (60, 80), (40, 40))
+    # Si ya se recogió el hacha en una pasada anterior, mantenerla invisible
+    try:
+        if getattr(inv, 'flags', {}).get('sala5_hacha'):
+            objeto_hacha['visible'] = False
+    except Exception:
+        pass
     objetos_sala = [objeto_hacha]
 
     # Cargar a Drácula
@@ -192,10 +198,20 @@ def iniciar_sala5(inv):
                     if teclas[pygame.K_e] and not personaje_bloqueado:
                         try:
                             from juego.controlador.agregar_inv import agregar_a_inventario
+                            added = False
                             try:
-                                agregar_a_inventario(objeto, inv)
+                                added = agregar_a_inventario(objeto, inv)
                             except Exception:
-                                agregar_a_inventario(inv, objeto)
+                                try:
+                                    added = agregar_a_inventario(inv, objeto)
+                                except Exception:
+                                    added = False
+                            # Marcar flag persistente para que el hacha no reaparezca aunque se pierda del inventario
+                            if added:
+                                try:
+                                    inv.flags['sala5_hacha'] = True
+                                except Exception:
+                                    pass
                         except Exception:
                             pass
                         objeto["visible"] = False
