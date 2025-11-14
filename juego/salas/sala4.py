@@ -299,7 +299,12 @@ def iniciar_sala4(inv=None):
                             break
                     ajo_recogido = True
                     ajo_visible = False
-                    print("[DEBUG] Ajo recogido!")
+                    # Marcar bandera en el inventario para indicar que el ajo de sala4 fue recogido
+                    try:
+                        inv.flags["sala4_ajo"] = True
+                    except Exception:
+                        pass
+                    print("[DEBUG] Ajo recogido! (flag sala4_ajo set)")
                 # Interacción con el mensaje de la pared (solo si no ha adivinado)
                 elif personaje_rect.colliderect(mensaje_pared_rect) and not personaje_bloqueado and not respuesta_correcta:
                     mensaje_pared_mostrado = True

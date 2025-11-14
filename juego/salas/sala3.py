@@ -7,6 +7,7 @@ from juego.controlador.inventario import crear_inventario
 def iniciar_sala3(inv, origen=None):
     if inv is None:
         inv = crear_inventario()
+    # Esta sala no contiene objetos propios (el ajo solo existe en sala4)
     objetos_sala = []
     # Si viene de sala4, pasar flag especial a cargar_sala
     if origen == "sala4":

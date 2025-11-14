@@ -172,10 +172,49 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                 
                 # Interacción puerta izquierda (E)
                 if puerta_izquierda and pies_personaje.colliderect(puerta_izquierda):
-                    sala_izquierda = config.get('sala_izquierda')
-                    if sala_izquierda:
-                        print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
-                        return sala_izquierda
+                                sala_izquierda = config.get('sala_izquierda')
+                                if sala_izquierda:
+                                    # Primero: si la sala destino es 'sala4' y ya recogiste el ajo en sala4,
+                                    # bloquear el paso (no permitir reentrar) y mostrar mensaje.
+                                    left_blocked_by_flag = False
+                                    try:
+                                        if sala_izquierda == 'sala4' and getattr(inv, 'flags', {}).get('sala4_ajo'):
+                                            mensaje_error_activo = True
+                                            mensaje_error_timer = mensaje_error_duracion
+                                            mensaje_error_texto = "Ya conseguiste el ajo en la sala 4; no puedes volver."
+                                            print("[DEBUG] intento de reentrada a sala4 bloqueado por flag sala4_ajo")
+                                            left_blocked_by_flag = True
+                                    except Exception:
+                                        left_blocked_by_flag = False
+
+                                    # Soporte opcional: algunas salas (ej. sala3) pueden querer BLOQUEAR
+                                    # la puerta izquierda cuando TODOS los objetos de la sala ya han sido
+                                    # recogidos. Para activar este comportamiento, en la config de la sala
+                                    # añadir: "bloquear_si_recolectados": {"izquierda": True}
+                                    bloquear_cfg = config.get('bloquear_si_recolectados', {})
+                                    bloquear_izq = bloquear_cfg.get('izquierda', False)
+                                    if bloquear_izq and objetos_sala and not left_blocked_by_flag:
+                                        # Comprobar si todos los objetos de la sala fueron recogidos
+                                        all_collected = all(not obj.get('visible', True) for obj in objetos_sala)
+                                        if all_collected:
+                                            # Mostrar mensaje y no permitir pasar a la sala izquierda
+                                            mensaje_error_activo = True
+                                            mensaje_error_timer = mensaje_error_duracion
+                                            mensaje_error_texto = "Ya encontraste todos los objetos en esta sala"
+                                            # No retornar, se queda en la sala
+                                            print(f"[DEBUG] puerta izquierda bloqueada: todos los objetos recogidos")
+                                        else:
+                                            print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
+                                            return sala_izquierda
+                                    else:
+                                        # Si left_blocked_by_flag es True, se llegó hasta aquí pero no queremos permitir
+                                        # la transición; por lo tanto no retornamos. En caso contrario, permitimos pasar.
+                                        if left_blocked_by_flag:
+                                            # ya mostramos mensaje; no hacer nada (no regresar a la sala)
+                                            pass
+                                        else:
+                                            print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
+                                            return sala_izquierda
 
             # Si hay un objeto cercano y no se ha pulsado E, mostrar el prompt
             if interaccion_target and not teclas[pygame.K_e]:

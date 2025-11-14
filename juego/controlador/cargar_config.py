@@ -61,6 +61,12 @@ def get_config_sala(nombre_sala):
                 "salida": pygame.Rect(500, 390, 90, 50),       # Puerta central (arco grande)
                 "derecha": pygame.Rect(980, 410, 90, 50)       # Puerta derecha (arco)
             },
+            # Si está activado, y la lista de objetos de la sala está VACÍA (o todos fueron recogidos),
+            # la puerta izquierda se bloqueará cuando TODOS los objetos de la sala ya estén en el inventario.
+            # Esto se usa para la lógica especial de `sala3`.
+            "bloquear_si_recolectados": {
+                "izquierda": True
+            },
             "sala_izquierda": "sala4",
             "sala_derecha": "sala5",
             "salida": "sala6"

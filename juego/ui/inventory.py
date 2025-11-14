@@ -41,6 +41,8 @@ class Inventory:
         self.held_from = None
         self.is_open = False
         self.context_menu = None
+        # Flags para estados de progresión específicos (ej. objetos clave recogidos)
+        self.flags = {}
 
         # asegurar fonts inicializadas (por si crean Inventory antes de pygame.init)
         if not pygame.get_init():
