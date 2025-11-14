@@ -155,6 +155,13 @@ def iniciar_sala4(inv=None):
     opacidad_caperucita = 255  # Opacidad de Caperucita
     velocidad_desvanecimiento_caperucita = 100  # Velocidad de desvanecimiento
 
+    # --- AJO (se crea cuando Caperucita desaparece) ---
+    ajo_img = None
+    ajo_rect = None
+    ajo_obj = None
+    ajo_visible = False
+    ajo_spawned = False
+
     # --- Línea límite situada a la izquierda de Caperucita ---
     limite_x = caperucita_rect.right + 30
     punto_inicio = (limite_x + 130, 385)
@@ -269,6 +276,18 @@ def iniciar_sala4(inv=None):
             elif teclas[pygame.K_F1]:
                 mostrar_contorno = not mostrar_contorno
             elif e_accion:  # Solo actúa cuando E es PRESIONADA (no mantenida)
+                # Interacción con ajo (si spawned y visible) - NO afecta colisiones de movimiento
+                if ajo_visible and ajo_rect and pies_personaje.colliderect(ajo_rect):
+                    try:
+                        from juego.controlador.agregar_inv import agregar_a_inventario
+                        try:
+                            agregar_a_inventario(ajo_obj, inv)
+                        except Exception:
+                            agregar_a_inventario(inv, ajo_obj)
+                    except Exception:
+                        pass
+                    ajo_obj["visible"] = False
+                    ajo_visible = False
                 # Interacción con la puerta de volver
                 if personaje_rect.colliderect(puerta_volver):
                     print("[DEBUG] Volver a sala anterior:", config.get("siguiente_sala"))
@@ -439,7 +458,12 @@ def iniciar_sala4(inv=None):
             pygame.draw.rect(screen, (0, 255, 255), personaje_rect, 1)
             pygame.draw.rect(screen, (255, 0, 0), puerta_volver, 2)
             pygame.draw.rect(screen, (255, 255, 0), caperucita_rect, 1)
-            pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)  # Hitbox de Caperucita
+            # Hitbox de Caperucita (si todavía existe)
+            if hitbox_caperucita:
+                try:
+                    pygame.draw.rect(screen, (0, 255, 0), hitbox_caperucita, 1)
+                except Exception:
+                    pass
             pygame.draw.rect(screen, (255, 165, 0), mensaje_pared_rect, 2)  # Área del mensaje en la pared
             pygame.draw.rect(screen, (0, 255, 255), pies_personaje, 2)  # Hitbox de Messi (pies)
             # Mostrar área de detección de Caperucita si el acertijo está resuelto
@@ -618,6 +642,14 @@ def iniciar_sala4(inv=None):
                 texto_cerrar_rect = texto_cerrar.get_rect(center=(size[0] // 2, size[1] // 2 + 100))
                 overlay.blit(texto_cerrar, texto_cerrar_rect)
         
+        # Indicador para ajo (si está cerca)
+        # Asegurarse de tener pies_personaje actualizado
+        pies_personaje = devolver_pies_personaje(personaje_rect)
+        if ajo_visible and ajo_rect and pies_personaje.colliderect(ajo_rect):
+            texto_ajo = fuente.render("Presiona E para recoger ajo", True, (255, 255, 255))
+            texto_rect_ajo = texto_ajo.get_rect(center=(size[0] // 2, size[1] - 120))
+            overlay.blit(texto_ajo, texto_rect_ajo)
+
         # Aplicar el overlay a la pantalla (DESPUÉS de dibujar todo)
         screen.blit(overlay, (0, 0))
         

@@ -1,7 +1,7 @@
 import pygame.freetype, sys
-from juego.pantalla.tutorial import tutorial
+from ..pantalla.tutorial import tutorial
 
-from juego.controlador.cargar_fondos import cargar_fondo
+from ..controlador.cargar_fondos import cargar_fondo
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 
 def pantalla_de_inicio():

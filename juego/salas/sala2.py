@@ -3,7 +3,8 @@ import sys
 import os
 import random
 import math
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from juego.salas.cargar_salas import cargar_sala
 from juego.controlador.cargar_fondos import cargar_fondo
@@ -33,7 +34,7 @@ def iniciar_sala2(inv=None):
 
     maniquies = []
     posiciones = [
-        (850, 250), (910, 350), (730, 340),
+        (850, 250), (910, 350), (680, 340),
         (20, 350), (150, 250), (250, 340)
     ]
     imagenes = ["mm1.png", "mm2.png", "mm3.png", "mm4.png", "mm5.png", "mm6.png"]
