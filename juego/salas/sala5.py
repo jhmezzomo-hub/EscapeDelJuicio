@@ -96,6 +96,8 @@ def iniciar_sala5(inv):
     # --- NUEVAS VARIABLES ---
     personaje_bloqueado = False
     temporizador_muerte = 0  # segundos restantes para morir
+    # Temporizador para mostrar el mensaje cuando Drácula se asusta
+    dracula_message_timer = 0.0
 
     # Inicializar estado previo de la tecla E para evitar re-disparo si viene mantenida
     try:
@@ -105,6 +107,11 @@ def iniciar_sala5(inv):
 
     while True:
         dt = clock.tick(60) / 1000.0
+        # Actualizar temporizador del mensaje de Drácula
+        if dracula_message_timer > 0:
+            dracula_message_timer -= dt
+            if dracula_message_timer < 0:
+                dracula_message_timer = 0
         teclas = pygame.key.get_pressed()
         e_presionada_ahora = teclas[pygame.K_e]
         e_accion = e_presionada_ahora and not e_presionada_prev
@@ -112,6 +119,9 @@ def iniciar_sala5(inv):
 
         # Dibujar fondo
         screen.blit(fondo, (0, 0))
+
+        # Overlay para dibujar textos y elementos semi-transparente
+        overlay = pygame.Surface(size, pygame.SRCALPHA)
 
         # Dibujar línea límite antes de los personajes
         if mostrar_hitboxes:
@@ -149,19 +159,26 @@ def iniciar_sala5(inv):
         # Si Drácula fue movido a la esquina y el jugador está en esa área,
         # cambiar la imagen a la versión 'resguardandose'. Cargamos la imagen
         # bajo demanda y la reutilizamos.
-        try:
-            if dracula_escondido_pos:
-                esquina_rect = pygame.Rect(dracula_escondido_pos, (dracula_rect.width, dracula_rect.height))
-                if personaje_rect.colliderect(esquina_rect):
-                    if dracula_resguard_img is None:
-                        try:
-                            dracula_resguard_img, _ = cargar_personaje("dracula_resguardandose.png", "dracula", size, tamaño=(180, 200))
-                        except Exception:
-                            dracula_resguard_img = None
-                    if dracula_resguard_img is not None:
-                        dracula_img = dracula_resguard_img
-        except Exception:
-            pass
+            try:
+                if dracula_escondido_pos:
+                    esquina_rect = pygame.Rect(dracula_escondido_pos, (dracula_rect.width, dracula_rect.height))
+                    # Mostrar el mensaje de Drácula solo si el temporizador > 0
+                    if dracula_message_timer > 0:
+                        fondo_texto = pygame.Rect(size[0] // 2 - 250, size[1] // 2 - 50, 500, 100)
+                        pygame.draw.rect(overlay, (0, 0, 0, 200), fondo_texto)
+                        texto_dracula = fuente.render("Drácula: ¡Aaj, que olor ajo. Mejor me alejo!", True, (255, 255, 255))
+                        texto_agr_rect = texto_dracula.get_rect(center=(size[0] // 2, size[1] // 2))
+                        overlay.blit(texto_dracula, texto_agr_rect)
+                    if personaje_rect.colliderect(esquina_rect):
+                        if dracula_resguard_img is None:
+                            try:
+                                dracula_resguard_img, _ = cargar_personaje("dracula_resguardandose.png", "dracula", size, tamaño=(180, 200))
+                            except Exception:
+                                dracula_resguard_img = None
+                        if dracula_resguard_img is not None:
+                            dracula_img = dracula_resguard_img
+            except Exception:
+                pass
 
         objetos_para_dibujar.extend([(dracula_img, dracula_rect), (current_player_surf, personaje_rect)])
         objetos_para_dibujar.sort(key=lambda x: x[1].bottom)
@@ -179,7 +196,6 @@ def iniciar_sala5(inv):
             inv.handle_event(event)
 
         pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
-        overlay = pygame.Surface(size, pygame.SRCALPHA)
 
         # --- OBJETOS INTERACTIVOS ---
         for objeto in objetos_sala:
@@ -277,6 +293,8 @@ def iniciar_sala5(inv):
                     pass
                 # Desactivar la línea (ya no dibuja ni tiene efecto)
                 line_active = False
+                # Mostrar mensaje de Drácula por 1.5 segundos cuando se mueve a la esquina
+                dracula_message_timer = 1.5
                 print("[DEBUG] Línea resuelta con ajo: Drácula movido y línea desactivada")
             else:
                 personaje_bloqueado = True
