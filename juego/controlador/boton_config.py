@@ -54,10 +54,11 @@ class Button:
 
 
 def aplicar_volumen():
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'cancion', 'cancion_fondo.mp3'))
     """Intenta aplicar el volumen al mixer si está inicializado."""
     global volumen
     try:
-        if pygame.mixer.get_init():
+        if pygame.mixer.get_init(path):
             pygame.mixer.music.set_volume(volumen)
     except Exception:
         # No hacemos nada si falla; el valor se conserva en la variable
