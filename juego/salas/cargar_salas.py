@@ -101,11 +101,8 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                 print(f"DEBUG movimiento: new topleft={personaje_rect.topleft} moving={moving} direction={direction}")
             # Recalcular pies del personaje con la nueva posición
             # Aumentamos el área de detección de los pies para facilitar la interacción
-            pies_personaje = pygame.Rect(
-                personaje_rect.centerx - 20,
-                personaje_rect.bottom - 10,
-                40, 10
-            )
+            from juego.controlador.mensaje_paso_sala import devolver_pies_personaje
+            pies_personaje = devolver_pies_personaje(personaje_rect)
             teclas = pygame.key.get_pressed()
             if teclas[pygame.K_ESCAPE]:
                 pygame.quit()
