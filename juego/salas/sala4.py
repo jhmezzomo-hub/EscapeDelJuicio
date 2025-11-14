@@ -470,6 +470,15 @@ def iniciar_sala4(inv=None):
                 disable_movement=False
             )
 
+        # Si el balde está en proceso de caer, mostrar la imagen asustada del personaje
+        if balde_cayendo:
+            try:
+                personaje_asustado, _ = cargar_personaje("mc_asustado.png", "mc", size, personaje_rect.size)
+                current_player_surf = personaje_asustado
+            except Exception:
+                # Si falla la carga, seguir usando la superficie actual
+                pass
+
         # Dibujar objetos con ordenamiento por profundidad (basado en posición Y)
         # Crear lista de objetos a dibujar con sus posiciones Y
         objetos_a_dibujar = []
