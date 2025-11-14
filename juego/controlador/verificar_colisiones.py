@@ -42,7 +42,8 @@ def verificar_colision_maniquies(maniquies, personaje_rect):
         profundidad = None
         try:
             if isinstance(m, dict):
-                hitbox = m.get("hitbox") or m.get("hitbox_rect")
+                # Preferir hitbox_pies si existe, para colisión física
+                hitbox = m.get("hitbox_pies") or m.get("hitbox") or m.get("hitbox_rect")
                 profundidad = m.get("profundidad")
             else:
                 # tratar secuencia/tupla de longitud variable
@@ -51,8 +52,6 @@ def verificar_colision_maniquies(maniquies, personaje_rect):
                 if hasattr(m, "__len__") and len(m) >= 4:
                     profundidad = m[3]
         except Exception:
-            # Si el elemento no es iterable o no tiene los campos esperados,
-            # lo ignoramos y continuamos con el siguiente maniquí.
             continue
 
         if hitbox is None:
@@ -64,7 +63,6 @@ def verificar_colision_maniquies(maniquies, personaje_rect):
             try:
                 y_inicio, y_fin = profundidad
             except Exception:
-                # profundidad no en el formato esperado => ignorar restricción
                 y_inicio = None
                 y_fin = None
         else:
@@ -75,6 +73,7 @@ def verificar_colision_maniquies(maniquies, personaje_rect):
             if not (y_inicio <= personaje_rect.bottom <= y_fin):
                 continue
 
+        # Detectar colisión si el personaje está dentro de la hitbox (sólido)
         if personaje_rect.colliderect(hitbox):
             return True
 
