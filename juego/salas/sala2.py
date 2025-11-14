@@ -57,20 +57,27 @@ def iniciar_sala2(inv=None):
         maniquie_rect = maniquie_img.get_rect()
         maniquie_rect.topleft = pos
 
-        # Calcular hitbox relativa al maniquí de forma más robusta
-        hb_width = max(24, maniquie_rect.width - 40)
-        hb_height = 30
-        hb_x = maniquie_rect.left + (maniquie_rect.width - hb_width) // 2
-        # colocar la hitbox cerca de los pies del maniquí
-        hb_y = maniquie_rect.bottom - int(hb_height * 1.2)
-        hitbox_rect = pygame.Rect(hb_x, hb_y, hb_width, hb_height)
+        # HITBOX DE COLISIÓN (PIES)
+        feet_width = max(24, maniquie_rect.width // 2)
+        feet_height = max(20, maniquie_rect.height // 6)
+        feet_x = maniquie_rect.left + (maniquie_rect.width - feet_width) // 2
+        feet_y = maniquie_rect.bottom - feet_height
+        hitbox_pies = pygame.Rect(feet_x, feet_y, feet_width, feet_height)
+
+        # HITBOX DE INTERACCIÓN (CABEZA)
+        head_width = max(24, maniquie_rect.width // 2)
+        head_height = max(20, maniquie_rect.height // 5)
+        head_x = maniquie_rect.left + (maniquie_rect.width - head_width) // 2
+        head_y = maniquie_rect.top + int(maniquie_rect.height * 0.05)
+        hitbox_cabeza = pygame.Rect(head_x, head_y, head_width, head_height)
 
         profundidad = (maniquie_rect.top, maniquie_rect.bottom)
 
         maniquies.append({
             "img": maniquie_img,
             "rect": maniquie_rect,
-            "hitbox": hitbox_rect,
+            "hitbox_pies": hitbox_pies,
+            "hitbox_cabeza": hitbox_cabeza,
             "profundidad": profundidad,
             "llave_agarrada": False,
             "es_llave_correcta": idx == llave_correcta_index,
@@ -166,7 +173,10 @@ def iniciar_sala2(inv=None):
         mensaje_texto = ""
         mensaje_color = (255, 255, 255)
 
-        pies_personaje = pygame.Rect(personaje_rect.centerx - 10, personaje_rect.bottom - 5, 20, 5)
+        # Hitbox de pies de Messi más alta para colisión
+        # Hitbox de pies de Messi aún más alta para colisión
+        # Hitbox de pies de Messi subida 20 píxeles más
+        pies_personaje = pygame.Rect(personaje_rect.centerx - 16, personaje_rect.bottom - 52, 32, 32)
 
         if pies_personaje.colliderect(get_config_sala("sala2")["puertas"]["salida"]):
             mensaje_maniqui = True
@@ -204,11 +214,18 @@ def iniciar_sala2(inv=None):
 
         if mostrar_hitboxes:
             for m in maniquies:
-                pygame.draw.rect(screen, (255, 0, 0), m["hitbox"], 1)
+                pygame.draw.rect(screen, (255, 0, 0), m["hitbox_pies"], 1)
+                pygame.draw.rect(screen, (0, 255, 0), m["hitbox_cabeza"], 1)
         
         # Interacciones con maniquíes (validar colisiones y recoger llaves)
         for m in maniquies:
-            if personaje_rect.colliderect(m["hitbox"]):
+            # Colisión física: pies
+            if pies_personaje.colliderect(m["hitbox_pies"]):
+                # Bloquear solo el avance, no teletransportar
+                if personaje_rect.bottom > m["hitbox_pies"].top and personaje_rect.top < m["hitbox_pies"].top:
+                    personaje_rect.bottom = m["hitbox_pies"].top
+            # Interacción de llave: cabeza
+            if personaje_rect.colliderect(m["hitbox_cabeza"]):
                 mensaje_maniqui = True
                 llave_existente = any(slot and slot.type == "llave" for slot in inv.inventory_slots + inv.quickbar)
 
