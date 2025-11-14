@@ -69,7 +69,7 @@ def get_config_sala(nombre_sala):
             },
             "sala_izquierda": "sala4",
             "sala_derecha": "sala5",
-            "salida": "sala6"
+            "salida": "sala7"
         },
         "sala4": {
             "fondo": "fondo_puertaD.png",
