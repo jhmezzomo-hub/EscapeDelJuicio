@@ -271,8 +271,8 @@ def iniciar_sala4(inv=None):
             elif e_accion:  # Solo actúa cuando E es PRESIONADA (no mantenida)
                 # Interacción con la puerta de volver
                 if personaje_rect.colliderect(puerta_volver):
-                    print("[DEBUG] Volver a sala anterior:", config.get("sala_anterior"))
-                    return "siguiente_sala"
+                    print("[DEBUG] Volver a sala anterior:", config.get("siguiente_sala"))
+                    return config.get("siguiente_sala")
                 # Interacción con Caperucita para liberarla (solo después de resolver el acertijo)
                 elif respuesta_correcta and not caperucita_liberada and opacidad_objetos == 0:
                     # Crear área de detección temporal para la interacción
