@@ -91,8 +91,7 @@ def get_config_sala(nombre_sala):
                 "tamaño": (125, 200),
             },
             "puertas": {
-                "volver": pygame.Rect(100, 400, 70, 40),
-                "salida": pygame.Rect(500, 400, 70, 40)
+                "salida": pygame.Rect(70, 410, 90, 50)
             },
             "siguiente_sala": "sala3"
         },

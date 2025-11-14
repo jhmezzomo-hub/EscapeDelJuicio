@@ -69,6 +69,12 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
     clock = pygame.time.Clock()
     velocidad = 2
     print(f"[DEBUG] sala config cargada: siguiente={config.get('siguiente_sala')}, puertas={config.get('puertas')}")
+    # Inicializar el estado previo de la tecla E con el estado actual para evitar
+    # que una tecla mantenida al cambiar de sala se interprete como nueva pulsación.
+    try:
+        e_presionada_prev = pygame.key.get_pressed()[pygame.K_e]
+    except Exception:
+        e_presionada_prev = False
     while True:
         dt = clock.tick(35) / 1000.0
 
@@ -104,6 +110,11 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
             from juego.controlador.mensaje_paso_sala import devolver_pies_personaje
             pies_personaje = devolver_pies_personaje(personaje_rect)
             teclas = pygame.key.get_pressed()
+            # Detectar transición de la tecla E (presionado ahora pero no antes)
+            e_presionada_ahora = teclas[pygame.K_e]
+            e_accion = e_presionada_ahora and not e_presionada_prev
+            e_presionada_prev = e_presionada_ahora
+
             if teclas[pygame.K_ESCAPE]:
                 pygame.quit()
                 sys.exit()
@@ -128,8 +139,8 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                     interaccion_target = objeto
                     break
 
-            # Si se pulsa E, intentar recoger el objeto (si hay uno) o interactuar con puertas
-            if teclas[pygame.K_e]:
+            # Si se PRESIONA E (detección de borde), intentar recoger el objeto (si hay uno) o interactuar con puertas
+            if e_accion:
                 if interaccion_target:
                     from juego.controlador.agregar_inv import agregar_a_inventario
                     added = agregar_a_inventario(interaccion_target, inv)
@@ -172,49 +183,49 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                 
                 # Interacción puerta izquierda (E)
                 if puerta_izquierda and pies_personaje.colliderect(puerta_izquierda):
-                                sala_izquierda = config.get('sala_izquierda')
-                                if sala_izquierda:
-                                    # Primero: si la sala destino es 'sala4' y ya recogiste el ajo en sala4,
-                                    # bloquear el paso (no permitir reentrar) y mostrar mensaje.
-                                    left_blocked_by_flag = False
-                                    try:
-                                        if sala_izquierda == 'sala4' and getattr(inv, 'flags', {}).get('sala4_ajo'):
-                                            mensaje_error_activo = True
-                                            mensaje_error_timer = mensaje_error_duracion
-                                            mensaje_error_texto = "Ya conseguiste el ajo en la sala 4; no puedes volver."
-                                            print("[DEBUG] intento de reentrada a sala4 bloqueado por flag sala4_ajo")
-                                            left_blocked_by_flag = True
-                                    except Exception:
-                                        left_blocked_by_flag = False
+                    sala_izquierda = config.get('sala_izquierda')
+                    if sala_izquierda:
+                        # Primero: si la sala destino es 'sala4' y ya recogiste el ajo en sala4,
+                        # bloquear el paso (no permitir reentrar) y mostrar mensaje.
+                        left_blocked_by_flag = False
+                        try:
+                            if sala_izquierda == 'sala4' and getattr(inv, 'flags', {}).get('sala4_ajo'):
+                                mensaje_error_activo = True
+                                mensaje_error_timer = mensaje_error_duracion
+                                mensaje_error_texto = "Ya conseguiste el ajo en la sala 4; no puedes volver."
+                                print("[DEBUG] intento de reentrada a sala4 bloqueado por flag sala4_ajo")
+                                left_blocked_by_flag = True
+                        except Exception:
+                            left_blocked_by_flag = False
 
-                                    # Soporte opcional: algunas salas (ej. sala3) pueden querer BLOQUEAR
-                                    # la puerta izquierda cuando TODOS los objetos de la sala ya han sido
-                                    # recogidos. Para activar este comportamiento, en la config de la sala
-                                    # añadir: "bloquear_si_recolectados": {"izquierda": True}
-                                    bloquear_cfg = config.get('bloquear_si_recolectados', {})
-                                    bloquear_izq = bloquear_cfg.get('izquierda', False)
-                                    if bloquear_izq and objetos_sala and not left_blocked_by_flag:
-                                        # Comprobar si todos los objetos de la sala fueron recogidos
-                                        all_collected = all(not obj.get('visible', True) for obj in objetos_sala)
-                                        if all_collected:
-                                            # Mostrar mensaje y no permitir pasar a la sala izquierda
-                                            mensaje_error_activo = True
-                                            mensaje_error_timer = mensaje_error_duracion
-                                            mensaje_error_texto = "Ya encontraste todos los objetos en esta sala"
-                                            # No retornar, se queda en la sala
-                                            print(f"[DEBUG] puerta izquierda bloqueada: todos los objetos recogidos")
-                                        else:
-                                            print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
-                                            return sala_izquierda
-                                    else:
-                                        # Si left_blocked_by_flag es True, se llegó hasta aquí pero no queremos permitir
-                                        # la transición; por lo tanto no retornamos. En caso contrario, permitimos pasar.
-                                        if left_blocked_by_flag:
-                                            # ya mostramos mensaje; no hacer nada (no regresar a la sala)
-                                            pass
-                                        else:
-                                            print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
-                                            return sala_izquierda
+                        # Soporte opcional: algunas salas (ej. sala3) pueden querer BLOQUEAR
+                        # la puerta izquierda cuando TODOS los objetos de la sala ya han sido
+                        # recogidos. Para activar este comportamiento, en la config de la sala
+                        # añadir: "bloquear_si_recolectados": {"izquierda": True}
+                        bloquear_cfg = config.get('bloquear_si_recolectados', {})
+                        bloquear_izq = bloquear_cfg.get('izquierda', False)
+                        if bloquear_izq and objetos_sala and not left_blocked_by_flag:
+                            # Comprobar si todos los objetos de la sala fueron recogidos
+                            all_collected = all(not obj.get('visible', True) for obj in objetos_sala)
+                            if all_collected:
+                                # Mostrar mensaje y no permitir pasar a la sala izquierda
+                                mensaje_error_activo = True
+                                mensaje_error_timer = mensaje_error_duracion
+                                mensaje_error_texto = "Ya encontraste todos los objetos en esta sala"
+                                # No retornar, se queda en la sala
+                                print(f"[DEBUG] puerta izquierda bloqueada: todos los objetos recogidos")
+                            else:
+                                print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
+                                return sala_izquierda
+                        else:
+                            # Si left_blocked_by_flag es True, se llegó hasta aquí pero no queremos permitir
+                            # la transición; por lo tanto no retornamos. En caso contrario, permitimos pasar.
+                            if left_blocked_by_flag:
+                                # ya mostramos mensaje; no hacer nada (no regresar a la sala)
+                                pass
+                            else:
+                                print(f"[DEBUG] ir a sala izquierda: {sala_izquierda}")
+                                return sala_izquierda
 
             # Si hay un objeto cercano y no se ha pulsado E, mostrar el prompt
             if interaccion_target and not teclas[pygame.K_e]:
@@ -287,9 +298,37 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
                 interaccion_texto = ""
                 interaccion_timer = 0.0
         # Mensajes de interacción con puertas
+        # Detectar si el jugador tiene un hacha en el inventario (incluye quickbar)
+        def tiene_item(inv_obj, nombre_item: str) -> bool:
+            try:
+                name = nombre_item.lower()
+                for s in getattr(inv_obj, 'inventory_slots', []) + getattr(inv_obj, 'quickbar', []):
+                    if s and getattr(s, 'type', '').lower() == name:
+                        return True
+            except Exception:
+                pass
+            return False
+
+        tiene_hacha = tiene_item(inv, 'hacha')
+
         if pies_personaje.colliderect(puerta_interaccion_salida):
-            texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
-            screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+            # Si la puerta está bloqueada y tenemos el hacha, sugerir usarla
+            if puerta_bloqueada and tiene_hacha:
+                # Si el inventario está abierto y el cursor está sobre el slot del hacha,
+                # mostrar el prompt para usar (Presiona E para usar)
+                is_q, idx = inv.slot_at_pos(pygame.mouse.get_pos()) if inv.is_open else (None, None)
+                hovered_item = None
+                if is_q is not None:
+                    hovered_item = inv.quickbar[idx] if is_q else inv.inventory_slots[idx]
+
+                if inv.is_open and hovered_item and getattr(hovered_item, 'type', '').lower() == 'hacha':
+                    texto = fuente.render("Presiona E para usar", True, (255, 255, 255))
+                else:
+                    texto = fuente.render("Hay algo en tu inventario que te puede ayudar, úsalo", True, (255, 255, 255))
+                screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
+            else:
+                texto = fuente.render("Presiona E para pasar a la siguiente sala", True, (255, 255, 255))
+                screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
         elif puerta_derecha and pies_personaje.colliderect(puerta_derecha):
             texto = fuente.render("Presiona E para ir a la sala derecha", True, (255, 255, 255))
             screen.blit(texto, (size[0] // 2 - texto.get_width() // 2, size[1] - 40))
@@ -325,6 +364,38 @@ def cargar_sala(nombre_sala, maniquies=[], inv=None, objetos_sala=[], puerta_blo
             screen.blit(texto_error, (size[0] // 2 - texto_error.get_width() // 2, size[1] - 140))
             if mensaje_error_timer <= 0:
                 mensaje_error_activo = False
+
+        # --- Usar hacha desde inventario: si el inventario está abierto, el jugador está
+        # encima de la puerta bloqueada y el cursor está encima del slot con el hacha,
+        # permitir usarla pulsando E (no hace falta recogerla en el suelo).
+        try:
+            teclas_now = pygame.key.get_pressed()
+            e_ahora = teclas_now[pygame.K_e]
+            e_accion_inv = e_ahora and not e_presionada_prev
+            if inv.is_open and puerta_interaccion_salida and pies_personaje.colliderect(puerta_interaccion_salida) and puerta_bloqueada and tiene_hacha:
+                is_q2, idx2 = inv.slot_at_pos(pygame.mouse.get_pos())
+                hovered_item2 = None
+                if is_q2 is not None:
+                    hovered_item2 = inv.quickbar[idx2] if is_q2 else inv.inventory_slots[idx2]
+                if hovered_item2 and getattr(hovered_item2, 'type', '').lower() == 'hacha':
+                    # Mostrar prompt (se dibuja también en la UI, esto es redundante pero útil)
+                    if e_accion_inv:
+                        # Usar el hacha: quitar de inventario y desbloquear la puerta (pasar de sala)
+                        try:
+                            if is_q2:
+                                inv.quickbar[idx2] = None
+                            else:
+                                inv.inventory_slots[idx2] = None
+                        except Exception:
+                            pass
+                        puerta_bloqueada = False
+                        siguiente = config.get('siguiente_sala')
+                        if siguiente:
+                            return siguiente
+            # actualizar estado de la tecla E para evitar rebotes
+            e_presionada_prev = e_ahora
+        except Exception:
+            pass
 
         pygame.display.flip()
         continue

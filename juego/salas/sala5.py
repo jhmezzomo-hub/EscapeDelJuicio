@@ -38,6 +38,7 @@ def iniciar_sala5(inv):
     limite_x = dracula_rect.left - 10
     punto_inicio = (limite_x - 130, 385)
     punto_fin = (limite_x, size[1])
+    line_active = True
 
     # Hitbox de Drácula
     hitbox_dracula = pygame.Rect(
@@ -53,6 +54,16 @@ def iniciar_sala5(inv):
     except Exception:
         pass
     fuente = general["fuente"]
+
+    # Alinear el hacha con el suelo relativo al personaje (evita que quede "flotando")
+    try:
+        if objeto_hacha and objeto_hacha.get('rect'):
+            x_hacha = objeto_hacha.get('pos', (objeto_hacha['rect'].left, objeto_hacha['rect'].top))[0]
+            # Colocar la base (midbottom) del hacha algunos píxeles por encima del bottom del personaje
+            objeto_hacha['rect'].midbottom = (x_hacha, personaje_rect.bottom - 10)
+            objeto_hacha['pos'] = objeto_hacha['rect'].topleft
+    except Exception:
+        pass
 
     mostrar_hitboxes = True
     mensaje_texto = ""
@@ -73,9 +84,18 @@ def iniciar_sala5(inv):
     personaje_bloqueado = False
     temporizador_muerte = 0  # segundos restantes para morir
 
+    # Inicializar estado previo de la tecla E para evitar re-disparo si viene mantenida
+    try:
+        e_presionada_prev = pygame.key.get_pressed()[pygame.K_e]
+    except Exception:
+        e_presionada_prev = False
+
     while True:
         dt = clock.tick(60) / 1000.0
         teclas = pygame.key.get_pressed()
+        e_presionada_ahora = teclas[pygame.K_e]
+        e_accion = e_presionada_ahora and not e_presionada_prev
+        e_presionada_prev = e_presionada_ahora
 
         # Dibujar fondo
         screen.blit(fondo, (0, 0))
@@ -158,7 +178,7 @@ def iniciar_sala5(inv):
         if en_puerta and not prev_en_puerta:
             mensaje_texto = "Presiona E para pasar a la siguiente sala"
             mensaje_timer = mensaje_duracion
-        if en_puerta and teclas[pygame.K_e] and not personaje_bloqueado:
+        if en_puerta and e_accion and not personaje_bloqueado:
             return config.get('siguiente_sala')
         prev_en_puerta = en_puerta
 
@@ -168,10 +188,43 @@ def iniciar_sala5(inv):
         x2, y2 = punto_fin
         dist = abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / ((y2 - y1)**2 + (x2 - x1)**2) ** 0.5
 
-        # Si toca la línea, bloquear y activar temporizador
-        if not personaje_bloqueado and dist < 10:
-            personaje_bloqueado = True
-            temporizador_muerte = 1.5  # 1.5 segundos
+        # Si toca la línea, comprobar si tiene ajo -> efectos especiales
+        if line_active and not personaje_bloqueado and dist < 10:
+            # detectar ajo en inventario o bandera
+            has_ajo = False
+            try:
+                if getattr(inv, 'flags', {}).get('sala4_ajo'):
+                    has_ajo = True
+                else:
+                    for slot in getattr(inv, 'inventory_slots', []):
+                        if slot and getattr(slot, 'type', '').lower() == 'ajo':
+                            has_ajo = True
+                            break
+            except Exception:
+                has_ajo = False
+
+            if has_ajo:
+                # Mover a Drácula a la esquina más lejana del hacha y desactivar la línea
+                try:
+                    axe_pos = objeto_hacha.get('pos') if objeto_hacha and objeto_hacha.get('pos') else (size[0]//2, size[1]//2)
+                except Exception:
+                    axe_pos = (size[0]//2, size[1]//2)
+
+                # Mover Drácula a la esquina inferior derecha (dentro de la pantalla)
+                br_x = max(20, size[0] - dracula_rect.width - 20)
+                br_y = max(20, size[1] - dracula_rect.height - 20)
+                dracula_rect.topleft = (br_x, br_y)
+                # Eliminar la hitbox de drácula de los obstáculos para que ya no afecte
+                try:
+                    obstaculos = [o for o in obstaculos if o.get('hitbox') != hitbox_dracula]
+                except Exception:
+                    pass
+                # Desactivar la línea (ya no dibuja ni tiene efecto)
+                line_active = False
+                print("[DEBUG] Línea resuelta con ajo: Drácula movido y línea desactivada")
+            else:
+                personaje_bloqueado = True
+                temporizador_muerte = 1.5  # 1.5 segundos
 
         
         # --- INTERACCIÓN CON DRÁCULA ---
