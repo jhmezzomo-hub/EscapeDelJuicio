@@ -405,13 +405,19 @@ def iniciar_sala4(inv=None):
         
         # --- VERIFICAR COLISIÓN CON LA LÍNEA (solo si no ha adivinado el acertijo) ---
         if not personaje_bloqueado and not respuesta_correcta:
-            px, py = personaje_rect.center
-            x1, y1 = punto_inicio
-            x2, y2 = punto_fin
-            dist = abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / ((y2 - y1)**2 + (x2 - x1)**2) ** 0.5
-            
-            # Si toca la línea, bloquear y activar temporizador
-            if dist < 5:
+            # Recalcular hitbox de los pies por seguridad
+            pies_personaje = devolver_pies_personaje(personaje_rect)
+
+            # Usar clipline para comprobar intersección exacta entre la línea y la hitbox
+            x1, y1 = int(punto_inicio[0]), int(punto_inicio[1])
+            x2, y2 = int(punto_fin[0]), int(punto_fin[1])
+            try:
+                # clipline retorna una tupla con los puntos del segmento cortado si hay intersección
+                interseccion = pies_personaje.clipline((x1, y1), (x2, y2))
+            except Exception:
+                interseccion = None
+
+            if interseccion:
                 personaje_bloqueado = True
                 temporizador_muerte = 1.5  # 1.5 segundos para la animación
                 balde_cayendo = True
