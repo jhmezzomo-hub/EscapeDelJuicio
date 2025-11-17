@@ -5,6 +5,16 @@ from juego.controlador.cargar_personaje import cargar_personaje
 from info_pantalla.info_pantalla import tamaño_pantallas
 from juego.controlador.mensaje_paso_sala import devolver_pies_personaje
 
+# Inicializar el módulo de fuentes si no está inicializado aún.
+# Esto evita el error "pygame.error: font not initialized" cuando
+# get_config_sala usa pygame.font.SysFont durante la importación.
+try:
+    if not pygame.font.get_init():
+        pygame.font.init()
+except Exception:
+    # Si falla por cualquier razón, evitamos que el módulo cruchee.
+    pass
+
 def get_config_sala(nombre_sala):
     size = tamaño_pantallas()
     configs = {

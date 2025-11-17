@@ -15,7 +15,7 @@ from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
 
 # Importar las otras salas
 from juego.salas.sala3 import iniciar_sala3
-from juego.salas.sala7 import iniciar_galaxy_attack
+from juego.salas.sala7 import iniciar_sala7
 
 
 def iniciar_sala6(inv):
@@ -80,7 +80,7 @@ def iniciar_sala6(inv):
 
         objetos_en_sala = [nave_obj]
         current_player_surf = sprites_caminar(size, screen, inv, mask, objetos_en_sala,
-                                              personaje_rect.size, personaje, personaje_rect)
+                                            personaje_rect.size, personaje, personaje_rect)
 
         lista_para_dibujar = [(nave_obj["img"], nave_obj["rect"]), (current_player_surf, personaje_rect)]
         lista_para_dibujar.sort(key=lambda x: x[1].bottom)
@@ -95,7 +95,7 @@ def iniciar_sala6(inv):
         if en_zona_nave:
             mensaje_texto = "Presione E para subirse a la nave"
             if teclas[pygame.K_e]:
-                iniciar_galaxy_attack()
+                iniciar_sala7()
                 return
         elif en_zona_retorno:
             mensaje_texto = "Presione E para volver a la sala anterior"
