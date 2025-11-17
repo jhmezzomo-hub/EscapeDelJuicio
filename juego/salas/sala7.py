@@ -64,13 +64,13 @@ class Nave(pygame.sprite.Sprite):
             self.tiempo_ultimo_dano = ahora
 
     def update(self, teclas):
-        if teclas[pygame.K_LEFT] and self.rect.left > 0:
+        if teclas[pygame.K_LEFT] or teclas[pygame.K_a] and self.rect.left > 0:
             self.rect.x -= self.velocidad
-        if teclas[pygame.K_RIGHT] and self.rect.right < ANCHO:
+        if teclas[pygame.K_RIGHT] or teclas[pygame.K_d] and self.rect.right < ANCHO:
             self.rect.x += self.velocidad
-        if teclas[pygame.K_UP] and self.rect.top > 0:
+        if teclas[pygame.K_UP] or teclas[pygame.K_w] and self.rect.top > 0:
             self.rect.y -= self.velocidad
-        if teclas[pygame.K_DOWN] and self.rect.bottom < ALTO:
+        if teclas[pygame.K_DOWN] or teclas[pygame.K_s] and self.rect.bottom < ALTO:
             self.rect.y += self.velocidad
 
         if self.power:
