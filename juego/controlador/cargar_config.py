@@ -118,6 +118,20 @@ def get_config_sala(nombre_sala):
             },
             "sala_anterior": "sala3",
             "siguiente_sala": "sala7"
+        },
+        "sala7": {
+            "fondo": "fondo_sala7.png",
+            "nombre_carpeta": "Fondos",
+            "personaje": {
+                "pos_inicial": (100, 400),
+                "tamaño": (125, 200),
+            },
+            "puertas": {
+                "volver": pygame.Rect(100, 400, 70, 40),
+                "salida": pygame.Rect(900, 400, 70, 40)
+            },
+            "sala_anterior": "sala6",
+            "siguiente_sala": "inicio"
         }
     }
     return configs.get(nombre_sala, None)

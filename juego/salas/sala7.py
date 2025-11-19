@@ -49,7 +49,7 @@ ROJO = (255, 0, 0)
 class Nave(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = nave_img
+        self.image = nave_img.copy()  # Crear copia independiente
         self.rect = self.image.get_rect(center=(ANCHO // 2, ALTO - 80))
         self.mask = pygame.mask.from_surface(self.image)
         self.velocidad = 7
@@ -59,14 +59,33 @@ class Nave(pygame.sprite.Sprite):
         self.laser_auto_timer = 0
         self.laser_grande = None
         self.tiempo_ultimo_dano = 0
+        # Sistema de invulnerabilidad visual
+        self.invulnerable = False
+        self.duracion_invulnerabilidad = 1000  # 1 segundo
+        self.alpha_original = 255
+        self.alpha_parpadeo = 100
 
     def recibir_dano(self):
         ahora = pygame.time.get_ticks()
-        if ahora - self.tiempo_ultimo_dano > 1000:
+        if ahora - self.tiempo_ultimo_dano > self.duracion_invulnerabilidad:
             self.vidas -= 1
             self.tiempo_ultimo_dano = ahora
+            self.invulnerable = True
 
     def update(self, teclas, grupo_balas=None):
+        # Manejar efecto visual de invulnerabilidad
+        if self.invulnerable:
+            tiempo_transcurrido = pygame.time.get_ticks() - self.tiempo_ultimo_dano
+            if tiempo_transcurrido >= self.duracion_invulnerabilidad:
+                self.invulnerable = False
+                self.image.set_alpha(self.alpha_original)  # Restaurar opacidad normal
+            else:
+                # Efecto de parpadeo rápido (cada 100ms)
+                parpadeo_intervalo = 100
+                ciclo = (tiempo_transcurrido // parpadeo_intervalo) % 2
+                alpha = self.alpha_parpadeo if ciclo == 0 else self.alpha_original
+                self.image.set_alpha(alpha)
+        
         if teclas[pygame.K_LEFT] or teclas[pygame.K_a] and self.rect.left > 0:
             self.rect.x -= self.velocidad
         if teclas[pygame.K_RIGHT] or teclas[pygame.K_d] and self.rect.right < ANCHO:
@@ -193,7 +212,7 @@ class AlertaLaser(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = boss_img
+        self.image = boss_img.copy()  # Crear copia independiente
         self.rect = self.image.get_rect(center=(ANCHO // 2, 100))
         self.mask = pygame.mask.from_surface(self.image)
         self.vida_max = 1000
@@ -205,12 +224,36 @@ class Boss(pygame.sprite.Sprite):
         self.estado = "normal"
         self.ultimo_poder = "laser_grande"
         self.atacando = False
+        # Efecto visual de parpadeo (sin invulnerabilidad)
+        self.parpadeando = False
+        self.tiempo_ultimo_hit = 0
+        self.duracion_parpadeo = 500  # 0.5 segundos de parpadeo visual
+        self.alpha_original = 255
+        self.alpha_parpadeo = 100
 
     def update(self):
+        # Manejar efecto visual de parpadeo cuando recibe daño
+        if self.parpadeando:
+            tiempo_transcurrido = pygame.time.get_ticks() - self.tiempo_ultimo_hit
+            if tiempo_transcurrido >= self.duracion_parpadeo:
+                self.parpadeando = False
+                self.image.set_alpha(self.alpha_original)  # Restaurar opacidad normal
+            else:
+                # Efecto de parpadeo rápido (cada 80ms)
+                parpadeo_intervalo = 80
+                ciclo = (tiempo_transcurrido // parpadeo_intervalo) % 2
+                alpha = self.alpha_parpadeo if ciclo == 0 else self.alpha_original
+                self.image.set_alpha(alpha)
+        
         if self.estado == "normal" and not self.atacando:
             self.rect.x += self.velocidad * self.direccion
             if self.rect.left <= 0 or self.rect.right >= ANCHO:
                 self.direccion *= -1
+
+    def recibir_hit_visual(self):
+        """Activa el efecto visual de parpadeo cuando recibe daño"""
+        self.parpadeando = True
+        self.tiempo_ultimo_hit = pygame.time.get_ticks()
 
     def preparar_ataque(self, tipo):
         self.estado = tipo
@@ -347,13 +390,20 @@ def iniciar_sala7():
         for bala in grupo_balas:
             if pygame.sprite.collide_mask(bala, boss):
                 boss.vida -= 10
+                boss.recibir_hit_visual()  # Activar efecto visual
                 bala.kill()
 
         # Colisión láser grande del jugador con boss usando máscaras
+        hit_laser = False
         for laser in grupo_laser_jugador:
             if pygame.sprite.collide_mask(laser, boss):
                 boss.vida -= 2
+                hit_laser = True
                 break
+        
+        # Activar parpadeo solo una vez por frame si hay colisión con láser
+        if hit_laser and not boss.parpadeando:
+            boss.recibir_hit_visual()
 
         # Colisión jugador con círculos de poder usando máscaras
         col_poder = []
@@ -396,8 +446,8 @@ def iniciar_sala7():
         resultado = pantalla_victoria()
         if resultado == 'replay':
             return 'sala7'  # Reiniciar sala 7
-        elif resultado == 'menu':
-            return 'inicio'  # Volver al menú principal
+        elif resultado == 'menu_victoria':  # Cambio aquí
+            return 'menu_victoria'  # Volver al menú desde victoria
         else:
             return None  # Salir del juego
     else:

@@ -91,9 +91,9 @@ def pantalla_victoria():
         sys.exit()
 
     def go_menu():
-        # Cerrar esta pantalla y abrir el menú principal.
+        # Cerrar esta pantalla y abrir el menú principal desde victoria.
         nonlocal running, result
-        result = 'menu'
+        result = 'menu_victoria'  # Valor específico para distinguir que viene de victoria
         running = False
 
     # Configuración de botones horizontales
