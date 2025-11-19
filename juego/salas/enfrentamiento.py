@@ -1,10 +1,10 @@
 import pygame, sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from juego.pantalla.mensaje_enfrentamiento import enfrentamiento_textos
+from juego.pantalla.mensaje_enfrentamiento import enfrentamientos_textos
 from juego.controlador.cargar_fondos import cargar_fondo
 
-def sala_mensaje_bienvenida():
+def sala_mensaje_enfrentamiento():
 	pygame.init()
 	size = (1100, 600)
 	screen = pygame.display.set_mode(size)
@@ -25,10 +25,10 @@ def sala_mensaje_bienvenida():
 				pygame.quit()
 				sys.exit()
 		tiempo_actual = pygame.time.get_ticks()
-		mostrar_bienvenida = enfrentamiento_textos(
+		mostrar_bienvenida = enfrentamientos_textos(
 			tiempo_actual, tiempo_inicio, fuente, screen, fondo 
 		)
 		clock.tick(60)
 
 if __name__ == "__main__":
-	sala_mensaje_bienvenida()
+	sala_mensaje_enfrentamiento()

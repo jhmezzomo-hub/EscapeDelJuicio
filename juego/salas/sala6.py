@@ -12,6 +12,7 @@ from juego.controlador.sprites_caminar import sprites_caminar
 from juego.limite_colisiones.colision_piso import colision_piso
 from info_pantalla.info_pantalla import tamaño_pantallas, info_pantalla
 from juego.controlador.boton_config import crear_boton_config, abrir_menu_config
+from juego.salas.enfrentamiento import sala_mensaje_enfrentamiento
 
 # Importar las otras salas
 from juego.salas.sala3 import iniciar_sala3
@@ -21,6 +22,7 @@ from juego.salas.sala7 import iniciar_sala7
 def iniciar_sala6(inv):
     if inv is None:
         inv = crear_inventario()
+    sala_mensaje_enfrentamiento()
 
     size = tamaño_pantallas()
     screen = info_pantalla()
