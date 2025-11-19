@@ -14,7 +14,7 @@ def main():
     screen = info_pantalla()
     inv = crear_inventario()
     pantalla_de_inicio()  # Mostrar menú principal
-    sala_actual = "sala3"
+    sala_actual = "sala7"
     #sala_mensaje_bienvenida()  # Mostrar mensaje de bienvenida
     while True:
         siguiente = None

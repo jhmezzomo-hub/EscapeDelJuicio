@@ -1,6 +1,8 @@
 import pygame, sys, random, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from juego.pantalla.pantalla_victoria import pantalla_victoria
+from juego.pantalla.pantalla_muerte import pantalla_fin
 from juego.controlador.cargar_config import get_config_sala
 config = get_config_sala("general")
 ANCHO, ALTO = 1100,600
@@ -49,6 +51,7 @@ class Nave(pygame.sprite.Sprite):
         super().__init__()
         self.image = nave_img
         self.rect = self.image.get_rect(center=(ANCHO // 2, ALTO - 80))
+        self.mask = pygame.mask.from_surface(self.image)
         self.velocidad = 7
         self.vidas = 3
         self.power = None
@@ -63,7 +66,7 @@ class Nave(pygame.sprite.Sprite):
             self.vidas -= 1
             self.tiempo_ultimo_dano = ahora
 
-    def update(self, teclas):
+    def update(self, teclas, grupo_balas=None):
         if teclas[pygame.K_LEFT] or teclas[pygame.K_a] and self.rect.left > 0:
             self.rect.x -= self.velocidad
         if teclas[pygame.K_RIGHT] or teclas[pygame.K_d] and self.rect.right < ANCHO:
@@ -80,7 +83,7 @@ class Nave(pygame.sprite.Sprite):
                     self.laser_grande.kill()
                     self.laser_grande = None
 
-        if self.power and self.power["tipo"] == "auto":
+        if self.power and self.power["tipo"] == "auto" and grupo_balas is not None:
             ahora = pygame.time.get_ticks()
             if ahora - self.laser_auto_timer > 200:
                 self.laser_auto_timer = ahora
@@ -97,6 +100,7 @@ class Bala(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(laser_chiquito_img, (30, 50))
         self.image = pygame.transform.rotate(self.image, 0 if direccion == -1 else 180)
         self.rect = self.image.get_rect(midbottom=(x, y))
+        self.mask = pygame.mask.from_surface(self.image)
         self.velocidad = 8 * direccion
 
     def update(self):
@@ -112,6 +116,7 @@ class LaserGrandeJugador(pygame.sprite.Sprite):
         self.image = self.image_original.copy()
         self.image.set_alpha(200)
         self.rect = self.image.get_rect(midbottom=jugador.rect.midtop)
+        self.mask = pygame.mask.from_surface(self.image)
         self.jugador = jugador
         self.tiempo_inicio = pygame.time.get_ticks()
         self.duracion = 2000
@@ -129,6 +134,7 @@ class LaserGrandeBoss(pygame.sprite.Sprite):
         self.image_original = pygame.transform.scale(laser_grande_img, (120, ALTO))
         self.image = self.image_original.copy()
         self.rect = self.image.get_rect(midtop=(x, y - 10))
+        self.mask = pygame.mask.from_surface(self.image)
         self.image.set_alpha(50)
         self.estado = "cargando"
         self.tiempo_inicio = pygame.time.get_ticks()
@@ -145,6 +151,8 @@ class LaserGrandeBoss(pygame.sprite.Sprite):
             if tiempo_transcurrido >= self.duracion_carga:
                 self.estado = "disparando"
                 self.image.set_alpha(255)
+                # Actualizar máscara cuando el alfa cambia significativamente
+                self.mask = pygame.mask.from_surface(self.image)
                 self.tiempo_inicio = pygame.time.get_ticks()
         elif self.estado == "disparando":
             if tiempo_transcurrido >= self.duracion_disparo:
@@ -159,6 +167,7 @@ class CirculoPoder(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.transform.scale(imagen, (80, 80))
         self.rect = self.image.get_rect(midtop=(random.randint(100, ANCHO - 100), -50))
+        self.mask = pygame.mask.from_surface(self.image)
         self.tipo = tipo
         self.velocidad = 3
 
@@ -186,6 +195,7 @@ class Boss(pygame.sprite.Sprite):
         super().__init__()
         self.image = boss_img
         self.rect = self.image.get_rect(center=(ANCHO // 2, 100))
+        self.mask = pygame.mask.from_surface(self.image)
         self.vida_max = 1000
         self.vida = self.vida_max
         self.velocidad = 3
@@ -243,22 +253,21 @@ def dibujar_barra_boss(vida_actual, vida_max):
     pygame.draw.rect(pantalla, BLANCO, (x, y, ancho_barra, alto_barra), 2)
 
 
-# === CREAR SPRITES ===
-jugador = Nave()
-boss = Boss()
-
-grupo_jugador = pygame.sprite.GroupSingle(jugador)
-grupo_balas = pygame.sprite.Group()
-grupo_boss = pygame.sprite.GroupSingle(boss)
-grupo_balas_boss = pygame.sprite.Group()
-grupo_lasers_boss = pygame.sprite.Group()
-grupo_poderes = pygame.sprite.Group()
-grupo_laser_jugador = pygame.sprite.Group()
-grupo_alertas = pygame.sprite.Group()
-
-
 # === BUCLE PRINCIPAL ===
 def iniciar_sala7():
+    # === CREAR SPRITES (dentro de la función para reiniciar estado) ===
+    jugador = Nave()
+    boss = Boss()
+
+    grupo_jugador = pygame.sprite.GroupSingle(jugador)
+    grupo_balas = pygame.sprite.Group()
+    grupo_boss = pygame.sprite.GroupSingle(boss)
+    grupo_balas_boss = pygame.sprite.Group()
+    grupo_lasers_boss = pygame.sprite.Group()
+    grupo_poderes = pygame.sprite.Group()
+    grupo_laser_jugador = pygame.sprite.Group()
+    grupo_alertas = pygame.sprite.Group()
+
     en_juego = True
     ultimo_poder_spawn = pygame.time.get_ticks()
 
@@ -279,7 +288,7 @@ def iniciar_sala7():
                     bala = Bala(jugador.rect.centerx, jugador.rect.top, -1)
                     grupo_balas.add(bala)
 
-        jugador.update(teclas)
+        jugador.update(teclas, grupo_balas)
         boss.update()
         grupo_balas.update()
         grupo_balas_boss.update()
@@ -322,25 +331,36 @@ def iniciar_sala7():
             if boss.tiempo_ataque <= 0:
                 boss.continuar()
 
-        if pygame.sprite.spritecollide(jugador, grupo_balas_boss, True):
-            jugador.recibir_dano()
+        # Colisión jugador con balas del boss usando máscaras
+        for bala in grupo_balas_boss:
+            if pygame.sprite.collide_mask(jugador, bala):
+                jugador.recibir_dano()
+                bala.kill()
 
+        # Colisión jugador con láser del boss usando máscaras
         for laser in grupo_lasers_boss:
-            if hasattr(laser, "hace_dano") and laser.hace_dano() and jugador.rect.colliderect(laser.rect):
+            if hasattr(laser, "hace_dano") and laser.hace_dano() and pygame.sprite.collide_mask(jugador, laser):
                 jugador.recibir_dano()
                 break
 
+        # Colisión balas del jugador con boss usando máscaras
         for bala in grupo_balas:
-            if pygame.sprite.spritecollide(bala, grupo_boss, False):
+            if pygame.sprite.collide_mask(bala, boss):
                 boss.vida -= 10
                 bala.kill()
 
+        # Colisión láser grande del jugador con boss usando máscaras
         for laser in grupo_laser_jugador:
-            if pygame.sprite.spritecollide(boss, grupo_laser_jugador, False):
+            if pygame.sprite.collide_mask(laser, boss):
                 boss.vida -= 2
                 break
 
-        col_poder = pygame.sprite.spritecollide(jugador, grupo_poderes, True)
+        # Colisión jugador con círculos de poder usando máscaras
+        col_poder = []
+        for poder in grupo_poderes:
+            if pygame.sprite.collide_mask(jugador, poder):
+                col_poder.append(poder)
+                poder.kill()
         for poder in col_poder:
             if poder.tipo == "auto":
                 jugador.power = {"tipo": "auto", "duracion": 3000}
@@ -371,14 +391,23 @@ def iniciar_sala7():
         dibujar_barra_boss(boss.vida, boss.vida_max)
         pygame.display.flip()
 
-    pantalla.fill((0, 0, 0))
-    fuente = pygame.font.Font(None, 80)
-    texto = "¡VICTORIA!" if boss.vida <= 0 else "GAME OVER"
-    color = (0, 255, 0) if boss.vida <= 0 else (255, 0, 0)
-    render = fuente.render(texto, True, color)
-    pantalla.blit(render, (ANCHO // 2 - render.get_width() // 2, ALTO // 2 - render.get_height() // 2))
-    pygame.display.flip()
-    pygame.time.wait(3000)
+    # Manejar resultado del juego
+    if boss.vida <= 0:
+        resultado = pantalla_victoria()
+        if resultado == 'replay':
+            return 'sala7'  # Reiniciar sala 7
+        elif resultado == 'menu':
+            return 'inicio'  # Volver al menú principal
+        else:
+            return None  # Salir del juego
+    else:
+        resultado = pantalla_fin()
+        if resultado == 'replay':
+            return 'sala7'  # Reiniciar sala 7
+        elif resultado == 'menu':
+            return 'inicio'  # Volver al menú principal
+        else:
+            return None  # Salir del juego
 
 
 if __name__ == "__main__":

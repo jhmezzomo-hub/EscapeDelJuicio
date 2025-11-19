@@ -97,8 +97,14 @@ def iniciar_sala6(inv):
         if en_zona_nave:
             mensaje_texto = "Presione E para subirse a la nave"
             if teclas[pygame.K_e]:
-                iniciar_sala7()
-                return
+                resultado = iniciar_sala7()
+                if resultado == 'sala7':
+                    # Reiniciar sala 7 - mantener el loop para que el usuario pueda volver a intentar
+                    continue
+                elif resultado == 'inicio':
+                    return 'inicio'  # Volver al menú principal
+                else:
+                    return  # Salir del juego
         elif en_zona_retorno:
             mensaje_texto = "Presione E para volver a la sala anterior"
             if teclas[pygame.K_e]:
